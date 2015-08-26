@@ -4,4 +4,4 @@ After BaseX Core stripped to its bare essentials a LMDBData snd TableLMDBAccess 
 
 This is a POC.
 
-The idea is to strengthen the BaseX store structure and later replicate it (with [BookKeeper](http://bookkeeper.apache.org/?) for further high availability.
+The idea is to strengthen the BaseX store structure and later replicate it (with [BookKeeper](http://bookkeeper.apache.org/)?) for further high availability.
