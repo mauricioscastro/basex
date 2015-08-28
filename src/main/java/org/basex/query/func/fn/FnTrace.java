@@ -82,12 +82,12 @@ public final class FnTrace extends StandardFunc {
     tb.add(value);
     final String info = tb.toString();
 
-    // if GUI is used or client is calling, cache trace info
-    if(qc.listen != null || qc.context.listener != null) {
-      qc.evalInfo(info);
-      if(qc.listen != null) qc.listen.info(info);
-    } else {
+//    // if GUI is used or client is calling, cache trace info
+//    if(qc.listen != null || qc.context.listener != null) {
+//      qc.evalInfo(info);
+//      if(qc.listen != null) qc.listen.info(info);
+//    } else {
       Util.errln(info);
-    }
+//    }
   }
 }

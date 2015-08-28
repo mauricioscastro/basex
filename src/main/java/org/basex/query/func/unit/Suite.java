@@ -1,14 +1,16 @@
 package org.basex.query.func.unit;
 
-import static org.basex.query.func.unit.Constants.*;
+import org.basex.core.MainOptions;
+import org.basex.io.IO;
+import org.basex.io.IOFile;
+import org.basex.query.value.node.FElem;
+import org.basex.util.Performance;
 
-import java.io.*;
-import java.util.*;
+import java.io.IOException;
+import java.util.ArrayList;
 
-import org.basex.core.*;
-import org.basex.io.*;
-import org.basex.query.value.node.*;
-import org.basex.util.*;
+import static org.basex.query.func.unit.Constants.TESTSUITES;
+import static org.basex.query.func.unit.Constants.TIME;
 
 /**
  * XQUnit tests: Testing multiple modules.
@@ -28,13 +30,13 @@ public final class Suite {
 
   /**
    * Tests all test functions in the specified path.
-   * @param ctx database context
+//   * @param ctx database context
    * @param root path to test modules
-   * @param proc calling process
+//   * @param proc calling process
    * @return resulting value
    * @throws IOException I/O exception
    */
-  public FElem test(final IOFile root, final Context ctx, final Proc proc) throws IOException {
+  public FElem test(final IOFile root, final MainOptions opt) throws IOException {
     final ArrayList<IOFile> files = new ArrayList<>();
 
     final Performance perf = new Performance();
@@ -49,7 +51,7 @@ public final class Suite {
     }
 
     for(final IOFile file : files) {
-      final Unit unit = new Unit(file, ctx, proc);
+      final Unit unit = new Unit(file, opt);
       unit.test(suites);
       errors += unit.errors;
       failures += unit.failures;

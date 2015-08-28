@@ -1,18 +1,30 @@
 package org.basex.index.ft;
 
-import static org.basex.core.Text.*;
-import static org.basex.data.DataText.*;
-import static org.basex.util.Token.*;
-
-import java.io.*;
-
-import org.basex.core.*;
-import org.basex.data.*;
-import org.basex.index.*;
+import org.basex.core.BaseXException;
+import org.basex.core.MainOptions;
+import org.basex.data.Data;
+import org.basex.index.IndexBuilder;
 import org.basex.io.out.DataOutput;
-import org.basex.util.*;
-import org.basex.util.ft.*;
-import org.basex.util.list.*;
+import org.basex.util.Num;
+import org.basex.util.TokenBuilder;
+import org.basex.util.Util;
+import org.basex.util.ft.FTCase;
+import org.basex.util.ft.FTFlag;
+import org.basex.util.ft.FTLexer;
+import org.basex.util.ft.FTOpt;
+import org.basex.util.ft.Language;
+import org.basex.util.ft.Stemmer;
+import org.basex.util.ft.StopWords;
+import org.basex.util.ft.Tokenizer;
+import org.basex.util.list.IntList;
+
+import java.io.IOException;
+
+import static org.basex.core.Text.INDEX_FULLTEXT_D;
+import static org.basex.core.Text.NO_STEMMER_X;
+import static org.basex.core.Text.NO_TOKENIZER_X;
+import static org.basex.data.DataText.DATAFTX;
+import static org.basex.util.Token.diff;
 
 /**
  * This class contains common methods for full-text index builders.
@@ -277,13 +289,13 @@ public final class FTBuilder extends IndexBuilder {
     return false;
   }
 
-  @Override
+//  @Override
   protected void abort() {
     // drop index files
     data.meta.drop(DATAFTX + ".*");
   }
 
-  @Override
+//  @Override
   protected String det() {
     return INDEX_FULLTEXT_D;
   }

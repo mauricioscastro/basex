@@ -1,19 +1,61 @@
 package org.basex.data;
 
-import static org.basex.core.Text.*;
-import static org.basex.data.DataText.*;
-import static org.basex.util.Strings.*;
-
-import java.io.*;
-
-import org.basex.build.*;
-import org.basex.core.*;
-import org.basex.core.cmd.*;
-import org.basex.io.*;
+import org.basex.build.BuildException;
+import org.basex.build.Parser;
+import org.basex.core.MainOptions;
+import org.basex.core.StaticOptions;
+import org.basex.io.IO;
+import org.basex.io.IOFile;
 import org.basex.io.in.DataInput;
 import org.basex.io.out.DataOutput;
-import org.basex.util.*;
-import org.basex.util.ft.*;
+import org.basex.util.Prop;
+import org.basex.util.Token;
+import org.basex.util.Version;
+import org.basex.util.ft.Language;
+
+import java.io.IOException;
+
+import static org.basex.core.Text.H_DB_FORMAT;
+import static org.basex.data.DataText.DATAINF;
+import static org.basex.data.DataText.DATAUPD;
+import static org.basex.data.DataText.DBATVIDX;
+import static org.basex.data.DataText.DBATVINC;
+import static org.basex.data.DataText.DBAUTOOPT;
+import static org.basex.data.DataText.DBCHOP;
+import static org.basex.data.DataText.DBCRTATV;
+import static org.basex.data.DataText.DBCRTFTX;
+import static org.basex.data.DataText.DBCRTTXT;
+import static org.basex.data.DataText.DBENC;
+import static org.basex.data.DataText.DBFNAME;
+import static org.basex.data.DataText.DBFSIZE;
+import static org.basex.data.DataText.DBFTCS;
+import static org.basex.data.DataText.DBFTDC;
+import static org.basex.data.DataText.DBFTLN;
+import static org.basex.data.DataText.DBFTST;
+import static org.basex.data.DataText.DBFTSW;
+import static org.basex.data.DataText.DBFTXIDX;
+import static org.basex.data.DataText.DBFTXINC;
+import static org.basex.data.DataText.DBLASTID;
+import static org.basex.data.DataText.DBMAXCATS;
+import static org.basex.data.DataText.DBMAXLEN;
+import static org.basex.data.DataText.DBNDOCS;
+import static org.basex.data.DataText.DBPERM;
+import static org.basex.data.DataText.DBPTHIDX;
+import static org.basex.data.DataText.DBSCTYPE;
+import static org.basex.data.DataText.DBSIZE;
+import static org.basex.data.DataText.DBSTR;
+import static org.basex.data.DataText.DBTIME;
+import static org.basex.data.DataText.DBTXTIDX;
+import static org.basex.data.DataText.DBTXTINC;
+import static org.basex.data.DataText.DBUPDIDX;
+import static org.basex.data.DataText.DBUPTODATE;
+import static org.basex.data.DataText.DBWCIDX;
+import static org.basex.data.DataText.IDBSTR;
+import static org.basex.data.DataText.ISTORAGE;
+import static org.basex.data.DataText.STORAGE;
+import static org.basex.util.Strings.UTF8;
+import static org.basex.util.Strings.toInt;
+import static org.basex.util.Strings.toLong;
 
 /**
  * This class provides meta information on a database.
@@ -261,7 +303,8 @@ public final class MetaData {
    * @return result of check
    */
   public synchronized boolean drop(final String pattern) {
-    return path != null && DropDB.drop(path, pattern + IO.BASEXSUFFIX);
+    //return path != null && DropDB.drop(path, pattern + IO.BASEXSUFFIX);
+    return true; // TODO: basex-lmdb: review
   }
 
   /**

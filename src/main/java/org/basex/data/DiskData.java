@@ -1,24 +1,49 @@
 package org.basex.data;
 
-import static org.basex.core.Text.*;
-import static org.basex.data.DataText.*;
-import static org.basex.util.Token.*;
-
-import java.io.*;
-
-import org.basex.build.*;
-import org.basex.core.*;
-import org.basex.core.cmd.*;
-import org.basex.index.*;
-import org.basex.index.ft.*;
-import org.basex.index.name.*;
-import org.basex.index.path.*;
-import org.basex.index.value.*;
-import org.basex.io.*;
+import org.basex.build.DiskBuilder;
+import org.basex.core.BaseXException;
+import org.basex.core.MainOptions;
+import org.basex.core.Text;
+import org.basex.index.IdPreMap;
+import org.basex.index.Index;
+import org.basex.index.IndexBuilder;
+import org.basex.index.IndexType;
+import org.basex.index.ft.FTBuilder;
+import org.basex.index.ft.FTIndex;
+import org.basex.index.name.Names;
+import org.basex.index.path.PathSummary;
+import org.basex.index.value.DiskValues;
+import org.basex.index.value.DiskValuesBuilder;
+import org.basex.index.value.UpdatableDiskValues;
+import org.basex.index.value.ValueIndex;
+import org.basex.io.IO;
+import org.basex.io.IOFile;
 import org.basex.io.in.DataInput;
 import org.basex.io.out.DataOutput;
-import org.basex.io.random.*;
-import org.basex.util.*;
+import org.basex.io.random.DataAccess;
+import org.basex.io.random.TableDiskAccess;
+import org.basex.util.Compress;
+import org.basex.util.Num;
+import org.basex.util.Util;
+
+import java.io.IOException;
+
+import static org.basex.core.Text.INDEX_NOT_DROPPED_X;
+import static org.basex.data.DataText.DATAATV;
+import static org.basex.data.DataText.DATAIDP;
+import static org.basex.data.DataText.DATAINF;
+import static org.basex.data.DataText.DATATXT;
+import static org.basex.data.DataText.DBATTS;
+import static org.basex.data.DataText.DBDOCS;
+import static org.basex.data.DataText.DBNS;
+import static org.basex.data.DataText.DBPATH;
+import static org.basex.data.DataText.DBTAGS;
+import static org.basex.util.Token.numDigits;
+import static org.basex.util.Token.string;
+import static org.basex.util.Token.toDouble;
+import static org.basex.util.Token.toLong;
+import static org.basex.util.Token.toSimpleInt;
+import static org.basex.util.Token.token;
 
 /**
  * This class stores and organizes the database table and the index structures
@@ -45,7 +70,7 @@ public final class DiskData extends Data {
   private boolean closed;
 
   /**
-   * Default constructor, called from {@link Open#open}.
+   * Default constructor.
    * @param meta meta data
    * @throws IOException I/O Exception
    */
@@ -173,7 +198,7 @@ public final class DiskData extends Data {
   }
 
   @Override
-  public void createIndex(final IndexType type, final MainOptions options, final Command cmd)
+  public void createIndex(final IndexType type, final MainOptions options)
       throws IOException {
 
     // close existing index
@@ -185,7 +210,7 @@ public final class DiskData extends Data {
       case FULLTEXT:  ib = new FTBuilder(this, options); break;
       default:        throw Util.notExpected();
     }
-    if(cmd != null) cmd.proc(ib);
+//    if(cmd != null) cmd.proc(ib);
     set(type, ib.build());
   }
 

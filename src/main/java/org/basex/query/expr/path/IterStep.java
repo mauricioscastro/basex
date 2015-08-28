@@ -36,7 +36,7 @@ final class IterStep extends Step {
       public ANode next() throws QueryException {
         if(iter == null) iter = axis.iter(checkNode(qc));
         for(ANode node; (node = iter.next()) != null;) {
-          qc.checkStop();
+//          qc.checkStop();
           if(test.eq(node) && preds(node, qc)) return node.finish();
         }
         return null;

@@ -10,7 +10,6 @@ import java.nio.file.*;
 import java.util.*;
 
 import org.basex.core.*;
-import org.basex.core.users.*;
 import org.basex.data.*;
 import org.basex.io.*;
 import org.basex.io.out.*;
@@ -317,7 +316,7 @@ public abstract class StandardFunc extends Arr {
    * @throws QueryException query exception
    */
   protected final void checkAdmin(final QueryContext qc) throws QueryException {
-    checkPerm(qc, Perm.ADMIN);
+//    checkPerm(qc, Perm.ADMIN);
   }
 
   /**
@@ -326,7 +325,7 @@ public abstract class StandardFunc extends Arr {
    * @throws QueryException query exception
    */
   protected final void checkCreate(final QueryContext qc) throws QueryException {
-    checkPerm(qc, Perm.CREATE);
+//    checkPerm(qc, Perm.CREATE);
   }
 
   /**
@@ -336,9 +335,9 @@ public abstract class StandardFunc extends Arr {
    * @param p permission
    * @throws QueryException query exception
    */
-  private void checkPerm(final QueryContext qc, final Perm p) throws QueryException {
-    if(!qc.context.user().has(p)) throw BASX_PERM_X.get(info, p);
-  }
+//  private void checkPerm(final QueryContext qc, final Perm p) throws QueryException {
+//    if(!qc.context.user().has(p)) throw BASX_PERM_X.get(info, p);
+//  }
 
   /**
    * Casts and checks the function item for its arity.
@@ -390,7 +389,7 @@ public abstract class StandardFunc extends Arr {
       throws QueryException {
 
     for(Item it; (it = iter.next()) != null;) {
-      qc.checkStop();
+//      qc.checkStop();
       if(it instanceof FItem) throw FISTRING_X.get(info, it.type);
       cache.add(it.materialize(info));
     }

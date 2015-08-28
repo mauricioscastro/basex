@@ -1,12 +1,15 @@
 package org.basex.query.value.item;
 
-import static org.basex.query.QueryError.*;
+import org.basex.core.MainOptions;
+import org.basex.query.QueryContext;
+import org.basex.query.QueryException;
+import org.basex.query.expr.Expr;
+import org.basex.query.value.type.AtomType;
+import org.basex.util.InputInfo;
+import org.basex.util.Token;
+import org.basex.util.XMLToken;
 
-import org.basex.core.*;
-import org.basex.query.*;
-import org.basex.query.expr.*;
-import org.basex.query.value.type.*;
-import org.basex.util.*;
+import static org.basex.query.QueryError.INVCODE_X;
 
 /**
  * String item ({@code xs:string}, {@code xs:normalizedString}, {@code xs:language}, etc.).
@@ -70,7 +73,7 @@ public final class Str extends AStr {
       throws QueryException {
 
     final byte[] bytes = Token.token(value.toString());
-    if(qc.context.options.get(MainOptions.CHECKSTRINGS)) {
+    if(qc.options.get(MainOptions.CHECKSTRINGS)) {
       final int bl = bytes.length;
       for(int b = 0; b < bl; b += Token.cl(bytes, b)) {
         final int cp = Token.cp(bytes, b);

@@ -1,20 +1,19 @@
 package org.basex.core.cmd;
 
-import static org.basex.core.Text.*;
+import org.basex.core.MainOptions;
+import org.basex.data.Data;
+import org.basex.io.IO;
+import org.basex.io.IOFile;
+import org.basex.io.out.PrintOutput;
+import org.basex.io.serial.Serializer;
+import org.basex.io.serial.SerializerOptions;
+import org.basex.query.value.node.DBNode;
+import org.basex.util.Token;
+import org.basex.util.list.IntList;
+import org.basex.util.list.StringList;
 
-import java.io.*;
-import java.util.*;
-
-import org.basex.core.*;
-import org.basex.core.locks.*;
-import org.basex.core.users.*;
-import org.basex.data.*;
-import org.basex.io.*;
-import org.basex.io.out.*;
-import org.basex.io.serial.*;
-import org.basex.query.value.node.*;
-import org.basex.util.*;
-import org.basex.util.list.*;
+import java.io.IOException;
+import java.util.HashSet;
 
 /**
  * Evaluates the 'export' command and saves the currently opened database
@@ -23,7 +22,7 @@ import org.basex.util.list.*;
  * @author BaseX Team 2005-15, BSD License
  * @author Christian Gruen
  */
-public final class Export extends Command {
+public final class Export {
   /** Currently exported file. */
   private IO progFile;
   /** Current number of exported file. */
@@ -36,24 +35,24 @@ public final class Export extends Command {
    * @param path export path
    */
   public Export(final String path) {
-    super(Perm.CREATE, true, path);
+//    super(Perm.CREATE, true, path);
   }
 
-  @Override
-  protected boolean run() {
-    try {
-      final Data data = context.data();
-      export(data, args[0], options, this);
-      return info(DB_EXPORTED_X, data.meta.name, perf);
-    } catch(final IOException ex) {
-      return error(Util.message(ex));
-    }
-  }
-
-  @Override
-  public void databases(final LockResult lr) {
-    lr.read.add(DBLocking.CONTEXT);
-  }
+//  @Override
+//  protected boolean run() {
+//    try {
+//      final Data data = context.data();
+//      export(data, args[0], options, this);
+//      return info(DB_EXPORTED_X, data.meta.name, perf);
+//    } catch(final IOException ex) {
+//      return error(Util.message(ex));
+//    }
+//  }
+//
+//  @Override
+//  public void databases(final LockResult lr) {
+//    lr.read.add(DBLocking.CONTEXT);
+//  }
 
   /**
    * Exports the current database to the specified path.
@@ -110,7 +109,7 @@ public final class Export extends Command {
       // create file path
       final IOFile fl = root.resolve(Token.string(data.text(pre, true)));
       if(export != null) {
-        export.checkStop();
+//        export.checkStop();
         export.progFile = fl;
         export.progPos++;
       }
@@ -129,7 +128,7 @@ public final class Export extends Command {
     for(final String s : desc) {
       final IOFile fl = new IOFile(root.path(), s);
       if(export != null) {
-        export.checkStop();
+//        export.checkStop();
         export.progFile = fl;
         export.progPos++;
       }
@@ -138,25 +137,25 @@ public final class Export extends Command {
     }
   }
 
-  @Override
-  public double prog() {
-    return progSize == 0 ? 0 : (double) progPos / progSize;
-  }
-
-  @Override
-  public boolean stoppable() {
-    return true;
-  }
-
-  @Override
-  public boolean supportsProg() {
-    return true;
-  }
-
-  @Override
-  public String det() {
-    return progFile == null ? EXPORT : progFile.path();
-  }
+//  @Override
+//  public double prog() {
+//    return progSize == 0 ? 0 : (double) progPos / progSize;
+//  }
+//
+//  @Override
+//  public boolean stoppable() {
+//    return true;
+//  }
+//
+//  @Override
+//  public boolean supportsProg() {
+//    return true;
+//  }
+//
+//  @Override
+//  public String det() {
+//    return progFile == null ? EXPORT : progFile.path();
+//  }
 
   /**
    * Returns a unique file path.

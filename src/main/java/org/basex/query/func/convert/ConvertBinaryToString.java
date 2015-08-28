@@ -37,6 +37,6 @@ public final class ConvertBinaryToString extends ConvertFn {
    */
   public static byte[] toString(final InputStream is, final String enc, final QueryContext qc)
       throws IOException {
-    return toString(is, enc, qc.context.options.get(MainOptions.CHECKSTRINGS));
+    return toString(is, enc, qc.options.get(MainOptions.CHECKSTRINGS));
   }
 }

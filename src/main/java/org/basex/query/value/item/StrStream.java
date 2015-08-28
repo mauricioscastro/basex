@@ -38,7 +38,7 @@ public final class StrStream extends AStr {
     this.input = input;
     this.encoding = encoding;
     this.error = error;
-    validate = qc.context.options.get(MainOptions.CHECKSTRINGS);
+    validate = qc.options.get(MainOptions.CHECKSTRINGS);
   }
 
   @Override

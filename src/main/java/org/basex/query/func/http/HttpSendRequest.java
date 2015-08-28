@@ -33,6 +33,6 @@ public final class HttpSendRequest extends StandardFunc {
       iter = cache.iter();
     }
     // send HTTP request
-    return new HttpClient(info, qc.context.options).sendRequest(href, request, iter);
+    return new HttpClient(info, qc.options).sendRequest(href, request, iter);
   }
 }

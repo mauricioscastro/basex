@@ -1,27 +1,54 @@
 package org.basex.query.func;
 
-import static org.basex.query.QueryError.*;
-import static org.basex.query.QueryText.*;
-
-import java.util.*;
-
-import org.basex.core.*;
-import org.basex.query.*;
-import org.basex.query.ann.*;
-import org.basex.query.expr.*;
+import org.basex.core.MainOptions;
+import org.basex.query.QueryContext;
+import org.basex.query.QueryException;
+import org.basex.query.Scope;
+import org.basex.query.StaticContext;
+import org.basex.query.StaticDecl;
+import org.basex.query.ann.Annotation;
+import org.basex.query.expr.Expr;
 import org.basex.query.expr.Expr.Flag;
-import org.basex.query.expr.gflwor.*;
+import org.basex.query.expr.ParseExpr;
+import org.basex.query.expr.TypeCheck;
+import org.basex.query.expr.XQFunction;
+import org.basex.query.expr.gflwor.GFLWOR;
 import org.basex.query.expr.gflwor.GFLWOR.Clause;
-import org.basex.query.func.fn.*;
-import org.basex.query.util.*;
-import org.basex.query.util.list.*;
-import org.basex.query.value.*;
-import org.basex.query.value.item.*;
-import org.basex.query.value.node.*;
-import org.basex.query.value.type.*;
-import org.basex.query.var.*;
-import org.basex.util.*;
-import org.basex.util.hash.*;
+import org.basex.query.expr.gflwor.Let;
+import org.basex.query.func.fn.FnError;
+import org.basex.query.util.ASTVisitor;
+import org.basex.query.util.Ann;
+import org.basex.query.util.list.AnnList;
+import org.basex.query.value.Value;
+import org.basex.query.value.item.ANum;
+import org.basex.query.value.item.Item;
+import org.basex.query.value.item.QNm;
+import org.basex.query.value.node.FElem;
+import org.basex.query.value.type.AtomType;
+import org.basex.query.value.type.FuncType;
+import org.basex.query.value.type.SeqType;
+import org.basex.query.var.Var;
+import org.basex.query.var.VarScope;
+import org.basex.util.InputInfo;
+import org.basex.util.TokenBuilder;
+import org.basex.util.hash.IntObjMap;
+
+import java.util.EnumMap;
+import java.util.LinkedList;
+
+import static org.basex.query.QueryError.UPEXPECTF;
+import static org.basex.query.QueryError.UPNOT_X;
+import static org.basex.query.QueryError.UUPFUNCTYPE;
+import static org.basex.query.QueryText.ARG;
+import static org.basex.query.QueryText.AS;
+import static org.basex.query.QueryText.DECLARE;
+import static org.basex.query.QueryText.FUNCTION;
+import static org.basex.query.QueryText.NAM;
+import static org.basex.query.QueryText.OPTCAST;
+import static org.basex.query.QueryText.OPTINLINE;
+import static org.basex.query.QueryText.PAREN1;
+import static org.basex.query.QueryText.PAREN2;
+import static org.basex.query.QueryText.SEP;
 
 /**
  * A static user-defined function.
@@ -294,7 +321,7 @@ public final class StaticFunc extends StaticDecl implements XQFunction {
     final Ann ann = anns.get(Annotation._BASEX_INLINE);
     final long limit = ann != null
         ? ann.args.length > 0 ? ((ANum) ann.args[0]).itr() : Long.MAX_VALUE
-        : qc.context.options.get(MainOptions.INLINELIMIT);
+        : qc.options.get(MainOptions.INLINELIMIT);
     return expr.isValue() || expr.exprSize() < limit;
   }
 }

@@ -1,20 +1,32 @@
 package org.basex.build;
 
-import static org.basex.core.Text.*;
-import static org.basex.data.DataText.*;
-
-import java.io.*;
-
-import org.basex.core.*;
-import org.basex.core.cmd.*;
-import org.basex.data.*;
-import org.basex.index.name.*;
-import org.basex.io.*;
+import org.basex.core.MainOptions;
+import org.basex.core.StaticOptions;
+import org.basex.data.Data;
+import org.basex.data.DataClip;
+import org.basex.data.DiskData;
+import org.basex.data.MetaData;
+import org.basex.index.name.Names;
+import org.basex.io.IO;
 import org.basex.io.in.DataInput;
-import org.basex.io.out.*;
 import org.basex.io.out.DataOutput;
-import org.basex.io.random.*;
-import org.basex.util.*;
+import org.basex.io.out.TableOutput;
+import org.basex.io.random.TableAccess;
+import org.basex.io.random.TableDiskAccess;
+import org.basex.util.Compress;
+import org.basex.util.Performance;
+import org.basex.util.Prop;
+import org.basex.util.Token;
+import org.basex.util.Util;
+
+import java.io.Closeable;
+import java.io.IOException;
+
+import static org.basex.core.Text.DOTS;
+import static org.basex.data.DataText.DATAATV;
+import static org.basex.data.DataText.DATATBL;
+import static org.basex.data.DataText.DATATMP;
+import static org.basex.data.DataText.DATATXT;
 
 /**
  * This class creates a database instance on disk.
@@ -69,7 +81,7 @@ public final class DiskBuilder extends Builder implements Closeable {
     bs = Math.max(IO.BLOCKSIZE, bs - bs % IO.BLOCKSIZE);
 
     // drop old database (if available) and create new one
-    DropDB.drop(dbname, sopts);
+//    DropDB.drop(dbname, sopts);
     sopts.dbpath(dbname).md();
 
     elemNames = new Names(meta);
@@ -106,14 +118,14 @@ public final class DiskBuilder extends Builder implements Closeable {
     return new DiskData(meta, elemNames, attrNames, path, nspaces);
   }
 
-  @Override
+//  @Override
   public void abort() {
     try {
       close();
     } catch(final IOException ex) {
       Util.debug(ex);
     }
-    if(meta != null) DropDB.drop(meta.name, sopts);
+    //if(meta != null) DropDB.drop(meta.name, sopts);
   }
 
   @Override

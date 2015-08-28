@@ -1,13 +1,15 @@
 package org.basex.build.csv;
 
-import static org.basex.core.Text.*;
+import org.basex.build.Builder;
+import org.basex.io.parse.csv.CsvConverter;
+import org.basex.query.value.item.Str;
+import org.basex.util.Atts;
+import org.basex.util.Util;
+import org.basex.util.XMLToken;
 
-import java.io.*;
+import java.io.IOException;
 
-import org.basex.build.*;
-import org.basex.io.parse.csv.*;
-import org.basex.query.value.item.*;
-import org.basex.util.*;
+import static org.basex.core.Text.LINE_X;
 
 /**
  * This class converts CSV data to XML, using direct or attributes conversion.
@@ -78,12 +80,12 @@ final class CsvBuilder extends CsvConverter {
     return null;
   }
 
-  @Override
+//  @Override
   protected String det() {
     return Util.info(LINE_X, line);
   }
 
-  @Override
+//  @Override
   public double prog() {
     return (double) nli.size() / nli.length();
   }

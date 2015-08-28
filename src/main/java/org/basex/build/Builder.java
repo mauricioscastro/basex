@@ -23,7 +23,7 @@ import org.basex.util.list.*;
  * @author BaseX Team 2005-15, BSD License
  * @author Christian Gruen
  */
-public abstract class Builder extends Proc {
+public abstract class Builder {
   /** Tree structure. */
   final PathSummary path = new PathSummary();
   /** Namespace index. */
@@ -129,7 +129,7 @@ public abstract class Builder extends Proc {
    * @throws IOException I/O exception
    */
   public final void closeElem() throws IOException {
-    checkStop();
+//    checkStop();
     --level;
     final int pre = parStack.get(level);
     setSize(pre, meta.size - pre);
@@ -173,19 +173,20 @@ public abstract class Builder extends Proc {
 
   // PROGRESS INFORMATION =====================================================
 
-  @Override
+//  @Override
   protected final String tit() {
     return CREATING_DB;
   }
 
-  @Override
+//  @Override
   public final String det() {
-    return spos == 0 ? parser.detail() : FINISHING_D;
+    return FINISHING_D; // spos == 0 ? parser.detail() : FINISHING_D;
   }
 
-  @Override
+//  @Override
   public final double prog() {
-    return spos == 0 ? parser.progress() : (double) spos / ssize;
+    return (double) spos / ssize;
+    //spos == 0 ? parser.progress() : (double) spos / ssize;
   }
 
   // ABSTRACT METHODS =========================================================
@@ -287,7 +288,7 @@ public abstract class Builder extends Proc {
     final byte[] pref = prefix(name);
     int uriId = nspaces.uriIdForPrefix(pref, true);
     if(uriId == 0 && pref.length != 0 && !eq(pref, XML))
-      throw new BuildException(WHICHNS, parser.detail(), prefix(name));
+      throw new BuildException(WHICHNS, "", prefix(name)); //parser.detail(), prefix(name));
     addElem(dis, nameId, Math.min(IO.MAXATTS, as + 1), uriId, !nsp.isEmpty());
 
     // get and store attribute references
@@ -297,7 +298,7 @@ public abstract class Builder extends Proc {
       nameId = attrNames.index(an, av, true);
       uriId = nspaces.uriIdForPrefix(ap, false);
       if(uriId == 0 && ap.length != 0 && !eq(ap, XML))
-        throw new BuildException(WHICHNS, parser.detail(), an);
+        throw new BuildException(WHICHNS, "",an); //parser.detail(), an);
 
       path.put(nameId, Data.ATTR, level + 1, av, meta);
       addAttr(nameId, av, Math.min(IO.MAXATTS, a + 1), uriId);
@@ -321,7 +322,7 @@ public abstract class Builder extends Proc {
    * @throws IOException I/O exception
    */
   private void limit(final int value, final int limit, final String msg) throws IOException {
-    if(value >= limit) throw new BuildException(msg, parser.detail(), limit);
+    if(value >= limit) throw new BuildException(msg, "", limit); //parser.detail(), limit);
   }
 
   /**

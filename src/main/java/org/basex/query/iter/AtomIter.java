@@ -41,7 +41,7 @@ public final class AtomIter extends Iter {
   public Item next() throws QueryException {
     // shortcut if no arrays will be returned
     if(size != -1) {
-      qc.checkStop();
+//      qc.checkStop();
       final Item it = iter.next();
       return it == null ? null : it.atomItem(info);
     }
@@ -52,7 +52,7 @@ public final class AtomIter extends Iter {
         if(it == null) return null;
         atom = it.atomValue(info).iter();
       }
-      qc.checkStop();
+//      qc.checkStop();
       final Item it = atom.next();
       if(it != null) return it;
       atom = null;

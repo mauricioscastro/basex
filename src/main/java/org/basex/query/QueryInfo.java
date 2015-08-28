@@ -51,7 +51,7 @@ public final class QueryInfo {
    * @param qc query context
    */
   QueryInfo(final QueryContext qc) {
-    verbose = qc.context.options.get(MainOptions.QUERYINFO) || Prop.debug;
+    verbose = qc.options.get(MainOptions.QUERYINFO) || Prop.debug;
   }
 
   /**
@@ -89,7 +89,7 @@ public final class QueryInfo {
   public String toString(final QueryProcessor qp, final long printed, final long hits,
       final boolean detailed) {
 
-    final int runs = Math.max(1, qp.qc.context.options.get(MainOptions.RUNS));
+    final int runs = Math.max(1, qp.qc.options.get(MainOptions.RUNS));
     final TokenBuilder tb = new TokenBuilder();
     final long total = parsing + compiling + evaluating + serializing;
     if(detailed) {

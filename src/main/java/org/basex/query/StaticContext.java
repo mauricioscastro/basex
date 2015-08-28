@@ -59,7 +59,7 @@ public final class StaticContext {
    * @param qc query context
    */
   public StaticContext(final QueryContext qc) {
-    mixUpdates = qc.context.options.get(MainOptions.MIXUPDATES);
+    mixUpdates = qc.options.get(MainOptions.MIXUPDATES);
   }
 
   /**

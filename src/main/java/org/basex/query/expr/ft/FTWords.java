@@ -1,24 +1,48 @@
 package org.basex.query.expr.ft;
 
-import static org.basex.query.QueryText.*;
-import static org.basex.util.ft.FTFlag.*;
+import org.basex.core.MainOptions;
+import org.basex.data.Data;
+import org.basex.data.MetaData;
+import org.basex.index.query.FTIndexIterator;
+import org.basex.query.QueryContext;
+import org.basex.query.QueryException;
+import org.basex.query.expr.Arr;
+import org.basex.query.expr.Expr;
+import org.basex.query.iter.FTIter;
+import org.basex.query.iter.Iter;
+import org.basex.query.util.ASTVisitor;
+import org.basex.query.util.IndexInfo;
+import org.basex.query.util.ft.FTMatches;
+import org.basex.query.value.Value;
+import org.basex.query.value.item.AStr;
+import org.basex.query.value.item.Item;
+import org.basex.query.value.node.FElem;
+import org.basex.query.value.node.FTNode;
+import org.basex.query.var.Var;
+import org.basex.query.var.VarScope;
+import org.basex.query.var.VarUsage;
+import org.basex.util.InputInfo;
+import org.basex.util.TokenBuilder;
+import org.basex.util.ft.FTCase;
+import org.basex.util.ft.FTLexer;
+import org.basex.util.ft.FTMode;
+import org.basex.util.ft.FTOpt;
+import org.basex.util.ft.Scoring;
+import org.basex.util.hash.IntObjMap;
+import org.basex.util.hash.TokenSet;
+import org.basex.util.list.TokenList;
 
-import org.basex.core.*;
-import org.basex.data.*;
-import org.basex.index.query.*;
-import org.basex.query.*;
-import org.basex.query.expr.*;
-import org.basex.query.iter.*;
-import org.basex.query.util.*;
-import org.basex.query.util.ft.*;
-import org.basex.query.value.*;
-import org.basex.query.value.item.*;
-import org.basex.query.value.node.*;
-import org.basex.query.var.*;
-import org.basex.util.*;
-import org.basex.util.ft.*;
-import org.basex.util.hash.*;
-import org.basex.util.list.*;
+import static org.basex.query.QueryText.ALL;
+import static org.basex.query.QueryText.ANY;
+import static org.basex.query.QueryText.OCCURS;
+import static org.basex.query.QueryText.PHRASE;
+import static org.basex.query.QueryText.TIMES;
+import static org.basex.query.QueryText.TO;
+import static org.basex.query.QueryText.WORD;
+import static org.basex.query.QueryText.WORDS;
+import static org.basex.util.ft.FTFlag.DC;
+import static org.basex.util.ft.FTFlag.ST;
+import static org.basex.util.ft.FTFlag.WC;
 
 /**
  * FTWords expression.
@@ -124,7 +148,7 @@ public final class FTWords extends FTExpr {
       public FTNode next() throws QueryException {
         if(ftiter == null) {
           final FTLexer lexer = new FTLexer(ftt.opt);
-          lexer.lserror(qc.context.options.get(MainOptions.LSERROR));
+          lexer.lserror(qc.options.get(MainOptions.LSERROR));
 
           // index iterator tree
           // number of distinct tokens

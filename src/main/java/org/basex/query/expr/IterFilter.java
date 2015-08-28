@@ -36,7 +36,7 @@ public final class IterFilter extends Filter {
         if(iter == null) iter = qc.iter(root);
         // filter sequence
         for(Item it; (it = iter.next()) != null;) {
-          qc.checkStop();
+//          qc.checkStop();
           if(preds(it, qc)) return it;
         }
         return null;

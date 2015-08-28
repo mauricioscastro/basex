@@ -1,33 +1,59 @@
 package org.basex.query.func;
 
-import static org.basex.query.QueryError.*;
-import static org.basex.query.QueryText.*;
-import static org.basex.util.Token.*;
-
-import java.lang.reflect.*;
-import java.lang.reflect.Array;
-import java.math.*;
-import java.net.*;
-import java.util.*;
-
-import javax.xml.datatype.*;
-import javax.xml.namespace.*;
-
-import org.basex.core.locks.*;
-import org.basex.core.users.*;
-import org.basex.query.*;
+import org.basex.core.locks.DBLocking;
+import org.basex.query.QueryContext;
+import org.basex.query.QueryException;
 import org.basex.query.QueryModule.Lock;
-import org.basex.query.QueryModule.Requires;
-import org.basex.query.expr.*;
-import org.basex.query.iter.*;
-import org.basex.query.util.pkg.*;
-import org.basex.query.value.*;
-import org.basex.query.value.item.*;
-import org.basex.query.value.seq.*;
-import org.basex.query.value.type.*;
+import org.basex.query.StaticContext;
+import org.basex.query.expr.Arr;
+import org.basex.query.expr.Expr;
+import org.basex.query.iter.Iter;
+import org.basex.query.util.pkg.ModuleLoader;
+import org.basex.query.value.Value;
+import org.basex.query.value.ValueBuilder;
+import org.basex.query.value.item.Jav;
+import org.basex.query.value.item.QNm;
+import org.basex.query.value.item.Str;
+import org.basex.query.value.seq.BlnSeq;
+import org.basex.query.value.seq.BytSeq;
+import org.basex.query.value.seq.DblSeq;
+import org.basex.query.value.seq.Empty;
+import org.basex.query.value.seq.FltSeq;
+import org.basex.query.value.seq.IntSeq;
+import org.basex.query.value.seq.StrSeq;
+import org.basex.query.value.type.AtomType;
+import org.basex.query.value.type.NodeType;
 import org.basex.query.value.type.Type;
-import org.basex.util.*;
-import org.w3c.dom.*;
+import org.basex.util.InputInfo;
+import org.basex.util.Strings;
+import org.basex.util.Util;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Comment;
+import org.w3c.dom.Document;
+import org.w3c.dom.DocumentFragment;
+import org.w3c.dom.Element;
+import org.w3c.dom.ProcessingInstruction;
+import org.w3c.dom.Text;
+
+import javax.xml.datatype.DatatypeConstants;
+import javax.xml.datatype.Duration;
+import javax.xml.datatype.XMLGregorianCalendar;
+import javax.xml.namespace.QName;
+import java.lang.reflect.Array;
+import java.lang.reflect.Method;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.net.URI;
+import java.net.URL;
+
+import static org.basex.query.QueryError.FUNCJAVA_X;
+import static org.basex.query.QueryError.JAVAAMBIG_X;
+import static org.basex.query.QueryError.JAVAINIT_X;
+import static org.basex.query.QueryText.JAVAPREF;
+import static org.basex.util.Token.startsWith;
+import static org.basex.util.Token.string;
+import static org.basex.util.Token.substring;
+import static org.basex.util.Token.token;
 
 /**
  * This class contains common methods for executing Java code and mapping
@@ -184,11 +210,11 @@ public abstract class JavaMapping extends Arr {
     }
     if(meth == null) throw FUNCJAVA_X.get(ii, path + ':' + name);
 
-    // check if user has sufficient permissions to call the function
-    Perm perm = Perm.ADMIN;
-    final Requires req = meth.getAnnotation(Requires.class);
-    if(req != null) perm = Perm.get(req.value().name().toLowerCase(Locale.ENGLISH));
-    if(!qc.context.user().has(perm)) return null;
+//    // check if user has sufficient permissions to call the function
+//    Perm perm = Perm.ADMIN;
+//    final Requires req = meth.getAnnotation(Requires.class);
+//    if(req != null) perm = Perm.get(req.value().name().toLowerCase(Locale.ENGLISH));
+//    if(!qc.context.user().has(perm)) return null;
 
     // Add module locks to QueryContext.
     final Lock lock = meth.getAnnotation(Lock.class);
@@ -240,8 +266,8 @@ public abstract class JavaMapping extends Arr {
       if(meth != null) return new JavaModuleFunc(sc, ii, jm, meth, args);
     }
 
-    // only allowed with administrator permissions
-    if(!qc.context.user().has(Perm.ADMIN)) return null;
+//    // only allowed with administrator permissions
+//    if(!qc.context.user().has(Perm.ADMIN)) return null;
 
     // check addressed class
     try {

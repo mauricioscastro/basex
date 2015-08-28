@@ -1,17 +1,21 @@
 package org.basex.io.random;
 
-import static org.basex.data.DataText.*;
-
-import java.io.*;
-import java.nio.channels.*;
-import java.util.*;
-
-import org.basex.core.*;
-import org.basex.data.*;
-import org.basex.io.*;
+import org.basex.core.BaseXException;
+import org.basex.core.Text;
+import org.basex.data.MetaData;
+import org.basex.io.IO;
 import org.basex.io.in.DataInput;
 import org.basex.io.out.DataOutput;
-import org.basex.util.*;
+import org.basex.util.Array;
+import org.basex.util.BitArray;
+import org.basex.util.Util;
+
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.channels.FileLock;
+import java.util.Arrays;
+
+import static org.basex.data.DataText.DATATBL;
 
 /**
  * This class stores the table on disk and reads it page-wise.
@@ -89,18 +93,19 @@ public final class TableDiskAccess extends TableAccess {
   /**
    * Checks if the table of the specified database is locked.
    * @param db name of database
-   * @param ctx database context
+//   * @param ctx database context
    * @return result of check
    */
-  public static boolean locked(final String db, final Context ctx) {
-    final IOFile table = MetaData.file(ctx.soptions.dbpath(db), DATATBL);
-    if(!table.exists()) return false;
-
-    try(final RandomAccessFile file = new RandomAccessFile(table.file(), "rw")) {
-      return file.getChannel().tryLock() == null;
-    } catch(final IOException ex) {
-      return true;
-    }
+  public static boolean locked(final String db) { //, final Context ctx) {
+    return false;
+//    final IOFile table = MetaData.file(ctx.soptions.dbpath(db), DATATBL);
+//    if(!table.exists()) return false;
+//
+//    try(final RandomAccessFile file = new RandomAccessFile(table.file(), "rw")) {
+//      return file.getChannel().tryLock() == null;
+//    } catch(final IOException ex) {
+//      return true;
+//    }
   }
 
   @Override

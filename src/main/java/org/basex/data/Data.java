@@ -1,23 +1,37 @@
 package org.basex.data;
 
-import static org.basex.util.Token.*;
+import org.basex.core.MainOptions;
+import org.basex.index.IdPreMap;
+import org.basex.index.Index;
+import org.basex.index.IndexNames;
+import org.basex.index.IndexType;
+import org.basex.index.name.Names;
+import org.basex.index.path.PathSummary;
+import org.basex.index.query.IndexIterator;
+import org.basex.index.query.IndexToken;
+import org.basex.index.resource.Resources;
+import org.basex.index.value.ValueIndex;
+import org.basex.io.IO;
+import org.basex.io.random.TableAccess;
+import org.basex.util.Atts;
+import org.basex.util.Token;
+import org.basex.util.TokenBuilder;
+import org.basex.util.Util;
+import org.basex.util.hash.TokenObjMap;
+import org.basex.util.list.IntList;
 
-import java.io.*;
-import java.util.*;
+import java.io.IOException;
+import java.util.Arrays;
 
-import org.basex.core.*;
-import org.basex.core.cmd.*;
-import org.basex.index.*;
-import org.basex.index.name.*;
-import org.basex.index.path.*;
-import org.basex.index.query.*;
-import org.basex.index.resource.*;
-import org.basex.index.value.*;
-import org.basex.io.*;
-import org.basex.io.random.*;
-import org.basex.util.*;
-import org.basex.util.hash.*;
-import org.basex.util.list.*;
+import static org.basex.util.Token.EMPTY;
+import static org.basex.util.Token.SPACE;
+import static org.basex.util.Token.XML;
+import static org.basex.util.Token.concat;
+import static org.basex.util.Token.eq;
+import static org.basex.util.Token.indexOf;
+import static org.basex.util.Token.prefix;
+import static org.basex.util.Token.substring;
+import static org.basex.util.Token.trim;
 
 /**
  * This class represents a database instance. It provides low-level access to all
@@ -131,10 +145,10 @@ public abstract class Data {
    * Drops the specified index.
    * @param type index to be dropped
    * @param options main options
-   * @param cmd calling command
+//   * @param cmd calling command
    * @throws IOException I/O exception
    */
-  public abstract void createIndex(IndexType type, MainOptions options, Command cmd)
+  public abstract void createIndex(IndexType type, MainOptions options)
       throws IOException;
 
   /**
@@ -1111,7 +1125,8 @@ public abstract class Data {
    * @return table
    */
   public String toString(final int start, final int end) {
-    return string(InfoStorage.table(this, start, end));
+    return "";
+    //string(InfoStorage.table(this, start, end));
   }
 
   @Override

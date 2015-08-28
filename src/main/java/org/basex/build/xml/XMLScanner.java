@@ -22,7 +22,7 @@ import org.basex.util.hash.*;
  * @author BaseX Team 2005-15, BSD License
  * @author Christian Gruen
  */
-final class XMLScanner extends Proc {
+final class XMLScanner {
   /** Entities. */
   private static final String[] ENTITIES =
     { "amp", "&", "apos", "'", "quot", "\"", "lt", "<", "gt", ">" };
@@ -1010,14 +1010,14 @@ final class XMLScanner extends Proc {
     return new BuildException(det() + COLS + message, ext);
   }
 
-  @Override
+//  @Override
   public String det() {
     final String path = input.io().path();
     return path.isEmpty() ? Util.info(LINE_X, input.line()) :
         Util.info(SCANPOS_X_X, input.io().path(), input.line());
   }
 
-  @Override
+//  @Override
   public double prog() {
     final double l = input.length();
     return l <= 0 ? 0 : input.pos() / l;

@@ -97,7 +97,9 @@ public final class StringRangeAccess extends IndexAccess {
 
   @Override
   public String toString() {
-    return (index.text ? Function._DB_TEXT_RANGE : Function._DB_ATTRIBUTE_RANGE).get(null, info,
-        Str.get(ictx.data.meta.name), Str.get(index.min), Str.get(index.max)).toString();
+    return "";
+    // TODO: basex-lmdb: review
+//    return (index.text ? Function._DB_TEXT_RANGE : Function._DB_ATTRIBUTE_RANGE).get(null, info,
+//        Str.get(ictx.data.meta.name), Str.get(index.min), Str.get(index.max)).toString();
   }
 }

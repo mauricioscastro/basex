@@ -1,19 +1,23 @@
 package org.basex.query.expr.ft;
 
-import static org.basex.query.QueryError.*;
-import static org.basex.util.Token.*;
+import org.basex.core.MainOptions;
+import org.basex.io.IO;
+import org.basex.query.QueryException;
+import org.basex.query.QueryProcessor;
+import org.basex.query.value.Value;
+import org.basex.query.value.item.Item;
+import org.basex.query.value.node.DBNode;
+import org.basex.util.Array;
+import org.basex.util.InputInfo;
+import org.basex.util.hash.TokenMap;
+import org.basex.util.hash.TokenObjMap;
+import org.basex.util.list.TokenList;
 
-import java.io.*;
+import java.io.IOException;
 
-import org.basex.core.*;
-import org.basex.io.*;
-import org.basex.query.*;
-import org.basex.query.value.*;
-import org.basex.query.value.item.*;
-import org.basex.query.value.node.*;
-import org.basex.util.*;
-import org.basex.util.hash.*;
-import org.basex.util.list.*;
+import static org.basex.query.QueryError.NOTHES_X;
+import static org.basex.util.Token.EMPTY;
+import static org.basex.util.Token.eq;
 
 /**
  * Simple Thesaurus for full-text requests.
@@ -27,7 +31,8 @@ public final class Thesaurus {
   /** Relationships. */
   private static final TokenMap RSHIPS = new TokenMap();
   /** Database context. */
-  private final Context ctx;
+//  private final Context ctx;
+  private MainOptions options;
 
   static {
     RSHIPS.put("NT", "BT");
@@ -80,10 +85,10 @@ public final class Thesaurus {
   /**
    * Constructor.
    * @param file file reference
-   * @param ctx database context
+//   * @param ctx database context
    */
-  public Thesaurus(final IO file, final Context ctx) {
-    this(file, EMPTY, 0, Long.MAX_VALUE, ctx);
+  public Thesaurus(final IO file, final MainOptions options) {
+    this(file, EMPTY, 0, Long.MAX_VALUE, options);
   }
 
   /**
@@ -92,15 +97,15 @@ public final class Thesaurus {
    * @param res relationship
    * @param min minimum level
    * @param max maximum level
-   * @param ctx database context
+//   * @param ctx database context
    */
   public Thesaurus(final IO file, final byte[] res, final long min, final long max,
-      final Context ctx) {
+                   final MainOptions options) {
     this.file = file;
     rel = res;
     this.min = min;
     this.max = max;
-    this.ctx = ctx;
+    this.options = options;
   }
 
   /**
@@ -161,7 +166,7 @@ public final class Thesaurus {
    * @throws QueryException query exception
    */
   private Value nodes(final String query, final Value value) throws QueryException {
-    try(final QueryProcessor qp = new QueryProcessor(query, ctx).context(value)) {
+    try(final QueryProcessor qp = new QueryProcessor(query, options).context(value)) {
       return qp.value();
     }
   }
@@ -174,7 +179,7 @@ public final class Thesaurus {
    * @throws QueryException query exception
    */
   private byte[] text(final String query, final Value value) throws QueryException {
-    try(final QueryProcessor qp = new QueryProcessor(query, ctx).context(value)) {
+    try(final QueryProcessor qp = new QueryProcessor(query, options).context(value)) {
       return qp.iter().next().string(null);
     }
   }

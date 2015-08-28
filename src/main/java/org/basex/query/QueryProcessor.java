@@ -1,20 +1,21 @@
 package org.basex.query;
 
-import static org.basex.core.Text.*;
+import org.basex.core.MainOptions;
+import org.basex.io.parse.json.JsonMapConverter;
+import org.basex.io.serial.Serializer;
+import org.basex.query.expr.Expr;
+import org.basex.query.iter.Iter;
+import org.basex.query.util.UriResolver;
+import org.basex.query.value.Value;
+import org.basex.query.value.node.FDoc;
+import org.basex.query.value.seq.DBNodes;
 
-import java.io.*;
-import java.util.regex.*;
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.regex.Pattern;
 
-import org.basex.core.*;
-import org.basex.core.locks.*;
-import org.basex.io.parse.json.*;
-import org.basex.io.serial.*;
-import org.basex.query.expr.*;
-import org.basex.query.iter.*;
-import org.basex.query.util.*;
-import org.basex.query.value.*;
-import org.basex.query.value.node.*;
-import org.basex.query.value.seq.*;
+import static org.basex.core.Text.PLEASE_WAIT_D;
 
 /**
  * This class is an entry point for evaluating XQuery strings.
@@ -22,7 +23,7 @@ import org.basex.query.value.seq.*;
  * @author BaseX Team 2005-15, BSD License
  * @author Christian Gruen
  */
-public final class QueryProcessor extends Proc implements Closeable {
+public final class QueryProcessor implements Closeable {
   /** Pattern for detecting library modules. */
   private static final Pattern LIBMOD_PATTERN = Pattern.compile(
   "^(xquery( version ['\"].*?['\"])?( encoding ['\"].*?['\"])? ?; ?)?module namespace.*");
@@ -36,14 +37,16 @@ public final class QueryProcessor extends Proc implements Closeable {
   /** Parsed flag. */
   private boolean parsed;
 
+  private boolean updating = false;
+
   /**
    * Default constructor.
    * @param query query string
-   * @param ctx database context
+//   * @param ctx database context
    */
-  public QueryProcessor(final String query, final Context ctx) {
+  public QueryProcessor(final String query, final MainOptions opt) {
     this.query = query;
-    qc = proc(new QueryContext(ctx));
+    qc = new QueryContext(opt);
     sc = new StaticContext(qc);
   }
 
@@ -249,10 +252,10 @@ public final class QueryProcessor extends Proc implements Closeable {
     qc.close();
   }
 
-  @Override
-  public void databases(final LockResult lr) {
-    qc.databases(lr);
-  }
+//  @Override
+//  public void databases(final LockResult lr) {
+//    qc.databases(lr);
+//  }
 
   /**
    * Returns the number of performed updates after query execution, or {@code 0}.
@@ -322,12 +325,12 @@ public final class QueryProcessor extends Proc implements Closeable {
     return new FDoc().add(qc.plan());
   }
 
-  @Override
+//  @Override
   public String tit() {
     return PLEASE_WAIT_D;
   }
 
-  @Override
+//  @Override
   public String det() {
     return PLEASE_WAIT_D;
   }

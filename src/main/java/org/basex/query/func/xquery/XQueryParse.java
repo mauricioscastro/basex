@@ -1,13 +1,19 @@
 package org.basex.query.func.xquery;
 
-import static org.basex.util.Token.*;
+import org.basex.query.LibraryModule;
+import org.basex.query.QueryContext;
+import org.basex.query.QueryException;
+import org.basex.query.QueryText;
+import org.basex.query.StaticScope;
+import org.basex.query.func.StandardFunc;
+import org.basex.query.value.item.QNm;
+import org.basex.query.value.node.FElem;
+import org.basex.util.InputInfo;
+import org.basex.util.options.BooleanOption;
+import org.basex.util.options.Options;
 
-import org.basex.query.*;
-import org.basex.query.func.*;
-import org.basex.query.value.item.*;
-import org.basex.query.value.node.*;
-import org.basex.util.*;
-import org.basex.util.options.*;
+import static org.basex.util.Token.string;
+import static org.basex.util.Token.token;
 
 /**
  * Function implementation.
@@ -50,7 +56,7 @@ public final class XQueryParse extends StandardFunc {
       plan = opts.get(XQueryOptions.PLAN);
     }
 
-    try(final QueryContext qctx = new QueryContext(qc.context)) {
+    try(final QueryContext qctx = new QueryContext(qc)) {
       final StaticScope ss = qctx.parse(string(query), null, null);
       final boolean library = ss instanceof LibraryModule;
 

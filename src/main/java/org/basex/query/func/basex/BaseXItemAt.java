@@ -30,7 +30,7 @@ public final class BaseXItemAt extends StandardFunc {
     // loop through all items
     long p = 0;
     for(Item item; (item = iter.next()) != null;) {
-      qc.checkStop();
+//      qc.checkStop();
       if(++p == pos) return item;
     }
     return null;

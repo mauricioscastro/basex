@@ -1,26 +1,37 @@
 package org.basex.query.value.node;
 
-import static org.basex.query.QueryText.*;
-import static org.basex.query.func.Function.*;
-
-import java.io.*;
-
-import org.basex.build.*;
-import org.basex.core.*;
-import org.basex.data.*;
-import org.basex.io.*;
-import org.basex.query.*;
-import org.basex.query.expr.*;
-import org.basex.query.iter.*;
-import org.basex.query.util.*;
-import org.basex.query.value.*;
-import org.basex.query.value.item.*;
-import org.basex.query.value.type.*;
+import org.basex.build.MemBuilder;
+import org.basex.build.Parser;
+import org.basex.core.MainOptions;
+import org.basex.data.Data;
+import org.basex.data.MemData;
+import org.basex.io.IO;
+import org.basex.query.QueryContext;
+import org.basex.query.QueryException;
+import org.basex.query.expr.Expr;
+import org.basex.query.iter.BasicNodeIter;
+import org.basex.query.util.DataBuilder;
+import org.basex.query.value.Value;
+import org.basex.query.value.item.Dbl;
+import org.basex.query.value.item.Int;
+import org.basex.query.value.item.QNm;
+import org.basex.query.value.type.NodeType;
 import org.basex.query.value.type.Type.ID;
-import org.basex.query.var.*;
-import org.basex.util.*;
-import org.basex.util.hash.*;
-import org.basex.util.list.*;
+import org.basex.query.var.Var;
+import org.basex.query.var.VarScope;
+import org.basex.util.Atts;
+import org.basex.util.InputInfo;
+import org.basex.util.Token;
+import org.basex.util.TokenBuilder;
+import org.basex.util.hash.IntObjMap;
+import org.basex.util.list.ByteList;
+
+import java.io.IOException;
+
+import static org.basex.query.QueryText.BASE;
+import static org.basex.query.QueryText.NAM;
+import static org.basex.query.QueryText.PRE;
+import static org.basex.query.QueryText.XML_URI;
 
 /**
  * Database node.
@@ -477,7 +488,7 @@ public class DBNode extends ANode {
    * @return string
    */
   private String toString(final boolean func) {
-    if(func) return _DB_OPEN_PRE.args(data.meta.name, pre);
+//    if(func) return _DB_OPEN_PRE.args(data.meta.name, pre);
 
     final TokenBuilder tb = new TokenBuilder(type.string()).add(' ');
     switch((NodeType) type) {

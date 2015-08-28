@@ -76,7 +76,7 @@ public final class Transform extends Arr {
         if(i2 != null) throw UPCOPYMULT_X.get(fo.info, fo.var.name, ValueBuilder.concat(i, i2));
 
         // copy node to main memory data instance
-        i = ((ANode) i).dbCopy(qc.context.options);
+        i = ((ANode) i).dbCopy(qc.options);
         // add resulting node to variable
         qc.set(fo.var, i, info);
         pu.addData(i.data());

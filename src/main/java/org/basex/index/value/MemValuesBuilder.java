@@ -1,11 +1,11 @@
 package org.basex.index.value;
 
-import java.io.*;
+import org.basex.core.MainOptions;
+import org.basex.data.Data;
+import org.basex.index.ValuesBuilder;
+import org.basex.util.Util;
 
-import org.basex.core.*;
-import org.basex.data.*;
-import org.basex.index.*;
-import org.basex.util.*;
+import java.io.IOException;
 
 /**
  * <p>This class builds a main-memory index for attribute values and text contents.</p>
@@ -41,7 +41,7 @@ public class MemValuesBuilder extends ValuesBuilder {
     return index;
   }
 
-  @Override
+//  @Override
   protected void abort() {
   }
 }

@@ -1,16 +1,19 @@
 package org.basex.query.func.fn;
 
-import org.basex.query.*;
-import org.basex.query.expr.*;
-import org.basex.query.func.*;
-import org.basex.query.func.basex.*;
-import org.basex.query.iter.*;
-import org.basex.query.value.*;
-import org.basex.query.value.item.*;
-import org.basex.query.value.seq.*;
-import org.basex.query.value.type.*;
+import org.basex.query.QueryContext;
+import org.basex.query.QueryException;
+import org.basex.query.expr.Expr;
+import org.basex.query.func.StandardFunc;
+import org.basex.query.func.basex.BaseXItemRange;
+import org.basex.query.iter.Iter;
+import org.basex.query.iter.ValueIter;
+import org.basex.query.value.Value;
+import org.basex.query.value.ValueBuilder;
+import org.basex.query.value.item.Item;
+import org.basex.query.value.seq.Empty;
+import org.basex.query.value.type.SeqType;
 import org.basex.query.value.type.SeqType.Occ;
-import org.basex.query.var.*;
+import org.basex.query.var.VarScope;
 
 /**
  * Function implementation.

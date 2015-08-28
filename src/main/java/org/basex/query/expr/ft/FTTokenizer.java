@@ -1,16 +1,24 @@
 package org.basex.query.expr.ft;
 
-import static org.basex.query.QueryError.*;
-import static org.basex.util.Token.*;
-import static org.basex.util.ft.FTFlag.*;
-
-import org.basex.core.*;
-import org.basex.query.*;
-import org.basex.util.*;
-import org.basex.util.ft.*;
+import org.basex.core.MainOptions;
+import org.basex.query.QueryContext;
+import org.basex.query.QueryException;
+import org.basex.util.Levenshtein;
+import org.basex.util.ft.FTBitapSearch;
 import org.basex.util.ft.FTBitapSearch.TokenComparator;
-import org.basex.util.hash.*;
-import org.basex.util.list.*;
+import org.basex.util.ft.FTCase;
+import org.basex.util.ft.FTIterator;
+import org.basex.util.ft.FTLexer;
+import org.basex.util.ft.FTOpt;
+import org.basex.util.hash.TokenObjMap;
+import org.basex.util.list.TokenList;
+
+import static org.basex.query.QueryError.FTWILDCARD_X;
+import static org.basex.util.Token.eq;
+import static org.basex.util.ft.FTFlag.DC;
+import static org.basex.util.ft.FTFlag.FZ;
+import static org.basex.util.ft.FTFlag.ST;
+import static org.basex.util.ft.FTFlag.WC;
 
 /**
  * This class performs the full-text tokenization.
@@ -39,7 +47,7 @@ final class FTTokenizer {
    * @param qc query context
    */
   FTTokenizer(final FTWords words, final QueryContext qc) {
-    this(words, qc.ftOpt(), new Levenshtein(qc.context.options.get(MainOptions.LSERROR)));
+    this(words, qc.ftOpt(), new Levenshtein(qc.options.get(MainOptions.LSERROR)));
   }
 
   /**

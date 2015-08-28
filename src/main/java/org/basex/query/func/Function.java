@@ -1,58 +1,487 @@
 package org.basex.query.func;
 
-import static org.basex.query.QueryText.*;
-import static org.basex.query.expr.Expr.Flag.*;
-import static org.basex.query.value.type.SeqType.*;
-
-import java.util.*;
-import java.util.regex.*;
-
-import org.basex.query.*;
-import org.basex.query.expr.*;
+import org.basex.query.StaticContext;
+import org.basex.query.expr.Expr;
 import org.basex.query.expr.Expr.Flag;
-import org.basex.query.func.admin.*;
-import org.basex.query.func.archive.*;
-import org.basex.query.func.array.*;
-import org.basex.query.func.basex.*;
-import org.basex.query.func.bin.*;
-import org.basex.query.func.client.*;
-import org.basex.query.func.convert.*;
-import org.basex.query.func.crypto.*;
-import org.basex.query.func.csv.*;
-import org.basex.query.func.db.*;
-import org.basex.query.func.fetch.*;
-import org.basex.query.func.file.*;
-import org.basex.query.func.fn.*;
-import org.basex.query.func.ft.*;
-import org.basex.query.func.hash.*;
-import org.basex.query.func.hof.*;
-import org.basex.query.func.html.*;
-import org.basex.query.func.http.*;
-import org.basex.query.func.index.*;
-import org.basex.query.func.inspect.*;
-import org.basex.query.func.json.*;
-import org.basex.query.func.map.*;
-import org.basex.query.func.math.*;
-import org.basex.query.func.out.*;
-import org.basex.query.func.proc.*;
-import org.basex.query.func.prof.*;
-import org.basex.query.func.random.*;
-import org.basex.query.func.repo.*;
-import org.basex.query.func.sql.*;
-import org.basex.query.func.stream.*;
-import org.basex.query.func.unit.*;
-import org.basex.query.func.user.*;
-import org.basex.query.func.validate.*;
-import org.basex.query.func.web.*;
-import org.basex.query.func.xquery.*;
-import org.basex.query.func.xslt.*;
-import org.basex.query.func.zip.*;
-import org.basex.query.util.*;
-import org.basex.query.util.list.*;
-import org.basex.query.value.item.*;
-import org.basex.query.value.type.*;
-import org.basex.util.*;
-import org.basex.util.hash.*;
+import org.basex.query.func.archive.ArchiveCreate;
+import org.basex.query.func.archive.ArchiveCreateFrom;
+import org.basex.query.func.archive.ArchiveDelete;
+import org.basex.query.func.archive.ArchiveEntries;
+import org.basex.query.func.archive.ArchiveExtractBinary;
+import org.basex.query.func.archive.ArchiveExtractText;
+import org.basex.query.func.archive.ArchiveExtractTo;
+import org.basex.query.func.archive.ArchiveOptions;
+import org.basex.query.func.archive.ArchiveUpdate;
+import org.basex.query.func.archive.ArchiveWrite;
+import org.basex.query.func.array.ArrayAppend;
+import org.basex.query.func.array.ArrayFilter;
+import org.basex.query.func.array.ArrayFlatten;
+import org.basex.query.func.array.ArrayFoldLeft;
+import org.basex.query.func.array.ArrayFoldRight;
+import org.basex.query.func.array.ArrayForEach;
+import org.basex.query.func.array.ArrayForEachPair;
+import org.basex.query.func.array.ArrayGet;
+import org.basex.query.func.array.ArrayHead;
+import org.basex.query.func.array.ArrayInsertBefore;
+import org.basex.query.func.array.ArrayJoin;
+import org.basex.query.func.array.ArrayRemove;
+import org.basex.query.func.array.ArrayReverse;
+import org.basex.query.func.array.ArraySerialize;
+import org.basex.query.func.array.ArraySize;
+import org.basex.query.func.array.ArraySort;
+import org.basex.query.func.array.ArraySubarray;
+import org.basex.query.func.array.ArrayTail;
+import org.basex.query.func.basex.BaseXDeepEqual;
+import org.basex.query.func.basex.BaseXItemAt;
+import org.basex.query.func.basex.BaseXItemRange;
+import org.basex.query.func.basex.BaseXLastFrom;
+import org.basex.query.func.bin.BinAnd;
+import org.basex.query.func.bin.BinBin;
+import org.basex.query.func.bin.BinDecodeString;
+import org.basex.query.func.bin.BinEncodeString;
+import org.basex.query.func.bin.BinFind;
+import org.basex.query.func.bin.BinFromOctets;
+import org.basex.query.func.bin.BinHex;
+import org.basex.query.func.bin.BinInsertBefore;
+import org.basex.query.func.bin.BinJoin;
+import org.basex.query.func.bin.BinLength;
+import org.basex.query.func.bin.BinNot;
+import org.basex.query.func.bin.BinOctal;
+import org.basex.query.func.bin.BinOr;
+import org.basex.query.func.bin.BinPackDouble;
+import org.basex.query.func.bin.BinPackFloat;
+import org.basex.query.func.bin.BinPackInteger;
+import org.basex.query.func.bin.BinPadLeft;
+import org.basex.query.func.bin.BinPadRight;
+import org.basex.query.func.bin.BinPart;
+import org.basex.query.func.bin.BinShift;
+import org.basex.query.func.bin.BinToOctets;
+import org.basex.query.func.bin.BinUnpackDouble;
+import org.basex.query.func.bin.BinUnpackFloat;
+import org.basex.query.func.bin.BinUnpackInteger;
+import org.basex.query.func.bin.BinUnpackUnsignedInteger;
+import org.basex.query.func.bin.BinXor;
+import org.basex.query.func.convert.ConvertBinaryToBytes;
+import org.basex.query.func.convert.ConvertBinaryToString;
+import org.basex.query.func.convert.ConvertBytesToBase64;
+import org.basex.query.func.convert.ConvertBytesToHex;
+import org.basex.query.func.convert.ConvertDateTimeToInteger;
+import org.basex.query.func.convert.ConvertDayTimeToInteger;
+import org.basex.query.func.convert.ConvertIntegerFromBase;
+import org.basex.query.func.convert.ConvertIntegerToBase;
+import org.basex.query.func.convert.ConvertIntegerToDateTime;
+import org.basex.query.func.convert.ConvertIntegerToDayTime;
+import org.basex.query.func.convert.ConvertStringToBase64;
+import org.basex.query.func.convert.ConvertStringToHex;
+import org.basex.query.func.crypto.CryptoDecrypt;
+import org.basex.query.func.crypto.CryptoEncrypt;
+import org.basex.query.func.crypto.CryptoGenerateSignature;
+import org.basex.query.func.crypto.CryptoHmac;
+import org.basex.query.func.crypto.CryptoValidateSignature;
+import org.basex.query.func.csv.CsvParse;
+import org.basex.query.func.csv.CsvSerialize;
+import org.basex.query.func.fetch.FetchBinary;
+import org.basex.query.func.fetch.FetchContentType;
+import org.basex.query.func.fetch.FetchText;
+import org.basex.query.func.fetch.FetchXml;
+import org.basex.query.func.file.FileAppend;
+import org.basex.query.func.file.FileAppendBinary;
+import org.basex.query.func.file.FileAppendText;
+import org.basex.query.func.file.FileAppendTextLines;
+import org.basex.query.func.file.FileBaseDir;
+import org.basex.query.func.file.FileChildren;
+import org.basex.query.func.file.FileCopy;
+import org.basex.query.func.file.FileCreateDir;
+import org.basex.query.func.file.FileCreateTempDir;
+import org.basex.query.func.file.FileCreateTempFile;
+import org.basex.query.func.file.FileCurrentDir;
+import org.basex.query.func.file.FileDelete;
+import org.basex.query.func.file.FileDirSeparator;
+import org.basex.query.func.file.FileExists;
+import org.basex.query.func.file.FileIsAbsolute;
+import org.basex.query.func.file.FileIsDir;
+import org.basex.query.func.file.FileIsFile;
+import org.basex.query.func.file.FileLastModified;
+import org.basex.query.func.file.FileList;
+import org.basex.query.func.file.FileMove;
+import org.basex.query.func.file.FileName;
+import org.basex.query.func.file.FileParent;
+import org.basex.query.func.file.FilePathSeparator;
+import org.basex.query.func.file.FilePathToNative;
+import org.basex.query.func.file.FilePathToUri;
+import org.basex.query.func.file.FileReadBinary;
+import org.basex.query.func.file.FileReadText;
+import org.basex.query.func.file.FileReadTextLines;
+import org.basex.query.func.file.FileResolvePath;
+import org.basex.query.func.file.FileSize;
+import org.basex.query.func.file.FileWrite;
+import org.basex.query.func.file.FileWriteBinary;
+import org.basex.query.func.file.FileWriteText;
+import org.basex.query.func.file.FileWriteTextLines;
+import org.basex.query.func.fn.FnAbs;
+import org.basex.query.func.fn.FnAdjustDateToTimezone;
+import org.basex.query.func.fn.FnAdjustTimeToTimezone;
+import org.basex.query.func.fn.FnAdustDateTimeToTimezone;
+import org.basex.query.func.fn.FnAnalyzeString;
+import org.basex.query.func.fn.FnApply;
+import org.basex.query.func.fn.FnAvailableEnvironmentVariables;
+import org.basex.query.func.fn.FnAvg;
+import org.basex.query.func.fn.FnBaseUri;
+import org.basex.query.func.fn.FnBoolean;
+import org.basex.query.func.fn.FnCeiling;
+import org.basex.query.func.fn.FnCodepointEqual;
+import org.basex.query.func.fn.FnCodepointsToString;
+import org.basex.query.func.fn.FnCollection;
+import org.basex.query.func.fn.FnCompare;
+import org.basex.query.func.fn.FnConcat;
+import org.basex.query.func.fn.FnContains;
+import org.basex.query.func.fn.FnContainsToken;
+import org.basex.query.func.fn.FnCount;
+import org.basex.query.func.fn.FnCurrentDate;
+import org.basex.query.func.fn.FnCurrentDateTime;
+import org.basex.query.func.fn.FnCurrentTime;
+import org.basex.query.func.fn.FnData;
+import org.basex.query.func.fn.FnDateTime;
+import org.basex.query.func.fn.FnDayFromDate;
+import org.basex.query.func.fn.FnDayFromDateTime;
+import org.basex.query.func.fn.FnDayFromDuration;
+import org.basex.query.func.fn.FnDeepEqual;
+import org.basex.query.func.fn.FnDefaultCollation;
+import org.basex.query.func.fn.FnDistinctValues;
+import org.basex.query.func.fn.FnDoc;
+import org.basex.query.func.fn.FnDocAvailable;
+import org.basex.query.func.fn.FnDocumentUri;
+import org.basex.query.func.fn.FnElementWithId;
+import org.basex.query.func.fn.FnEmpty;
+import org.basex.query.func.fn.FnEncodeForUri;
+import org.basex.query.func.fn.FnEndsWith;
+import org.basex.query.func.fn.FnEnvironmentVariable;
+import org.basex.query.func.fn.FnError;
+import org.basex.query.func.fn.FnEscapeHtmlUri;
+import org.basex.query.func.fn.FnExactlyOne;
+import org.basex.query.func.fn.FnExists;
+import org.basex.query.func.fn.FnFalse;
+import org.basex.query.func.fn.FnFilter;
+import org.basex.query.func.fn.FnFloor;
+import org.basex.query.func.fn.FnFoldLeft;
+import org.basex.query.func.fn.FnFoldRight;
+import org.basex.query.func.fn.FnForEach;
+import org.basex.query.func.fn.FnForEachPair;
+import org.basex.query.func.fn.FnFormatDate;
+import org.basex.query.func.fn.FnFormatDateTime;
+import org.basex.query.func.fn.FnFormatInteger;
+import org.basex.query.func.fn.FnFormatNumber;
+import org.basex.query.func.fn.FnFormatTime;
+import org.basex.query.func.fn.FnFunctionArity;
+import org.basex.query.func.fn.FnFunctionLookup;
+import org.basex.query.func.fn.FnFunctionName;
+import org.basex.query.func.fn.FnGenerateId;
+import org.basex.query.func.fn.FnHasChildren;
+import org.basex.query.func.fn.FnHead;
+import org.basex.query.func.fn.FnHoursFromDateTime;
+import org.basex.query.func.fn.FnHoursFromDuration;
+import org.basex.query.func.fn.FnHoursFromTime;
+import org.basex.query.func.fn.FnId;
+import org.basex.query.func.fn.FnIdref;
+import org.basex.query.func.fn.FnImplicitTimezone;
+import org.basex.query.func.fn.FnInScopePrefixes;
+import org.basex.query.func.fn.FnIndexOf;
+import org.basex.query.func.fn.FnInnermost;
+import org.basex.query.func.fn.FnInsertBefore;
+import org.basex.query.func.fn.FnIriToUri;
+import org.basex.query.func.fn.FnJsonDoc;
+import org.basex.query.func.fn.FnJsonToXml;
+import org.basex.query.func.fn.FnLang;
+import org.basex.query.func.fn.FnLast;
+import org.basex.query.func.fn.FnLocalName;
+import org.basex.query.func.fn.FnLocalNameFromQName;
+import org.basex.query.func.fn.FnLowerCase;
+import org.basex.query.func.fn.FnMatches;
+import org.basex.query.func.fn.FnMax;
+import org.basex.query.func.fn.FnMin;
+import org.basex.query.func.fn.FnMinutesFromDateTime;
+import org.basex.query.func.fn.FnMinutesFromDuration;
+import org.basex.query.func.fn.FnMinutesFromTime;
+import org.basex.query.func.fn.FnMonthFromDate;
+import org.basex.query.func.fn.FnMonthFromDateTime;
+import org.basex.query.func.fn.FnMonthsFromDuration;
+import org.basex.query.func.fn.FnName;
+import org.basex.query.func.fn.FnNamespaceUri;
+import org.basex.query.func.fn.FnNamespaceUriForPrefix;
+import org.basex.query.func.fn.FnNamespaceUriFromQName;
+import org.basex.query.func.fn.FnNilled;
+import org.basex.query.func.fn.FnNodeName;
+import org.basex.query.func.fn.FnNormalizeSpace;
+import org.basex.query.func.fn.FnNormalizeUnicode;
+import org.basex.query.func.fn.FnNot;
+import org.basex.query.func.fn.FnNumber;
+import org.basex.query.func.fn.FnOneOrMore;
+import org.basex.query.func.fn.FnOutermost;
+import org.basex.query.func.fn.FnParseIetfDate;
+import org.basex.query.func.fn.FnParseJson;
+import org.basex.query.func.fn.FnParseXml;
+import org.basex.query.func.fn.FnParseXmlFragment;
+import org.basex.query.func.fn.FnPath;
+import org.basex.query.func.fn.FnPosition;
+import org.basex.query.func.fn.FnPrefixFromQName;
+import org.basex.query.func.fn.FnPut;
+import org.basex.query.func.fn.FnQName;
+import org.basex.query.func.fn.FnRandomNumberGenerator;
+import org.basex.query.func.fn.FnRemove;
+import org.basex.query.func.fn.FnReplace;
+import org.basex.query.func.fn.FnResolveQName;
+import org.basex.query.func.fn.FnResolveUri;
+import org.basex.query.func.fn.FnReverse;
+import org.basex.query.func.fn.FnRoot;
+import org.basex.query.func.fn.FnRound;
+import org.basex.query.func.fn.FnRoundHalfToEven;
+import org.basex.query.func.fn.FnSecondsFromDateTime;
+import org.basex.query.func.fn.FnSecondsFromDuration;
+import org.basex.query.func.fn.FnSecondsFromTime;
+import org.basex.query.func.fn.FnSerialize;
+import org.basex.query.func.fn.FnSort;
+import org.basex.query.func.fn.FnStartsWith;
+import org.basex.query.func.fn.FnStaticBaseUri;
+import org.basex.query.func.fn.FnString;
+import org.basex.query.func.fn.FnStringJoin;
+import org.basex.query.func.fn.FnStringLength;
+import org.basex.query.func.fn.FnStringToCodepoints;
+import org.basex.query.func.fn.FnSubsequence;
+import org.basex.query.func.fn.FnSubstring;
+import org.basex.query.func.fn.FnSubstringAfter;
+import org.basex.query.func.fn.FnSubstringBefore;
+import org.basex.query.func.fn.FnSum;
+import org.basex.query.func.fn.FnTail;
+import org.basex.query.func.fn.FnTimezoneFromDate;
+import org.basex.query.func.fn.FnTimezoneFromDateTime;
+import org.basex.query.func.fn.FnTimezoneFromTime;
+import org.basex.query.func.fn.FnTokenize;
+import org.basex.query.func.fn.FnTrace;
+import org.basex.query.func.fn.FnTranslate;
+import org.basex.query.func.fn.FnTrue;
+import org.basex.query.func.fn.FnUnordered;
+import org.basex.query.func.fn.FnUnparsedText;
+import org.basex.query.func.fn.FnUnparsedTextAvailable;
+import org.basex.query.func.fn.FnUnparsedTextLines;
+import org.basex.query.func.fn.FnUpperCase;
+import org.basex.query.func.fn.FnUriCollection;
+import org.basex.query.func.fn.FnXmlToJson;
+import org.basex.query.func.fn.FnYearFromDate;
+import org.basex.query.func.fn.FnYearFromDateTime;
+import org.basex.query.func.fn.FnYearsFromDuration;
+import org.basex.query.func.fn.FnZeroOrOne;
+import org.basex.query.func.ft.FtContains;
+import org.basex.query.func.ft.FtCount;
+import org.basex.query.func.ft.FtExtract;
+import org.basex.query.func.ft.FtMark;
+import org.basex.query.func.ft.FtNormalize;
+import org.basex.query.func.ft.FtScore;
+import org.basex.query.func.ft.FtSearch;
+import org.basex.query.func.ft.FtTokenize;
+import org.basex.query.func.ft.FtTokens;
+import org.basex.query.func.hash.HashHash;
+import org.basex.query.func.hash.HashMd5;
+import org.basex.query.func.hash.HashSha1;
+import org.basex.query.func.hash.HashSha256;
+import org.basex.query.func.hof.HofConst;
+import org.basex.query.func.hof.HofFoldLeft1;
+import org.basex.query.func.hof.HofId;
+import org.basex.query.func.hof.HofScanLeft;
+import org.basex.query.func.hof.HofSortWith;
+import org.basex.query.func.hof.HofTakeWhile;
+import org.basex.query.func.hof.HofTopKBy;
+import org.basex.query.func.hof.HofTopKWith;
+import org.basex.query.func.hof.HofUntil;
+import org.basex.query.func.html.HtmlParse;
+import org.basex.query.func.html.HtmlParser;
+import org.basex.query.func.http.HttpSendRequest;
+import org.basex.query.func.index.IndexAttributeNames;
+import org.basex.query.func.index.IndexAttributes;
+import org.basex.query.func.index.IndexElementNames;
+import org.basex.query.func.index.IndexFacets;
+import org.basex.query.func.index.IndexTexts;
+import org.basex.query.func.inspect.InspectContext;
+import org.basex.query.func.inspect.InspectFunction;
+import org.basex.query.func.inspect.InspectFunctions;
+import org.basex.query.func.inspect.InspectModule;
+import org.basex.query.func.inspect.InspectXqdoc;
+import org.basex.query.func.json.JsonParse;
+import org.basex.query.func.json.JsonSerialize;
+import org.basex.query.func.map.MapContains;
+import org.basex.query.func.map.MapEntry;
+import org.basex.query.func.map.MapForEach;
+import org.basex.query.func.map.MapGet;
+import org.basex.query.func.map.MapKeys;
+import org.basex.query.func.map.MapMerge;
+import org.basex.query.func.map.MapPut;
+import org.basex.query.func.map.MapRemove;
+import org.basex.query.func.map.MapSerialize;
+import org.basex.query.func.map.MapSize;
+import org.basex.query.func.math.MathAcos;
+import org.basex.query.func.math.MathAsin;
+import org.basex.query.func.math.MathAtan;
+import org.basex.query.func.math.MathAtan2;
+import org.basex.query.func.math.MathCos;
+import org.basex.query.func.math.MathCosh;
+import org.basex.query.func.math.MathCrc32;
+import org.basex.query.func.math.MathE;
+import org.basex.query.func.math.MathExp;
+import org.basex.query.func.math.MathExp10;
+import org.basex.query.func.math.MathLog;
+import org.basex.query.func.math.MathLog10;
+import org.basex.query.func.math.MathPi;
+import org.basex.query.func.math.MathPow;
+import org.basex.query.func.math.MathSin;
+import org.basex.query.func.math.MathSinh;
+import org.basex.query.func.math.MathSqrt;
+import org.basex.query.func.math.MathTan;
+import org.basex.query.func.math.MathTanh;
+import org.basex.query.func.out.OutFormat;
+import org.basex.query.func.out.OutNl;
+import org.basex.query.func.out.OutTab;
+import org.basex.query.func.proc.ProcExecute;
+import org.basex.query.func.proc.ProcSystem;
+import org.basex.query.func.prof.ProfCurrentMs;
+import org.basex.query.func.prof.ProfCurrentNs;
+import org.basex.query.func.prof.ProfDump;
+import org.basex.query.func.prof.ProfHuman;
+import org.basex.query.func.prof.ProfMem;
+import org.basex.query.func.prof.ProfSleep;
+import org.basex.query.func.prof.ProfTime;
+import org.basex.query.func.prof.ProfVariables;
+import org.basex.query.func.prof.ProfVoid;
+import org.basex.query.func.random.RandomDouble;
+import org.basex.query.func.random.RandomGaussian;
+import org.basex.query.func.random.RandomInteger;
+import org.basex.query.func.random.RandomSeededDouble;
+import org.basex.query.func.random.RandomSeededInteger;
+import org.basex.query.func.random.RandomUuid;
+import org.basex.query.func.unit.UnitAssert;
+import org.basex.query.func.unit.UnitAssertEquals;
+import org.basex.query.func.unit.UnitFail;
+import org.basex.query.func.xquery.XQueryEval;
+import org.basex.query.func.xquery.XQueryInvoke;
+import org.basex.query.func.xquery.XQueryParse;
+import org.basex.query.func.xquery.XQueryType;
+import org.basex.query.func.xquery.XQueryUpdate;
+import org.basex.query.func.xslt.XsltProcessor;
+import org.basex.query.func.xslt.XsltTransform;
+import org.basex.query.func.xslt.XsltTransformText;
+import org.basex.query.func.xslt.XsltVersion;
+import org.basex.query.func.zip.ZipBinaryEntry;
+import org.basex.query.func.zip.ZipEntries;
+import org.basex.query.func.zip.ZipHtmlEntry;
+import org.basex.query.func.zip.ZipTextEntry;
+import org.basex.query.func.zip.ZipUpdateEntries;
+import org.basex.query.func.zip.ZipXmlEntry;
+import org.basex.query.func.zip.ZipZipFile;
+import org.basex.query.util.NSGlobal;
+import org.basex.query.util.list.AnnList;
+import org.basex.query.value.item.QNm;
+import org.basex.query.value.type.FuncType;
+import org.basex.query.value.type.SeqType;
+import org.basex.util.InputInfo;
+import org.basex.util.Reflect;
+import org.basex.util.Strings;
+import org.basex.util.Token;
+import org.basex.util.TokenBuilder;
+import org.basex.util.hash.TokenSet;
+
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.regex.Pattern;
+
+import static org.basex.query.QueryText.BASEX_URI;
+import static org.basex.query.QueryText.ARCHIVE_URI;
+import static org.basex.query.QueryText.ARRAY_URI;
+import static org.basex.query.QueryText.BIN_URI;
+import static org.basex.query.QueryText.CONVERT_URI;
+import static org.basex.query.QueryText.CRYPTO_URI;
+import static org.basex.query.QueryText.CSV_URI;
+import static org.basex.query.QueryText.FETCH_URI;
+import static org.basex.query.QueryText.FILE_URI;
+import static org.basex.query.QueryText.FN_URI;
+import static org.basex.query.QueryText.FT_URI;
+import static org.basex.query.QueryText.HASH_URI;
+import static org.basex.query.QueryText.HOF_URI;
+import static org.basex.query.QueryText.HTML_URI;
+import static org.basex.query.QueryText.HTTP_URI;
+import static org.basex.query.QueryText.INDEX_URI;
+import static org.basex.query.QueryText.INSPECT_URI;
+import static org.basex.query.QueryText.JSON_URI;
+import static org.basex.query.QueryText.MAP_URI;
+import static org.basex.query.QueryText.MATH_URI;
+import static org.basex.query.QueryText.OUT_URI;
+import static org.basex.query.QueryText.PROC_URI;
+import static org.basex.query.QueryText.PROF_URI;
+import static org.basex.query.QueryText.RANDOM_URI;
+import static org.basex.query.QueryText.UNIT_URI;
+import static org.basex.query.QueryText.XQUERY_URI;
+import static org.basex.query.QueryText.XSLT_URI;
+import static org.basex.query.QueryText.ZIP_URI;
+import static org.basex.query.expr.Expr.Flag.CNS;
+import static org.basex.query.expr.Expr.Flag.CTX;
+import static org.basex.query.expr.Expr.Flag.HOF;
+import static org.basex.query.expr.Expr.Flag.NDT;
+import static org.basex.query.expr.Expr.Flag.UPD;
+import static org.basex.query.value.type.SeqType.AAT;
+import static org.basex.query.value.type.SeqType.AAT_ZM;
+import static org.basex.query.value.type.SeqType.AAT_ZO;
+import static org.basex.query.value.type.SeqType.ARRAY_O;
+import static org.basex.query.value.type.SeqType.ARRAY_ZM;
+import static org.basex.query.value.type.SeqType.B64;
+import static org.basex.query.value.type.SeqType.B64_ZM;
+import static org.basex.query.value.type.SeqType.B64_ZO;
+import static org.basex.query.value.type.SeqType.BIN;
+import static org.basex.query.value.type.SeqType.BLN;
+import static org.basex.query.value.type.SeqType.BLN_ZO;
+import static org.basex.query.value.type.SeqType.BYT_ZM;
+import static org.basex.query.value.type.SeqType.DAT;
+import static org.basex.query.value.type.SeqType.DAT_ZO;
+import static org.basex.query.value.type.SeqType.DBL;
+import static org.basex.query.value.type.SeqType.DBL_ZM;
+import static org.basex.query.value.type.SeqType.DBL_ZO;
+import static org.basex.query.value.type.SeqType.DEC_ZO;
+import static org.basex.query.value.type.SeqType.DOC_O;
+import static org.basex.query.value.type.SeqType.DOC_ZO;
+import static org.basex.query.value.type.SeqType.DTD;
+import static org.basex.query.value.type.SeqType.DTD_ZO;
+import static org.basex.query.value.type.SeqType.DTM;
+import static org.basex.query.value.type.SeqType.DTM_ZO;
+import static org.basex.query.value.type.SeqType.DUR_ZO;
+import static org.basex.query.value.type.SeqType.ELM;
+import static org.basex.query.value.type.SeqType.ELM_ZM;
+import static org.basex.query.value.type.SeqType.EMP;
+import static org.basex.query.value.type.SeqType.FLT;
+import static org.basex.query.value.type.SeqType.FUN_O;
+import static org.basex.query.value.type.SeqType.FUN_OZ;
+import static org.basex.query.value.type.SeqType.FUN_ZM;
+import static org.basex.query.value.type.SeqType.HEX;
+import static org.basex.query.value.type.SeqType.ITEM;
+import static org.basex.query.value.type.SeqType.ITEM_OM;
+import static org.basex.query.value.type.SeqType.ITEM_ZM;
+import static org.basex.query.value.type.SeqType.ITEM_ZO;
+import static org.basex.query.value.type.SeqType.ITR;
+import static org.basex.query.value.type.SeqType.ITR_ZM;
+import static org.basex.query.value.type.SeqType.ITR_ZO;
+import static org.basex.query.value.type.SeqType.MAP_O;
+import static org.basex.query.value.type.SeqType.MAP_ZM;
+import static org.basex.query.value.type.SeqType.NCN_ZO;
+import static org.basex.query.value.type.SeqType.NOD;
+import static org.basex.query.value.type.SeqType.NOD_ZM;
+import static org.basex.query.value.type.SeqType.NOD_ZO;
+import static org.basex.query.value.type.SeqType.NUM;
+import static org.basex.query.value.type.SeqType.NUM_ZO;
+import static org.basex.query.value.type.SeqType.QNM;
+import static org.basex.query.value.type.SeqType.QNM_ZO;
+import static org.basex.query.value.type.SeqType.STR;
+import static org.basex.query.value.type.SeqType.STR_ZM;
+import static org.basex.query.value.type.SeqType.STR_ZO;
+import static org.basex.query.value.type.SeqType.TIM;
+import static org.basex.query.value.type.SeqType.TIM_ZO;
+import static org.basex.query.value.type.SeqType.URI;
+import static org.basex.query.value.type.SeqType.URI_ZM;
+import static org.basex.query.value.type.SeqType.URI_ZO;
 
 /**
  * Definitions of all built-in XQuery functions.
@@ -544,16 +973,16 @@ public enum Function {
 
   /* Admin Module. */
 
-  /** XQuery function. */
-  _ADMIN_SESSIONS(AdminSessions.class, "sessions()", arg(), ELM_ZM, flag(NDT), ADMIN_URI),
-  /** XQuery function. */
-  _ADMIN_LOGS(AdminLogs.class, "logs([date[,merge]])", arg(STR, BLN), ELM_ZM, flag(NDT), ADMIN_URI),
-  /** XQuery function. */
-  _ADMIN_WRITE_LOG(AdminWriteLog.class, "write-log(message[,type])",
-      arg(STR, STR), EMP, flag(NDT), ADMIN_URI),
-  /** XQuery function. */
-  _ADMIN_DELETE_LOGS(AdminDeleteLogs.class, "delete-logs(date)",
-      arg(STR), EMP, flag(NDT), ADMIN_URI),
+//  /** XQuery function. */
+//  _ADMIN_SESSIONS(AdminSessions.class, "sessions()", arg(), ELM_ZM, flag(NDT), ADMIN_URI),
+//  /** XQuery function. */
+//  _ADMIN_LOGS(AdminLogs.class, "logs([date[,merge]])", arg(STR, BLN), ELM_ZM, flag(NDT), ADMIN_URI),
+//  /** XQuery function. */
+//  _ADMIN_WRITE_LOG(AdminWriteLog.class, "write-log(message[,type])",
+//      arg(STR, STR), EMP, flag(NDT), ADMIN_URI),
+//  /** XQuery function. */
+//  _ADMIN_DELETE_LOGS(AdminDeleteLogs.class, "delete-logs(date)",
+//      arg(STR), EMP, flag(NDT), ADMIN_URI),
 
   /* Archive Module. */
 
@@ -670,19 +1099,19 @@ public enum Function {
 
   /* Client Module. */
 
-  /** XQuery function. */
-  _CLIENT_CONNECT(ClientConnect.class, "connect(url,port,user,password)",
-      arg(STR, ITR, STR, STR), URI, flag(NDT), CLIENT_URI),
-  /** XQuery function. */
-  _CLIENT_EXECUTE(ClientExecute.class, "execute(id,command)", arg(URI, STR), STR, flag(NDT),
-      CLIENT_URI),
-  /** XQuery function. */
-  _CLIENT_INFO(ClientInfo.class, "info(id)", arg(URI), STR, flag(NDT), CLIENT_URI),
-  /** XQuery function. */
-  _CLIENT_QUERY(ClientQuery.class, "query(id,query[,bindings])",
-      arg(URI, STR, ITEM), ITEM_ZO, flag(NDT), CLIENT_URI),
-  /** XQuery function. */
-  _CLIENT_CLOSE(ClientClose.class, "close(id)", arg(URI), EMP, flag(NDT), CLIENT_URI),
+//  /** XQuery function. */
+//  _CLIENT_CONNECT(ClientConnect.class, "connect(url,port,user,password)",
+//      arg(STR, ITR, STR, STR), URI, flag(NDT), CLIENT_URI),
+//  /** XQuery function. */
+//  _CLIENT_EXECUTE(ClientExecute.class, "execute(id,command)", arg(URI, STR), STR, flag(NDT),
+//      CLIENT_URI),
+//  /** XQuery function. */
+//  _CLIENT_INFO(ClientInfo.class, "info(id)", arg(URI), STR, flag(NDT), CLIENT_URI),
+//  /** XQuery function. */
+//  _CLIENT_QUERY(ClientQuery.class, "query(id,query[,bindings])",
+//      arg(URI, STR, ITEM), ITEM_ZO, flag(NDT), CLIENT_URI),
+//  /** XQuery function. */
+//  _CLIENT_CLOSE(ClientClose.class, "close(id)", arg(URI), EMP, flag(NDT), CLIENT_URI),
 
   /* Conversion Module. */
 
@@ -752,95 +1181,95 @@ public enum Function {
 
   /* Database Module. */
 
-  /** XQuery function. */
-  _DB_OPEN(DbOpen.class, "open(database[,path])", arg(STR, STR), NOD_ZM, DB_URI),
-  /** XQuery function. */
-  _DB_OPEN_PRE(DbOpenPre.class, "open-pre(database,pre)", arg(STR, ITR), NOD_ZM, DB_URI),
-  /** XQuery function. */
-  _DB_OPEN_ID(DbOpenId.class, "open-id(database,id)", arg(STR, ITR), NOD_ZM, DB_URI),
-  /** XQuery function. */
-  _DB_TEXT(DbText.class, "text(database,string)", arg(STR, ITEM), NOD_ZM, flag(NDT), DB_URI),
-  /** XQuery function. */
-  _DB_TEXT_RANGE(DbTextRange.class, "text-range(database,from,to)",
-      arg(STR, ITEM, ITEM), NOD_ZM, flag(NDT), DB_URI),
-  /** XQuery function. */
-  _DB_ATTRIBUTE(DbAttribute.class, "attribute(database,string[,name])",
-      arg(STR, ITEM, STR), NOD_ZM, flag(NDT), DB_URI),
-  /** XQuery function. */
-  _DB_ATTRIBUTE_RANGE(DbAttributeRange.class, "attribute-range(database,from,to[,name])",
-      arg(STR, ITEM, ITEM, STR), NOD_ZM, flag(NDT), DB_URI),
-  /** XQuery function. */
-  _DB_LIST(DbList.class, "list([database[,path]])", arg(STR, STR), STR_ZM, flag(NDT), DB_URI),
-  /** XQuery function. */
-  _DB_LIST_DETAILS(DbListDetails.class, "list-details([database[,path]])", arg(STR, STR), ELM_ZM,
-      flag(NDT), DB_URI),
-  /** XQuery function. */
-  _DB_BACKUPS(DbBackups.class, "backups([database])", arg(ITEM), ELM_ZM, DB_URI),
-  /** XQuery function. */
-  _DB_CREATE_BACKUP(DbCreateBackup.class, "create-backup(database)", arg(STR), EMP,
-      flag(UPD, NDT), DB_URI),
-  /** XQuery function. */
-  _DB_COPY(DbCopy.class, "copy(database, new-name)", arg(STR, STR), EMP, flag(UPD, NDT),
-      DB_URI),
-  /** XQuery function. */
-  _DB_ALTER(DbAlter.class, "alter(database, new-name)", arg(STR, STR), EMP, flag(UPD, NDT), DB_URI),
-  /** XQuery function. */
-  _DB_DROP_BACKUP(DbDropBackup.class, "drop-backup(name)", arg(STR), EMP, flag(UPD, NDT), DB_URI),
-  /** XQuery function. */
-  _DB_RESTORE(DbRestore.class, "restore(backup)", arg(STR), EMP, flag(UPD, NDT), DB_URI),
-  /** XQuery function. */
-  _DB_SYSTEM(DbSystem.class, "system()", arg(), STR, DB_URI),
-  /** XQuery function. */
-  _DB_INFO(DbInfo.class, "info(database)", arg(ITEM), STR, DB_URI),
-  /** XQuery function. */
-  _DB_NODE_ID(DbNodeId.class, "node-id(nodes)", arg(NOD_ZM), ITR_ZM, DB_URI),
-  /** XQuery function. */
-  _DB_NODE_PRE(DbNodePre.class, "node-pre(nodes)", arg(NOD_ZM), ITR_ZM, DB_URI),
-  /** XQuery function. */
-  _DB_OUTPUT(DbOutput.class, "output(result)", arg(ITEM_ZM), EMP, flag(UPD, NDT), DB_URI),
-  /** XQuery function. */
-  _DB_OUTPUT_CACHE(DbOutputCache.class, "output-cache()", arg(), ITEM_ZO, flag(NDT), DB_URI),
-  /** XQuery function. */
-  _DB_ADD(DbAdd.class, "add(database,input[,path[,options]])",
-      arg(STR, NOD, STR, ITEM), EMP, flag(UPD, NDT), DB_URI),
-  /** XQuery function. */
-  _DB_DELETE(DbDelete.class, "delete(database,path)", arg(STR, STR), EMP, flag(UPD, NDT), DB_URI),
-  /** XQuery function. */
-  _DB_CREATE(DbCreate.class, "create(name[,inputs[,paths[,options]]])",
-      arg(STR, ITEM_ZM, STR_ZM, ITEM), EMP, flag(UPD, NDT), DB_URI),
-  /** XQuery function. */
-  _DB_DROP(DbDrop.class, "drop(database)", arg(ITEM), EMP, flag(UPD, NDT), DB_URI),
-  /** XQuery function. */
-  _DB_RENAME(DbRename.class, "rename(database,path,new-path)", arg(STR, STR, STR), EMP,
-      flag(UPD, NDT), DB_URI),
-  /** XQuery function. */
-  _DB_REPLACE(DbReplace.class, "replace(database,path,input[,options])",
-      arg(STR, STR, ITEM, ITEM), EMP, flag(UPD, NDT), DB_URI),
-  /** XQuery function. */
-  _DB_OPTIMIZE(DbOptimize.class, "optimize(database[,all[,options]])",
-      arg(STR, BLN, ITEM), EMP, flag(UPD, NDT), DB_URI),
-  /** XQuery function. */
-  _DB_RETRIEVE(DbRetrieve.class, "retrieve(database,path)", arg(STR, STR), B64, flag(NDT), DB_URI),
-  /** XQuery function. */
-  _DB_STORE(DbStore.class, "store(database,path,input)", arg(STR, STR, ITEM), EMP, flag(UPD, NDT),
-      DB_URI),
-  /** XQuery function. */
-  _DB_IS_XML(DbIsXml.class, "is-xml(database,path)", arg(STR, STR), BLN, DB_URI),
-  /** XQuery function. */
-  _DB_IS_RAW(DbIsRaw.class, "is-raw(database,path)", arg(STR, STR), BLN, DB_URI),
-  /** XQuery function. */
-  _DB_EXISTS(DbExists.class, "exists(database[,path])", arg(STR, STR), BLN, flag(NDT), DB_URI),
-  /** XQuery function. */
-  _DB_CONTENT_TYPE(DbContentType.class, "content-type(database,path)", arg(STR, STR), STR, DB_URI),
-  /** XQuery function. */
-  _DB_FLUSH(DbFlush.class, "flush(database)", arg(ITEM), EMP, flag(UPD, NDT), DB_URI),
-  /** XQuery function. */
-  _DB_EXPORT(DbExport.class, "export(database,path[,param]])", arg(STR, STR, ITEM), EMP, flag(NDT),
-      DB_URI),
-  /** XQuery function. */
-  _DB_NAME(DbName.class, "name(node)", arg(NOD), STR, DB_URI),
-  /** XQuery function. */
-  _DB_PATH(DbPath.class, "path(node)", arg(NOD), STR, DB_URI),
+//  /** XQuery function. */
+//  _DB_OPEN(DbOpen.class, "open(database[,path])", arg(STR, STR), NOD_ZM, DB_URI),
+//  /** XQuery function. */
+//  _DB_OPEN_PRE(DbOpenPre.class, "open-pre(database,pre)", arg(STR, ITR), NOD_ZM, DB_URI),
+//  /** XQuery function. */
+//  _DB_OPEN_ID(DbOpenId.class, "open-id(database,id)", arg(STR, ITR), NOD_ZM, DB_URI),
+//  /** XQuery function. */
+//  _DB_TEXT(DbText.class, "text(database,string)", arg(STR, ITEM), NOD_ZM, flag(NDT), DB_URI),
+//  /** XQuery function. */
+//  _DB_TEXT_RANGE(DbTextRange.class, "text-range(database,from,to)",
+//      arg(STR, ITEM, ITEM), NOD_ZM, flag(NDT), DB_URI),
+//  /** XQuery function. */
+//  _DB_ATTRIBUTE(DbAttribute.class, "attribute(database,string[,name])",
+//      arg(STR, ITEM, STR), NOD_ZM, flag(NDT), DB_URI),
+//  /** XQuery function. */
+//  _DB_ATTRIBUTE_RANGE(DbAttributeRange.class, "attribute-range(database,from,to[,name])",
+//      arg(STR, ITEM, ITEM, STR), NOD_ZM, flag(NDT), DB_URI),
+//  /** XQuery function. */
+//  _DB_LIST(DbList.class, "list([database[,path]])", arg(STR, STR), STR_ZM, flag(NDT), DB_URI),
+//  /** XQuery function. */
+//  _DB_LIST_DETAILS(DbListDetails.class, "list-details([database[,path]])", arg(STR, STR), ELM_ZM,
+//      flag(NDT), DB_URI),
+//  /** XQuery function. */
+//  _DB_BACKUPS(DbBackups.class, "backups([database])", arg(ITEM), ELM_ZM, DB_URI),
+//  /** XQuery function. */
+//  _DB_CREATE_BACKUP(DbCreateBackup.class, "create-backup(database)", arg(STR), EMP,
+//      flag(UPD, NDT), DB_URI),
+//  /** XQuery function. */
+//  _DB_COPY(DbCopy.class, "copy(database, new-name)", arg(STR, STR), EMP, flag(UPD, NDT),
+//      DB_URI),
+//  /** XQuery function. */
+//  _DB_ALTER(DbAlter.class, "alter(database, new-name)", arg(STR, STR), EMP, flag(UPD, NDT), DB_URI),
+//  /** XQuery function. */
+//  _DB_DROP_BACKUP(DbDropBackup.class, "drop-backup(name)", arg(STR), EMP, flag(UPD, NDT), DB_URI),
+//  /** XQuery function. */
+//  _DB_RESTORE(DbRestore.class, "restore(backup)", arg(STR), EMP, flag(UPD, NDT), DB_URI),
+//  /** XQuery function. */
+//  _DB_SYSTEM(DbSystem.class, "system()", arg(), STR, DB_URI),
+//  /** XQuery function. */
+//  _DB_INFO(DbInfo.class, "info(database)", arg(ITEM), STR, DB_URI),
+//  /** XQuery function. */
+//  _DB_NODE_ID(DbNodeId.class, "node-id(nodes)", arg(NOD_ZM), ITR_ZM, DB_URI),
+//  /** XQuery function. */
+//  _DB_NODE_PRE(DbNodePre.class, "node-pre(nodes)", arg(NOD_ZM), ITR_ZM, DB_URI),
+//  /** XQuery function. */
+//  _DB_OUTPUT(DbOutput.class, "output(result)", arg(ITEM_ZM), EMP, flag(UPD, NDT), DB_URI),
+//  /** XQuery function. */
+//  _DB_OUTPUT_CACHE(DbOutputCache.class, "output-cache()", arg(), ITEM_ZO, flag(NDT), DB_URI),
+//  /** XQuery function. */
+//  _DB_ADD(DbAdd.class, "add(database,input[,path[,options]])",
+//      arg(STR, NOD, STR, ITEM), EMP, flag(UPD, NDT), DB_URI),
+//  /** XQuery function. */
+//  _DB_DELETE(DbDelete.class, "delete(database,path)", arg(STR, STR), EMP, flag(UPD, NDT), DB_URI),
+//  /** XQuery function. */
+//  _DB_CREATE(DbCreate.class, "create(name[,inputs[,paths[,options]]])",
+//      arg(STR, ITEM_ZM, STR_ZM, ITEM), EMP, flag(UPD, NDT), DB_URI),
+//  /** XQuery function. */
+//  _DB_DROP(DbDrop.class, "drop(database)", arg(ITEM), EMP, flag(UPD, NDT), DB_URI),
+//  /** XQuery function. */
+//  _DB_RENAME(DbRename.class, "rename(database,path,new-path)", arg(STR, STR, STR), EMP,
+//      flag(UPD, NDT), DB_URI),
+//  /** XQuery function. */
+//  _DB_REPLACE(DbReplace.class, "replace(database,path,input[,options])",
+//      arg(STR, STR, ITEM, ITEM), EMP, flag(UPD, NDT), DB_URI),
+//  /** XQuery function. */
+//  _DB_OPTIMIZE(DbOptimize.class, "optimize(database[,all[,options]])",
+//      arg(STR, BLN, ITEM), EMP, flag(UPD, NDT), DB_URI),
+//  /** XQuery function. */
+//  _DB_RETRIEVE(DbRetrieve.class, "retrieve(database,path)", arg(STR, STR), B64, flag(NDT), DB_URI),
+//  /** XQuery function. */
+//  _DB_STORE(DbStore.class, "store(database,path,input)", arg(STR, STR, ITEM), EMP, flag(UPD, NDT),
+//      DB_URI),
+//  /** XQuery function. */
+//  _DB_IS_XML(DbIsXml.class, "is-xml(database,path)", arg(STR, STR), BLN, DB_URI),
+//  /** XQuery function. */
+//  _DB_IS_RAW(DbIsRaw.class, "is-raw(database,path)", arg(STR, STR), BLN, DB_URI),
+//  /** XQuery function. */
+//  _DB_EXISTS(DbExists.class, "exists(database[,path])", arg(STR, STR), BLN, flag(NDT), DB_URI),
+//  /** XQuery function. */
+//  _DB_CONTENT_TYPE(DbContentType.class, "content-type(database,path)", arg(STR, STR), STR, DB_URI),
+//  /** XQuery function. */
+//  _DB_FLUSH(DbFlush.class, "flush(database)", arg(ITEM), EMP, flag(UPD, NDT), DB_URI),
+//  /** XQuery function. */
+//  _DB_EXPORT(DbExport.class, "export(database,path[,param]])", arg(STR, STR, ITEM), EMP, flag(NDT),
+//      DB_URI),
+//  /** XQuery function. */
+//  _DB_NAME(DbName.class, "name(node)", arg(NOD), STR, DB_URI),
+//  /** XQuery function. */
+//  _DB_PATH(DbPath.class, "path(node)", arg(NOD), STR, DB_URI),
 
   /* Fetch Module. */
 
@@ -1128,42 +1557,42 @@ public enum Function {
 
   /* Repository Module. */
 
-  /** XQuery function. */
-  _REPO_INSTALL(RepoInstall.class, "install(uri)", arg(STR), EMP, flag(NDT), REPO_URI),
-  /** XQuery function. */
-  _REPO_DELETE(RepoDelete.class, "delete(uri)", arg(STR), EMP, flag(NDT), REPO_URI),
-  /** XQuery function. */
-  _REPO_LIST(RepoList.class, "list()", arg(), STR_ZM, flag(NDT), REPO_URI),
-
-  /* SQL Module. */
-
-  /** XQuery function. */
-  _SQL_INIT(SqlInit.class, "init(class)", arg(STR), EMP, flag(NDT), SQL_URI),
-  /** XQuery function. */
-  _SQL_CONNECT(SqlConnect.class, "connect(url[,user[,pass[,options]]]]])",
-      arg(STR, STR, STR, NOD_ZO), ITR, flag(NDT), SQL_URI),
-  /** XQuery function. */
-  _SQL_PREPARE(SqlPrepare.class, "prepare(id,statement)", arg(ITR, STR), ITR, flag(NDT), SQL_URI),
-  /** XQuery function. */
-  _SQL_EXECUTE(SqlExecute.class, "execute(id,query)", arg(ITR, STR), ELM_ZM, flag(NDT), SQL_URI),
-  /** XQuery function. */
-  _SQL_EXECUTE_PREPARED(SqlExecutePrepared.class, "execute-prepared(id[,params])",
-      arg(ITR, ELM), ELM_ZM, flag(NDT), SQL_URI),
-  /** XQuery function. */
-  _SQL_CLOSE(SqlClose.class, "close(id)", arg(ITR), EMP, flag(NDT), SQL_URI),
-  /** XQuery function. */
-  _SQL_COMMIT(SqlCommit.class, "commit(id)", arg(ITR), EMP, flag(NDT), SQL_URI),
-  /** XQuery function. */
-  _SQL_ROLLBACK(SqlRollback.class, "rollback(id)", arg(ITR), EMP, flag(NDT), SQL_URI),
-
-  /* Streaming Module. */
-
-  /** XQuery function. */
-  _STREAM_MATERIALIZE(StreamMaterialize.class, "materialize(value)", arg(ITEM_ZM), ITEM_ZM,
-      STREAM_URI),
-  /** XQuery function. */
-  _STREAM_IS_STREAMABLE(StreamIsStreamable.class, "is-streamable(item)", arg(ITEM), BLN,
-      STREAM_URI),
+//  /** XQuery function. */
+//  _REPO_INSTALL(RepoInstall.class, "install(uri)", arg(STR), EMP, flag(NDT), REPO_URI),
+//  /** XQuery function. */
+//  _REPO_DELETE(RepoDelete.class, "delete(uri)", arg(STR), EMP, flag(NDT), REPO_URI),
+//  /** XQuery function. */
+//  _REPO_LIST(RepoList.class, "list()", arg(), STR_ZM, flag(NDT), REPO_URI),
+//
+//  /* SQL Module. */
+//
+//  /** XQuery function. */
+//  _SQL_INIT(SqlInit.class, "init(class)", arg(STR), EMP, flag(NDT), SQL_URI),
+//  /** XQuery function. */
+//  _SQL_CONNECT(SqlConnect.class, "connect(url[,user[,pass[,options]]]]])",
+//      arg(STR, STR, STR, NOD_ZO), ITR, flag(NDT), SQL_URI),
+//  /** XQuery function. */
+//  _SQL_PREPARE(SqlPrepare.class, "prepare(id,statement)", arg(ITR, STR), ITR, flag(NDT), SQL_URI),
+//  /** XQuery function. */
+//  _SQL_EXECUTE(SqlExecute.class, "execute(id,query)", arg(ITR, STR), ELM_ZM, flag(NDT), SQL_URI),
+//  /** XQuery function. */
+//  _SQL_EXECUTE_PREPARED(SqlExecutePrepared.class, "execute-prepared(id[,params])",
+//      arg(ITR, ELM), ELM_ZM, flag(NDT), SQL_URI),
+//  /** XQuery function. */
+//  _SQL_CLOSE(SqlClose.class, "close(id)", arg(ITR), EMP, flag(NDT), SQL_URI),
+//  /** XQuery function. */
+//  _SQL_COMMIT(SqlCommit.class, "commit(id)", arg(ITR), EMP, flag(NDT), SQL_URI),
+//  /** XQuery function. */
+//  _SQL_ROLLBACK(SqlRollback.class, "rollback(id)", arg(ITR), EMP, flag(NDT), SQL_URI),
+//
+//  /* Streaming Module. */
+//
+//  /** XQuery function. */
+//  _STREAM_MATERIALIZE(StreamMaterialize.class, "materialize(value)", arg(ITEM_ZM), ITEM_ZM,
+//      STREAM_URI),
+//  /** XQuery function. */
+//  _STREAM_IS_STREAMABLE(StreamIsStreamable.class, "is-streamable(item)", arg(ITEM), BLN,
+//      STREAM_URI),
 
   /* Unit Module. */
 
@@ -1178,65 +1607,65 @@ public enum Function {
 
   /* User Module. */
 
-  /** XQuery function. */
-  _USER_CURRENT(UserCurrent.class, "current()", arg(), STR, USER_URI),
-  /** XQuery function. */
-  _USER_EXISTS(UserExists.class, "exists(name)", arg(STR), BLN, flag(NDT), USER_URI),
-  /** XQuery function. */
-  _USER_LIST(UserList.class, "list()", arg(), ELM_ZM, flag(NDT), USER_URI),
-  /** XQuery function. */
-  _USER_LIST_DETAILS(UserListDetails.class, "list-details([name])",
-      arg(STR), ELM_ZM, flag(NDT), USER_URI),
-  /** XQuery function. */
-  _USER_CREATE(UserCreate.class, "create(name,password[,permission])",
-      arg(STR, STR, STR), EMP, flag(UPD), USER_URI),
-  /** XQuery function. */
-  _USER_GRANT(UserGrant.class, "grant(name,permission[,pattern])",
-      arg(STR, STR, STR), EMP, flag(UPD), USER_URI),
-  /** XQuery function. */
-  _USER_DROP(UserDrop.class, "drop(name[,pattern])", arg(STR, STR), EMP, flag(UPD), USER_URI),
-  /** XQuery function. */
-  _USER_ALTER(UserAlter.class, "alter(name,newname)", arg(STR, STR), EMP, flag(UPD), USER_URI),
-  /** XQuery function. */
-  _USER_PASSWORD(UserPassword.class, "password(name,password)",
-      arg(STR, STR), EMP, flag(UPD), USER_URI),
-
-  /* Validate Module. */
-
-  /** XQuery function. */
-  _VALIDATE_XSD(ValidateXsd.class, "xsd(input[,schema])", arg(ITEM, ITEM), EMP, flag(NDT),
-      VALIDATE_URI),
-  /** XQuery function. */
-  _VALIDATE_XSD_INFO(ValidateXsdInfo.class, "xsd-info(input[,schema])",
-      arg(ITEM, ITEM), STR_ZM, flag(NDT), VALIDATE_URI),
-  /** XQuery function. */
-  _VALIDATE_DTD(ValidateDtd.class, "dtd(input[,schema])", arg(ITEM, ITEM), EMP, flag(NDT),
-      VALIDATE_URI),
-  /** XQuery function. */
-  _VALIDATE_DTD_INFO(ValidateDtdInfo.class, "dtd-info(input[,schema])",
-      arg(ITEM, ITEM), STR_ZM, flag(NDT), VALIDATE_URI),
-  /** XQuery function. */
-  _VALIDATE_RNG(ValidateRng.class, "rng(input,schema[,compact])",
-      arg(ITEM, ITEM, BLN), STR_ZM, flag(NDT), VALIDATE_URI),
-  /** XQuery function. */
-  _VALIDATE_RNG_INFO(ValidateRngInfo.class, "rng-info(input,schema[,compact])",
-      arg(ITEM, ITEM, BLN), STR_ZM, flag(NDT), VALIDATE_URI),
-
-  /* Web Module. */
-
-  /** XQuery function. */
-  _WEB_CONTENT_TYPE(WebContentType.class, "content-type(path)", arg(STR), STR, WEB_URI),
-  /** XQuery function. */
-  _WEB_CREATE_URL(WebCreateUrl.class, "create-url(url,params)", arg(STR, MAP_O), STR, WEB_URI),
-  /** XQuery function. */
-  _WEB_REDIRECT(WebRedirect.class, "redirect(location[,params])", arg(STR, MAP_O), ELM, WEB_URI),
-  /** XQuery function. */
-  _WEB_RESPONSE_HEADER(WebResponseHeader.class, "response-header([headers[,output]])",
-      arg(MAP_O, MAP_O), ELM, WEB_URI),
-  /** XQuery function. */
-  _WEB_ENCODE_URL(WebEncodeUrl.class, "encode-url(string)", arg(STR), STR, WEB_URI),
-  /** XQuery function. */
-  _WEB_DECODE_URL(WebDecodeUrl.class, "decode-url(string)", arg(STR), STR, WEB_URI),
+//  /** XQuery function. */
+//  _USER_CURRENT(UserCurrent.class, "current()", arg(), STR, USER_URI),
+//  /** XQuery function. */
+//  _USER_EXISTS(UserExists.class, "exists(name)", arg(STR), BLN, flag(NDT), USER_URI),
+//  /** XQuery function. */
+//  _USER_LIST(UserList.class, "list()", arg(), ELM_ZM, flag(NDT), USER_URI),
+//  /** XQuery function. */
+//  _USER_LIST_DETAILS(UserListDetails.class, "list-details([name])",
+//      arg(STR), ELM_ZM, flag(NDT), USER_URI),
+//  /** XQuery function. */
+//  _USER_CREATE(UserCreate.class, "create(name,password[,permission])",
+//      arg(STR, STR, STR), EMP, flag(UPD), USER_URI),
+//  /** XQuery function. */
+//  _USER_GRANT(UserGrant.class, "grant(name,permission[,pattern])",
+//      arg(STR, STR, STR), EMP, flag(UPD), USER_URI),
+//  /** XQuery function. */
+//  _USER_DROP(UserDrop.class, "drop(name[,pattern])", arg(STR, STR), EMP, flag(UPD), USER_URI),
+//  /** XQuery function. */
+//  _USER_ALTER(UserAlter.class, "alter(name,newname)", arg(STR, STR), EMP, flag(UPD), USER_URI),
+//  /** XQuery function. */
+//  _USER_PASSWORD(UserPassword.class, "password(name,password)",
+//      arg(STR, STR), EMP, flag(UPD), USER_URI),
+//
+//  /* Validate Module. */
+//
+//  /** XQuery function. */
+//  _VALIDATE_XSD(ValidateXsd.class, "xsd(input[,schema])", arg(ITEM, ITEM), EMP, flag(NDT),
+//      VALIDATE_URI),
+//  /** XQuery function. */
+//  _VALIDATE_XSD_INFO(ValidateXsdInfo.class, "xsd-info(input[,schema])",
+//      arg(ITEM, ITEM), STR_ZM, flag(NDT), VALIDATE_URI),
+//  /** XQuery function. */
+//  _VALIDATE_DTD(ValidateDtd.class, "dtd(input[,schema])", arg(ITEM, ITEM), EMP, flag(NDT),
+//      VALIDATE_URI),
+//  /** XQuery function. */
+//  _VALIDATE_DTD_INFO(ValidateDtdInfo.class, "dtd-info(input[,schema])",
+//      arg(ITEM, ITEM), STR_ZM, flag(NDT), VALIDATE_URI),
+//  /** XQuery function. */
+//  _VALIDATE_RNG(ValidateRng.class, "rng(input,schema[,compact])",
+//      arg(ITEM, ITEM, BLN), STR_ZM, flag(NDT), VALIDATE_URI),
+//  /** XQuery function. */
+//  _VALIDATE_RNG_INFO(ValidateRngInfo.class, "rng-info(input,schema[,compact])",
+//      arg(ITEM, ITEM, BLN), STR_ZM, flag(NDT), VALIDATE_URI),
+//
+//  /* Web Module. */
+//
+//  /** XQuery function. */
+//  _WEB_CONTENT_TYPE(WebContentType.class, "content-type(path)", arg(STR), STR, WEB_URI),
+//  /** XQuery function. */
+//  _WEB_CREATE_URL(WebCreateUrl.class, "create-url(url,params)", arg(STR, MAP_O), STR, WEB_URI),
+//  /** XQuery function. */
+//  _WEB_REDIRECT(WebRedirect.class, "redirect(location[,params])", arg(STR, MAP_O), ELM, WEB_URI),
+//  /** XQuery function. */
+//  _WEB_RESPONSE_HEADER(WebResponseHeader.class, "response-header([headers[,output]])",
+//      arg(MAP_O, MAP_O), ELM, WEB_URI),
+//  /** XQuery function. */
+//  _WEB_ENCODE_URL(WebEncodeUrl.class, "encode-url(string)", arg(STR), STR, WEB_URI),
+//  /** XQuery function. */
+//  _WEB_DECODE_URL(WebDecodeUrl.class, "decode-url(string)", arg(STR), STR, WEB_URI),
 
   /* XQuery Module. */
 

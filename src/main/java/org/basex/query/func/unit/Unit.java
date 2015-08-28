@@ -1,26 +1,63 @@
 package org.basex.query.func.unit;
 
-import static org.basex.query.QueryError.*;
-import static org.basex.query.func.unit.Constants.*;
-import static org.basex.query.ann.Annotation.*;
-import static org.basex.util.Token.*;
+import org.basex.core.MainOptions;
+import org.basex.io.IO;
+import org.basex.io.IOFile;
+import org.basex.query.MainModule;
+import org.basex.query.QueryContext;
+import org.basex.query.QueryException;
+import org.basex.query.QueryText;
+import org.basex.query.expr.Expr;
+import org.basex.query.func.StaticFunc;
+import org.basex.query.iter.Iter;
+import org.basex.query.util.Ann;
+import org.basex.query.util.list.AnnList;
+import org.basex.query.value.Value;
+import org.basex.query.value.item.DTDur;
+import org.basex.query.value.item.Item;
+import org.basex.query.value.item.QNm;
+import org.basex.query.value.node.ANode;
+import org.basex.query.value.node.FElem;
+import org.basex.util.Performance;
 
-import java.io.*;
-import java.util.*;
+import java.io.IOException;
+import java.util.ArrayList;
 
-import org.basex.core.*;
-import org.basex.core.Context;
-import org.basex.io.*;
-import org.basex.query.*;
-import org.basex.query.expr.*;
-import org.basex.query.func.*;
-import org.basex.query.iter.*;
-import org.basex.query.util.*;
-import org.basex.query.util.list.*;
-import org.basex.query.value.*;
-import org.basex.query.value.item.*;
-import org.basex.query.value.node.*;
-import org.basex.util.*;
+import static org.basex.query.QueryError.BASX_ANNNUM_X_X_X;
+import static org.basex.query.QueryError.UNIT_ARGS_X;
+import static org.basex.query.QueryError.UNIT_ASSERT;
+import static org.basex.query.QueryError.UNIT_PRIVATE_X;
+import static org.basex.query.QueryError.chop;
+import static org.basex.query.ann.Annotation.PRIVATE;
+import static org.basex.query.ann.Annotation._UNIT_AFTER;
+import static org.basex.query.ann.Annotation._UNIT_AFTER_MODULE;
+import static org.basex.query.ann.Annotation._UNIT_BEFORE;
+import static org.basex.query.ann.Annotation._UNIT_BEFORE_MODULE;
+import static org.basex.query.ann.Annotation._UNIT_IGNORE;
+import static org.basex.query.ann.Annotation._UNIT_TEST;
+import static org.basex.query.func.unit.Constants.COLUMN;
+import static org.basex.query.func.unit.Constants.ERROR;
+import static org.basex.query.func.unit.Constants.ERRORS;
+import static org.basex.query.func.unit.Constants.EXPECTED;
+import static org.basex.query.func.unit.Constants.FAILURE;
+import static org.basex.query.func.unit.Constants.FAILURES;
+import static org.basex.query.func.unit.Constants.INFO;
+import static org.basex.query.func.unit.Constants.ITEM;
+import static org.basex.query.func.unit.Constants.LINE;
+import static org.basex.query.func.unit.Constants.NAME;
+import static org.basex.query.func.unit.Constants.RETURNED;
+import static org.basex.query.func.unit.Constants.SKIPPED;
+import static org.basex.query.func.unit.Constants.TESTCASE;
+import static org.basex.query.func.unit.Constants.TESTINIT;
+import static org.basex.query.func.unit.Constants.TESTS;
+import static org.basex.query.func.unit.Constants.TESTSUITE;
+import static org.basex.query.func.unit.Constants.TIME;
+import static org.basex.query.func.unit.Constants.TYPE;
+import static org.basex.query.func.unit.Constants.URI;
+import static org.basex.util.Token.EMPTY;
+import static org.basex.util.Token.eq;
+import static org.basex.util.Token.string;
+import static org.basex.util.Token.token;
 
 /**
  * XQUnit tests: Testing single modules.
@@ -30,11 +67,11 @@ import org.basex.util.*;
  */
 final class Unit {
   /** Database context. */
-  private final Context ctx;
+//  private final Context ctx;
   /** File. */
   private final IOFile file;
   /** Parent process. */
-  private final Proc proc;
+//  private final Proc proc;
 
   /** Query string. */
   private String input;
@@ -50,16 +87,18 @@ final class Unit {
   /** Tests. */
   int tests;
 
+  private final MainOptions options;
+
   /**
    * Constructor.
    * @param file file
-   * @param ctx database context
-   * @param proc process
+//   * @param ctx database context
+//   * @param proc process
    */
-  public Unit(final IOFile file, final Context ctx, final Proc proc) {
+  public Unit(final IOFile file, final MainOptions options) {
     this.file = file;
-    this.ctx = ctx;
-    this.proc = proc;
+    this.options = options;
+//    this.proc = proc;
   }
 
   /**
@@ -78,7 +117,7 @@ final class Unit {
     final ArrayList<StaticFunc> test = new ArrayList<>(0);
     final Performance perf = new Performance();
 
-    try(final QueryContext qc = new QueryContext(ctx)) {
+    try(final QueryContext qc = new QueryContext(options)) {
       input = string(file.read());
       qc.parse(input, file.path(), null);
 
@@ -282,16 +321,17 @@ final class Unit {
   private void eval(final StaticFunc func) throws QueryException {
     current = func;
 
-    try(final QueryContext qctx = new QueryContext(ctx)) {
-      qctx.listen = proc.listen;
+    try(final QueryContext qctx = new QueryContext(options)) {
+//      qctx.listen = proc.listen;
       qctx.parse(input, file.path(), null);
       qctx.mainModule(new MainModule(find(qctx, func), new Expr[0]));
       // ignore results
       final Iter iter = qctx.iter();
       while(iter.next() != null);
-    } finally {
-      proc.proc(null);
     }
+//    finally {
+//      proc.proc(null);
+//    }
   }
 
   /**

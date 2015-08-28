@@ -1,20 +1,20 @@
 package org.basex.query.value.seq;
 
-import java.util.*;
+import org.basex.data.Data;
+import org.basex.query.QueryProcessor;
+import org.basex.query.expr.Expr;
+import org.basex.query.util.ft.FTPosData;
+import org.basex.query.value.node.DBNode;
+import org.basex.query.value.node.FTPosNode;
+import org.basex.query.value.type.NodeType;
+import org.basex.util.list.IntList;
 
-import org.basex.core.Context;
-import org.basex.data.*;
-import org.basex.query.*;
-import org.basex.query.expr.*;
-import org.basex.query.util.ft.*;
-import org.basex.query.value.node.*;
-import org.basex.query.value.type.*;
-import org.basex.util.list.*;
+import java.util.Arrays;
 
 /**
  * This class stores database nodes in an ascending order.
  * Instances of this class will be returned by the method {@link QueryProcessor#cache(int)} method.
- * They are used in the GUI and in the {@link Context} class to reference currently opened,
+// * They are used in the GUI and in the  Context class to reference currently opened,
  * marked, and copied database nodes.
  *
  * @author BaseX Team 2005-15, BSD License

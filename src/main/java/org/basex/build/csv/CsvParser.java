@@ -1,10 +1,10 @@
 package org.basex.build.csv;
 
-import java.io.*;
+import org.basex.build.SingleParser;
+import org.basex.core.MainOptions;
+import org.basex.io.IO;
 
-import org.basex.build.*;
-import org.basex.core.*;
-import org.basex.io.*;
+import java.io.IOException;
 
 /**
  * This class parses files in the CSV format and converts them to XML.
@@ -41,6 +41,6 @@ public final class CsvParser extends SingleParser {
 
   @Override
   protected void parse() throws IOException {
-    proc(new CsvBuilder(copts, builder)).convert(source);
+    new CsvBuilder(copts, builder).convert(source);
   }
 }

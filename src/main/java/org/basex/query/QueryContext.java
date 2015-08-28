@@ -1,44 +1,80 @@
 package org.basex.query;
 
-import static org.basex.core.Text.*;
-import static org.basex.query.QueryError.*;
-import static org.basex.util.Token.*;
+import org.basex.build.json.JsonOptions;
+import org.basex.build.json.JsonOptions.JsonFormat;
+import org.basex.build.json.JsonParserOptions;
+import org.basex.core.BaseXException;
+import org.basex.core.MainOptions;
+import org.basex.core.MainOptions.MainParser;
+import org.basex.data.Data;
+import org.basex.io.IO;
+import org.basex.io.parse.json.JsonConverter;
+import org.basex.io.parse.json.JsonMapConverter;
+import org.basex.io.serial.SerializerOptions;
+import org.basex.query.expr.Expr;
+import org.basex.query.expr.Expr.Flag;
+import org.basex.query.expr.XQFunction;
+import org.basex.query.func.JavaMapping;
+import org.basex.query.func.StaticFuncs;
+import org.basex.query.iter.Iter;
+import org.basex.query.up.Updates;
+import org.basex.query.util.collation.Collation;
+import org.basex.query.util.ft.FTPosData;
+import org.basex.query.util.list.ItemList;
+import org.basex.query.value.Value;
+import org.basex.query.value.ValueBuilder;
+import org.basex.query.value.item.DTDur;
+import org.basex.query.value.item.Dat;
+import org.basex.query.value.item.Dtm;
+import org.basex.query.value.item.Item;
+import org.basex.query.value.item.QNm;
+import org.basex.query.value.item.Tim;
+import org.basex.query.value.node.DBNode;
+import org.basex.query.value.node.FElem;
+import org.basex.query.value.seq.DBNodes;
+import org.basex.query.value.seq.Empty;
+import org.basex.query.value.type.AtomType;
+import org.basex.query.value.type.FuncType;
+import org.basex.query.value.type.ListType;
+import org.basex.query.value.type.NodeType;
+import org.basex.query.value.type.Type;
+import org.basex.query.var.QueryStack;
+import org.basex.query.var.Var;
+import org.basex.query.var.VarScope;
+import org.basex.query.var.Variables;
+import org.basex.util.DateTime;
+import org.basex.util.InputInfo;
+import org.basex.util.Prop;
+import org.basex.util.Strings;
+import org.basex.util.Util;
+import org.basex.util.ft.FTLexer;
+import org.basex.util.ft.FTOpt;
+import org.basex.util.hash.TokenMap;
+import org.basex.util.hash.TokenObjMap;
+import org.basex.util.list.IntList;
+import org.basex.util.list.StringList;
+import org.basex.util.list.TokenList;
+import org.basex.util.options.Option;
 
-import java.io.*;
-import java.util.*;
+import java.io.Closeable;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map.Entry;
 
-import org.basex.build.json.*;
-import org.basex.build.json.JsonOptions.*;
-import org.basex.core.*;
-import org.basex.core.MainOptions.MainParser;
-import org.basex.core.locks.*;
-import org.basex.core.users.*;
-import org.basex.core.Context;
-import org.basex.data.*;
-import org.basex.io.*;
-import org.basex.io.parse.json.*;
-import org.basex.io.serial.*;
-import org.basex.query.expr.*;
-import org.basex.query.expr.Expr.Flag;
-import org.basex.query.func.*;
-import org.basex.query.func.fn.*;
-import org.basex.query.iter.*;
-import org.basex.query.up.*;
-import org.basex.query.util.collation.*;
-import org.basex.query.util.ft.*;
-import org.basex.query.util.list.*;
-import org.basex.query.value.*;
-import org.basex.query.value.item.*;
-import org.basex.query.value.node.*;
-import org.basex.query.value.seq.*;
-import org.basex.query.value.type.*;
-import org.basex.query.var.*;
-import org.basex.util.*;
-import org.basex.util.ft.*;
-import org.basex.util.hash.*;
-import org.basex.util.list.*;
-import org.basex.util.options.*;
+import static org.basex.core.Text.PLEASE_WAIT_D;
+import static org.basex.core.Text.SAVE;
+import static org.basex.query.QueryError.BASX_STACKOVERFLOW;
+import static org.basex.query.QueryError.BASX_VALUE_X_X;
+import static org.basex.query.QueryError.CIRCCTX;
+import static org.basex.query.QueryError.NOCTX_X;
+import static org.basex.query.QueryError.NOURI_X;
+import static org.basex.query.QueryError.WHICHTYPE_X;
+import static org.basex.util.Token.indexOf;
+import static org.basex.util.Token.substring;
+import static org.basex.util.Token.token;
 
 /**
  * This class organizes both static and dynamic properties that are specific to a
@@ -47,7 +83,7 @@ import org.basex.util.options.*;
  * @author BaseX Team 2005-15, BSD License
  * @author Christian Gruen
  */
-public final class QueryContext extends Proc implements Closeable {
+public final class QueryContext implements Closeable {
   /** The evaluation stack. */
   public final QueryStack stack = new QueryStack();
   /** Static variables. */
@@ -62,7 +98,7 @@ public final class QueryContext extends Proc implements Closeable {
   /** Query info. */
   public final QueryInfo info;
   /** Database context. */
-  public final Context context;
+  //public final Context context;
 
   /** Query resources. */
   public QueryResources resources;
@@ -151,35 +187,45 @@ public final class QueryContext extends Proc implements Closeable {
   /** Indicates if the query context has been closed. */
   private boolean closed;
 
+  public boolean updating = false;
+
+  public MainOptions options;
+
   /**
    * Constructor.
    * @param qcParent parent context
    */
   public QueryContext(final QueryContext qcParent) {
-    this(qcParent.context, qcParent);
-    listen = qcParent.listen;
-    resources = qcParent.resources;
+    this(qcParent.options, qcParent);
+//    listen = qcParent.listen;
+//    resources = qcParent.resources;
   }
 
   /**
    * Constructor.
-   * @param context database context
+//   * @param context database context
    */
-  public QueryContext(final Context context) {
-    this(context, null);
+  public QueryContext(final MainOptions opt) {
+    this(opt, null);
     resources = new QueryResources(this);
   }
 
   /**
    * Constructor.
-   * @param context database context
+//   * @param context database context
    * @param qcParent parent context (optional)
    */
-  private QueryContext(final Context context, final QueryContext qcParent) {
-    this.context = context;
+  private QueryContext(final MainOptions opt, final QueryContext qcParent) {
+    options = opt;
+//    this.context = context;
     this.qcParent = qcParent;
     info = new QueryInfo(this);
   }
+
+    private void addEmbeddedNamespaces(final StaticContext sc) throws QueryException {
+        // TODO: BXK: add a read only LmdbDataManager version ?
+        //sc.namespace("DiskDataManager","java:br.net.bsocial.db.DiskDataManager");
+    }
 
   /**
    * Parses the specified query.
@@ -280,13 +326,13 @@ public final class QueryContext extends Proc implements Closeable {
     final int os = opts.size();
     for(int o = 0; o < os; o += 2) {
       try {
-        context.options.assign(opts.get(o).toUpperCase(Locale.ENGLISH), opts.get(o + 1));
+        options.assign(opts.get(o).toUpperCase(Locale.ENGLISH), opts.get(o + 1));
       } catch(final BaseXException ex) {
         throw BASX_VALUE_X_X.get(null, opts.get(o), opts.get(o + 1));
       }
     }
     // set tail call option after assignment database option
-    maxCalls = context.options.get(MainOptions.TAILCALLS);
+    maxCalls = options.get(MainOptions.TAILCALLS);
 
     // bind external variables
     vars.bindExternal(this, bindings);
@@ -300,15 +346,16 @@ public final class QueryContext extends Proc implements Closeable {
         // only {@link ParseExpr} instances may lead to a missing context
         throw ex.error() == NOCTX_X ? CIRCCTX.get(ctxItem.info) : ex;
       }
-    } else {
-      // cache the initial context nodes
-      final DBNodes nodes = context.current();
-      if(nodes != null) {
-        if(!context.perm(Perm.READ, nodes.data().meta.name))
-          throw BASX_PERM_X.get(null, Perm.READ);
-        value = resources.compile(nodes);
-      }
     }
+//    else {
+//      // cache the initial context nodes
+//      final DBNodes nodes = context.current();
+//      if(nodes != null) {
+//        if(!context.perm(Perm.READ, nodes.data().meta.name))
+//          throw BASX_PERM_X.get(null, Perm.READ);
+//        value = resources.compile(nodes);
+//      }
+//    }
 
     // if specified, convert context value to specified type
     // [LW] should not be necessary
@@ -318,7 +365,7 @@ public final class QueryContext extends Proc implements Closeable {
 
     // dynamic compilation
     analyze();
-    info.runtime = true;
+//    info.runtime = true;
     compiled = true;
   }
 
@@ -365,7 +412,7 @@ public final class QueryContext extends Proc implements Closeable {
           copy(cache, datas, dbs);
           copy(output, datas, dbs);
 
-          if(context.data() != null) context.invalidate();
+//          if(context.data() != null) context.invalidate();
           updates.apply(this);
 
           // append cached outputs
@@ -396,7 +443,7 @@ public final class QueryContext extends Proc implements Closeable {
       if(!(it instanceof DBNode)) continue;
       final Data data = it.data();
       if(datas.contains(data) || !data.inMemory() && dbs.contains(data.meta.name)) {
-        cache.set(c, ((DBNode) it).dbCopy(context.options));
+        cache.set(c, ((DBNode) it).dbCopy(options));
       }
     }
   }
@@ -408,7 +455,7 @@ public final class QueryContext extends Proc implements Closeable {
    * @throws QueryException query exception
    */
   public Iter iter(final Expr expr) throws QueryException {
-    checkStop();
+//    checkStop();
     return expr.iter(this);
   }
 
@@ -419,7 +466,7 @@ public final class QueryContext extends Proc implements Closeable {
    * @throws QueryException query exception
    */
   public Value value(final Expr expr) throws QueryException {
-    checkStop();
+//    checkStop();
     return expr.value(this);
   }
 
@@ -431,20 +478,20 @@ public final class QueryContext extends Proc implements Closeable {
     return value != null ? value.data() : null;
   }
 
-  @Override
-  public void databases(final LockResult lr) {
-    lr.read.add(readLocks);
-    lr.write.add(writeLocks);
-    // use global locking if referenced databases cannot be statically determined
-    if(root == null || !root.databases(lr, this) ||
-       ctxItem != null && !ctxItem.databases(lr, this)) {
-      if(updating) lr.writeAll = true;
-      else lr.readAll = true;
-    }
-    // replace collection lock with context lock
-    if(lr.read.delete(Docs.COLL)) lr.read.add(DBLocking.CONTEXT);
-    if(lr.write.delete(Docs.COLL)) lr.write.add(DBLocking.CONTEXT);
-  }
+//  @Override
+//  public void databases(final LockResult lr) {
+//    lr.read.add(readLocks);
+//    lr.write.add(writeLocks);
+//    // use global locking if referenced databases cannot be statically determined
+//    if(root == null || !root.databases(lr, this) ||
+//       ctxItem != null && !ctxItem.databases(lr, this)) {
+//      if(updating) lr.writeAll = true;
+//      else lr.readAll = true;
+//    }
+//    // replace collection lock with context lock
+//    if(lr.read.delete(Docs.COLL)) lr.read.add(DBLocking.CONTEXT);
+//    if(lr.write.delete(Docs.COLL)) lr.write.add(DBLocking.CONTEXT);
+//  }
 
   /**
    * Binds the HTTP context.
@@ -540,7 +587,7 @@ public final class QueryContext extends Proc implements Closeable {
    */
   public SerializerOptions serParams() {
     if(serParams == null) {
-      serParams = new SerializerOptions(context.options.get(MainOptions.SERIALIZER));
+      serParams = new SerializerOptions(options.get(MainOptions.SERIALIZER));
       defaultOutput = root != null;
     }
     return serParams;
@@ -600,21 +647,21 @@ public final class QueryContext extends Proc implements Closeable {
 
     // reassign original database options
     for(final Entry<Option<?>, Object> e : staticOpts.entrySet()) {
-      context.options.put(e.getKey(), e.getValue());
+      options.put(e.getKey(), e.getValue());
     }
   }
 
-  @Override
+//  @Override
   public String tit() {
     return SAVE;
   }
 
-  @Override
+//  @Override
   public String det() {
     return PLEASE_WAIT_D;
   }
 
-  @Override
+//  @Override
   public double prog() {
     return 0;
   }
@@ -642,7 +689,7 @@ public final class QueryContext extends Proc implements Closeable {
     if(defaultOutput && data != null) {
       final IntList pres = new IntList();
       while((it = ir.next()) != null && it.data() == data && pres.size() < mx) {
-        checkStop();
+//        checkStop();
         pres.add(((DBNode) it).pre());
       }
 
@@ -660,7 +707,7 @@ public final class QueryContext extends Proc implements Closeable {
 
     // use standard iterator
     while((it = ir.next()) != null && cache.size() < mx) {
-      checkStop();
+//      checkStop();
       cache.add(it.materialize(null));
     }
     return cache.value();

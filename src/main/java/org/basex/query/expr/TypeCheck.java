@@ -98,7 +98,7 @@ public final class TypeCheck extends Single {
       public Item next() throws QueryException {
         final SeqType st = seqType;
         while(c == cache.size()) {
-          qc.checkStop();
+//          qc.checkStop();
           cache.size(0);
           c = 0;
 

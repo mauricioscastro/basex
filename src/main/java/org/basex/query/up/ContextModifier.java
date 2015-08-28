@@ -1,16 +1,22 @@
 package org.basex.query.up;
 
-import static org.basex.query.QueryError.*;
+import org.basex.data.Data;
+import org.basex.data.MemData;
+import org.basex.query.QueryContext;
+import org.basex.query.QueryException;
+import org.basex.query.up.primitives.DataUpdate;
+import org.basex.query.up.primitives.Update;
+import org.basex.query.up.primitives.name.NameUpdate;
+import org.basex.util.Util;
+import org.basex.util.list.StringList;
 
-import java.io.*;
-import java.util.*;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
-import org.basex.data.*;
-import org.basex.query.*;
-import org.basex.query.up.primitives.*;
-import org.basex.query.up.primitives.name.*;
-import org.basex.util.*;
-import org.basex.util.list.*;
+import static org.basex.query.QueryError.BXDB_LOCK_X;
 
 /**
  * Base class for the different context modifiers. A context modifier aggregates
@@ -25,7 +31,7 @@ public abstract class ContextModifier {
   /** Update primitives, aggregated separately for each database name. */
   private final Map<String, NameUpdates> nameUpdates = new HashMap<>();
   /** Update primitives, aggregated separately for each user name. */
-  private final Map<String, UserUpdates> userUpdates = new HashMap<>();
+//  private final Map<String, UserUpdates> userUpdates = new HashMap<>();
   /** Temporary data reference, containing all XML fragments to be inserted. */
   private MemData tmp;
 
@@ -45,7 +51,7 @@ public abstract class ContextModifier {
         dbUpdates.put(data, ups);
       }
       // create temporary mem data instance if not available yet
-      if(tmp == null) tmp = new MemData(qc.context.options);
+      if(tmp == null) tmp = new MemData(qc.options);
       ups.add(dataUp, tmp);
     } else if(update instanceof NameUpdate) {
       final NameUpdate nameUp = (NameUpdate) update;
@@ -56,16 +62,18 @@ public abstract class ContextModifier {
         nameUpdates.put(name, ups);
       }
       ups.add(nameUp);
-    } else if(update instanceof UserUpdate) {
-      final UserUpdate userUp = (UserUpdate) update;
-      final String name = userUp.name();
-      UserUpdates ups = userUpdates.get(name);
-      if(ups == null) {
-        ups = new UserUpdates();
-        userUpdates.put(name, ups);
-      }
-      ups.add(userUp);
-    } else {
+    }
+//    else if(update instanceof UserUpdate) {
+//      final UserUpdate userUp = (UserUpdate) update;
+//      final String name = userUp.name();
+//      UserUpdates ups = userUpdates.get(name);
+//      if(ups == null) {
+//        ups = new UserUpdates();
+//        userUpdates.put(name, ups);
+//      }
+//      ups.add(userUp);
+//    }
+    else {
       throw Util.notExpected("Unknown update type: " + update);
     }
   }
@@ -92,7 +100,7 @@ public abstract class ContextModifier {
   final void prepare(final HashSet<Data> datas, final QueryContext qc) throws QueryException {
     for(final DataUpdates up : dbUpdates.values()) {
       // create temporary mem data instance if not available yet
-      if(tmp == null) tmp = new MemData(qc.context.options);
+      if(tmp == null) tmp = new MemData(qc.options);
       up.prepare(tmp);
       datas.add(up.data());
     }
@@ -105,8 +113,8 @@ public abstract class ContextModifier {
    * @throws QueryException query exception
    */
   final void apply(final QueryContext qc) throws QueryException {
-    for(final UserUpdates up : userUpdates.values()) up.apply();
-    if(!userUpdates.isEmpty()) qc.context.users.write();
+//    for(final UserUpdates up : userUpdates.values()) up.apply();
+//    if(!userUpdates.isEmpty()) qc.context.users.write();
 
     // apply initial updates based on database names
     for(final NameUpdates up : nameUpdates.values()) up.apply(true);
@@ -117,7 +125,7 @@ public abstract class ContextModifier {
     final Set<Data> datas = new HashSet<>();
     try {
       for(final Data data : dbUpdates.keySet()) {
-        data.startUpdate(qc.context.options);
+        data.startUpdate(qc.options);
         datas.add(data);
       }
       // apply node and database update
@@ -129,7 +137,7 @@ public abstract class ContextModifier {
     } finally {
       // remove locks: in case of a crash, remove only already acquired write locks
       for(final Data data : datas) {
-        data.finishUpdate(qc.context.options);
+        data.finishUpdate(qc.options);
       }
     }
 
@@ -145,7 +153,7 @@ public abstract class ContextModifier {
     int s = 0;
     for(final DataUpdates up : dbUpdates.values()) s += up.size();
     for(final NameUpdates up : nameUpdates.values()) s += up.size();
-    for(final UserUpdates up : userUpdates.values()) s += up.size();
+//    for(final UserUpdates up : userUpdates.values()) s += up.size();
     return s;
   }
 }

@@ -75,7 +75,7 @@ final class CachedPath extends AxisPath {
         qc.value = node;
         iter(step + 1, list, qc);
       } else {
-        qc.checkStop();
+//        qc.checkStop();
         list.add(node);
       }
     }

@@ -1,20 +1,23 @@
 package org.basex.query;
 
-import java.util.*;
+import org.basex.core.locks.DBLocking;
+import org.basex.core.locks.LockResult;
+import org.basex.query.expr.Expr;
+import org.basex.query.func.StaticFunc;
+import org.basex.query.func.StaticFuncCall;
+import org.basex.query.iter.Iter;
+import org.basex.query.util.ASTVisitor;
+import org.basex.query.util.list.ItemList;
+import org.basex.query.value.item.FuncItem;
+import org.basex.query.value.item.Item;
+import org.basex.query.value.node.FElem;
+import org.basex.query.value.type.SeqType;
+import org.basex.query.var.StaticVar;
+import org.basex.query.var.VarScope;
+import org.basex.util.InputInfo;
+import org.basex.util.list.StringList;
 
-import org.basex.core.*;
-import org.basex.core.locks.*;
-import org.basex.query.expr.*;
-import org.basex.query.func.*;
-import org.basex.query.iter.*;
-import org.basex.query.util.*;
-import org.basex.query.util.list.*;
-import org.basex.query.value.item.*;
-import org.basex.query.value.node.*;
-import org.basex.query.value.type.*;
-import org.basex.query.var.*;
-import org.basex.util.*;
-import org.basex.util.list.*;
+import java.util.IdentityHashMap;
 
 /**
  * An XQuery main module.
@@ -148,7 +151,7 @@ public final class MainModule extends StaticScope {
    * @param lr lock result
    * @param qc query context
    * @return result of check
-   * @see Proc#databases(LockResult)
+//   * @see Proc#databases(LockResult)
    */
   boolean databases(final LockResult lr, final QueryContext qc) {
     return expr.accept(new LockVisitor(lr, qc));
@@ -172,7 +175,7 @@ public final class MainModule extends StaticScope {
      * @param qc query context
      */
     private LockVisitor(final LockResult lr, final QueryContext qc) {
-      sl = qc.updating ? lr.write : lr.read;
+      sl = qc.updating ? lr.write : lr.read; // TODO: basex-lmdb: review
       level = qc.ctxItem == null ? 0 : 1;
     }
 

@@ -1,16 +1,8 @@
 package org.basex.core;
 
-import static org.basex.core.Lang.*;
+import org.basex.util.Prop;
 
-import org.basex.core.parse.Commands.CmdAlter;
-import org.basex.core.parse.Commands.CmdCreate;
-import org.basex.core.parse.Commands.CmdDrop;
-import org.basex.core.parse.Commands.CmdIndex;
-import org.basex.core.parse.Commands.CmdInfo;
-import org.basex.core.parse.Commands.CmdPerm;
-import org.basex.core.parse.Commands.CmdRepo;
-import org.basex.core.parse.Commands.CmdShow;
-import org.basex.util.*;
+import static org.basex.core.Lang.lang;
 
 /**
  * This class contains internationalized text strings, which are used throughout the project.
@@ -279,21 +271,21 @@ public interface Text {
   String NOHELP = lang("no_help");
 
   /** Command help. */
-  String[] HELPCREATE = {
-    "[" + CmdCreate.BACKUP + '|' + CmdCreate.DATABASE + '|' +
-    CmdCreate.INDEX + '|' + CmdCreate.USER + "] [...]",
-    lang("c_create1"),
-    lang("c_create2") + NL +
-    LI + CmdDrop.BACKUP + " [" + S_NAME + "]:" + NL +
-    "  " + lang("c_create22", S_NAME) + NL +
-    LI + CmdCreate.DATABASE + " [" + S_NAME + "] ([" + S_INPUT + "]):"  + NL +
-    "  " + lang("c_create21", S_NAME, S_INPUT) + NL +
-    LI + CmdCreate.INDEX + " [" + CmdIndex.TEXT + '|' + CmdIndex.ATTRIBUTE +
-    '|' + CmdIndex.FULLTEXT + "]:" + NL +
-    "  " + lang("c_create23") + NL +
-    LI + CmdCreate.USER + " [" + S_NAME + "] ([" + S_PW + "]):" + NL +
-    "  " + lang("c_create24")
-  };
+//  String[] HELPCREATE = {
+//    "[" + CmdCreate.BACKUP + '|' + CmdCreate.DATABASE + '|' +
+//    CmdCreate.INDEX + '|' + CmdCreate.USER + "] [...]",
+//    lang("c_create1"),
+//    lang("c_create2") + NL +
+//    LI + CmdDrop.BACKUP + " [" + S_NAME + "]:" + NL +
+//    "  " + lang("c_create22", S_NAME) + NL +
+//    LI + CmdCreate.DATABASE + " [" + S_NAME + "] ([" + S_INPUT + "]):"  + NL +
+//    "  " + lang("c_create21", S_NAME, S_INPUT) + NL +
+//    LI + CmdCreate.INDEX + " [" + CmdIndex.TEXT + '|' + CmdIndex.ATTRIBUTE +
+//    '|' + CmdIndex.FULLTEXT + "]:" + NL +
+//    "  " + lang("c_create23") + NL +
+//    LI + CmdCreate.USER + " [" + S_NAME + "] ([" + S_PW + "]):" + NL +
+//    "  " + lang("c_create24")
+//  };
 
   /** Command help. */
   String[] HELPCOPY = {
@@ -327,16 +319,16 @@ public interface Text {
     '[' + S_NAME + "] ([" + S_PATH + "])", lang("c_open1"), lang("c_open2", S_NAME, S_PATH)
   };
   /** Command help. */
-  String[] HELPINFO = {
-    "([" + CmdInfo.DATABASE + '|' + CmdInfo.INDEX + '|' +
-    CmdInfo.STORAGE + "])",
-    lang("c_info1"),
-    lang("c_info21") + NL +
-    LI + lang("c_info22") + NL +
-    LI + CmdInfo.DATABASE + ": " + lang("c_info23") + NL +
-    LI + CmdInfo.INDEX + ": " + lang("c_info24") + NL +
-    LI + CmdInfo.STORAGE + " [start end] | [" + S_QUERY + "]: " + lang("c_info25")
-  };
+//  String[] HELPINFO = {
+//    "([" + CmdInfo.DATABASE + '|' + CmdInfo.INDEX + '|' +
+//    CmdInfo.STORAGE + "])",
+//    lang("c_info1"),
+//    lang("c_info21") + NL +
+//    LI + lang("c_info22") + NL +
+//    LI + CmdInfo.DATABASE + ": " + lang("c_info23") + NL +
+//    LI + CmdInfo.INDEX + ": " + lang("c_info24") + NL +
+//    LI + CmdInfo.STORAGE + " [start end] | [" + S_QUERY + "]: " + lang("c_info25")
+//  };
   /** Command help. */
   String[] HELPCLOSE = {
     "", lang("c_close1"), lang("c_close2")
@@ -346,21 +338,21 @@ public interface Text {
     "([" + S_NAME + "] ([" + S_PATH + "]))", lang("c_list1"), lang("c_list2", S_NAME, S_PATH)
   };
   /** Command help. */
-  String[] HELPDROP = {
-    "[" + CmdDrop.BACKUP + '|' + CmdDrop.DATABASE + '|' +
-      CmdDrop.INDEX + '|' + CmdDrop.USER + "] [...]",
-    lang("c_drop1"),
-    lang("c_drop2") + NL +
-    LI + CmdDrop.BACKUP + " [" + S_NAME + "]:" + NL +
-      "  " + lang("c_drop24") + NL +
-    LI + CmdDrop.DATABASE + " [" + S_NAME + "]:" + NL +
-      "  " + lang("c_drop21") + NL +
-    LI + CmdDrop.INDEX + " [" + CmdIndex.TEXT + '|' +
-      CmdIndex.ATTRIBUTE + '|' + CmdIndex.FULLTEXT + "]:" + NL +
-      "  " + lang("c_drop22") + NL +
-    LI + CmdDrop.USER + " [" + S_NAME + "] (" + ON + " [pattern]): " + NL +
-      "  " + lang("c_drop23")
-  };
+//  String[] HELPDROP = {
+//    "[" + CmdDrop.BACKUP + '|' + CmdDrop.DATABASE + '|' +
+//      CmdDrop.INDEX + '|' + CmdDrop.USER + "] [...]",
+//    lang("c_drop1"),
+//    lang("c_drop2") + NL +
+//    LI + CmdDrop.BACKUP + " [" + S_NAME + "]:" + NL +
+//      "  " + lang("c_drop24") + NL +
+//    LI + CmdDrop.DATABASE + " [" + S_NAME + "]:" + NL +
+//      "  " + lang("c_drop21") + NL +
+//    LI + CmdDrop.INDEX + " [" + CmdIndex.TEXT + '|' +
+//      CmdIndex.ATTRIBUTE + '|' + CmdIndex.FULLTEXT + "]:" + NL +
+//      "  " + lang("c_drop22") + NL +
+//    LI + CmdDrop.USER + " [" + S_NAME + "] (" + ON + " [pattern]): " + NL +
+//      "  " + lang("c_drop23")
+//  };
   /** Command help. */
   String[] HELPEXPORT = {
     '[' + S_PATH + ']', lang("c_export1"), lang("c_export2", S_PATH)
@@ -412,34 +404,34 @@ public interface Text {
     '[' + S_NAME + "-(date)]", lang("c_restore1"), lang("c_restore2")
   };
   /** Command help. */
-  String[] HELPSHOW = {
-    "[" + CmdShow.BACKUPS + '|' + CmdShow.SESSIONS + '|' + CmdShow.USERS + ']',
-    lang("c_show1"),
-    lang("c_show21") + NL +
-    LI + CmdShow.SESSIONS + ": " + lang("c_show23") + NL +
-    LI + CmdShow.USERS + " (" + ON + " [database]): " + lang("c_show24") + NL +
-    LI + CmdShow.BACKUPS + ": " + lang("c_show25")
-  };
+//  String[] HELPSHOW = {
+//    "[" + CmdShow.BACKUPS + '|' + CmdShow.SESSIONS + '|' + CmdShow.USERS + ']',
+//    lang("c_show1"),
+//    lang("c_show21") + NL +
+//    LI + CmdShow.SESSIONS + ": " + lang("c_show23") + NL +
+//    LI + CmdShow.USERS + " (" + ON + " [database]): " + lang("c_show24") + NL +
+//    LI + CmdShow.BACKUPS + ": " + lang("c_show25")
+//  };
   /** Command help. */
-  String[] HELPGRANT = {
-    "[" + CmdPerm.NONE + '|' + CmdPerm.READ + '|' + CmdPerm.WRITE + '|' +
-    CmdPerm.CREATE + '|' + CmdPerm.ADMIN + "] (" + ON + " [pattern]) " + S_TO +
-    " [user]",
-    lang("c_grant1"),
-    lang("c_grant2")
-  };
+//  String[] HELPGRANT = {
+//    "[" + CmdPerm.NONE + '|' + CmdPerm.READ + '|' + CmdPerm.WRITE + '|' +
+//    CmdPerm.CREATE + '|' + CmdPerm.ADMIN + "] (" + ON + " [pattern]) " + S_TO +
+//    " [user]",
+//    lang("c_grant1"),
+//    lang("c_grant2")
+//  };
   /** Command help. */
-  String[] HELPALTER = {
-    "[" + CmdAlter.DATABASE + '|' + CmdAlter.PASSWORD + '|' + CmdAlter.USER + "] [...]",
-    lang("c_alter1"),
-    lang("c_alter2") + NL  +
-    LI + CmdAlter.DATABASE + " [" + S_NAME + "] [newname]" + NL +
-    "  " + lang("c_alterdb") + NL +
-    LI + CmdAlter.PASSWORD + " [" + S_NAME + "] [" + S_PW + "]" + NL +
-    "  " + lang("c_alterpw") + NL +
-    LI + CmdAlter.USER  + " [" + S_NAME + "] ([newname]):" + NL +
-    "  " + lang("c_alteruser")
-  };
+//  String[] HELPALTER = {
+//    "[" + CmdAlter.DATABASE + '|' + CmdAlter.PASSWORD + '|' + CmdAlter.USER + "] [...]",
+//    lang("c_alter1"),
+//    lang("c_alter2") + NL  +
+//    LI + CmdAlter.DATABASE + " [" + S_NAME + "] [newname]" + NL +
+//    "  " + lang("c_alterdb") + NL +
+//    LI + CmdAlter.PASSWORD + " [" + S_NAME + "] [" + S_PW + "]" + NL +
+//    "  " + lang("c_alterpw") + NL +
+//    LI + CmdAlter.USER  + " [" + S_NAME + "] ([newname]):" + NL +
+//    "  " + lang("c_alteruser")
+//  };
   /** Command help. */
   String[] HELPINSPECT = {
     "", lang("c_inspect1"), lang("c_inspect2")
@@ -457,17 +449,17 @@ public interface Text {
     "([" + S_PW + "])", lang("c_password1"), lang("c_password2")
   };
   /** Command help. */
-  String[] HELPREPO = {
-    "[" + CmdRepo.DELETE + '|' + CmdRepo.INSTALL + '|' + CmdRepo.LIST + ']',
-    lang("c_repo1"),
-    lang("c_repo2") + NL +
-    LI + CmdRepo.DELETE + " [" + S_PKGNAME + '|' + S_PKGDIR + "]:" +  NL +
-    "  " + lang("c_repo3", S_PKGNAME, S_PKGDIR) + NL +
-    LI + CmdRepo.INSTALL + " [" + S_PKGPATH + "]:" + NL +
-    "  " + lang("c_repo4", S_PKGPATH) + NL +
-    LI + CmdRepo.LIST + ':' + NL +
-    "  " + lang("c_repo5")
-  };
+//  String[] HELPREPO = {
+//    "[" + CmdRepo.DELETE + '|' + CmdRepo.INSTALL + '|' + CmdRepo.LIST + ']',
+//    lang("c_repo1"),
+//    lang("c_repo2") + NL +
+//    LI + CmdRepo.DELETE + " [" + S_PKGNAME + '|' + S_PKGDIR + "]:" +  NL +
+//    "  " + lang("c_repo3", S_PKGNAME, S_PKGDIR) + NL +
+//    LI + CmdRepo.INSTALL + " [" + S_PKGPATH + "]:" + NL +
+//    "  " + lang("c_repo4", S_PKGPATH) + NL +
+//    LI + CmdRepo.LIST + ':' + NL +
+//    "  " + lang("c_repo5")
+//  };
   /** Command help. */
   String[] HELPHELP = {
     "([command])", lang("c_help1", Prop.NAME), lang("c_help2", "command")

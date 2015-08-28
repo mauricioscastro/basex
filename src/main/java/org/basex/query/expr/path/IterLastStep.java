@@ -41,7 +41,7 @@ final class IterLastStep extends Step {
         ANode litem = null;
         final Test tst = test;
         for(ANode item; (item = iter.next()) != null;) {
-          qc.checkStop();
+//          qc.checkStop();
           if(tst.eq(item)) litem = item.finish();
         }
         return litem == null ? null : litem;

@@ -1,22 +1,43 @@
 package org.basex.query.expr.gflwor;
 
-import java.util.*;
-
-import org.basex.query.*;
-import org.basex.query.expr.*;
-import org.basex.query.expr.path.*;
-import org.basex.query.func.fn.*;
-import org.basex.query.iter.*;
-import org.basex.query.util.*;
-import org.basex.query.value.*;
-import org.basex.query.value.item.*;
-import org.basex.query.value.node.*;
-import org.basex.query.value.seq.*;
-import org.basex.query.value.type.*;
+import org.basex.query.QueryContext;
+import org.basex.query.QueryError;
+import org.basex.query.QueryException;
+import org.basex.query.QueryText;
+import org.basex.query.expr.And;
+import org.basex.query.expr.Arr;
+import org.basex.query.expr.CmpR;
+import org.basex.query.expr.Expr;
+import org.basex.query.expr.If;
+import org.basex.query.expr.ParseExpr;
+import org.basex.query.expr.Pos;
+import org.basex.query.expr.TypeCheck;
+import org.basex.query.expr.path.AxisPath;
+import org.basex.query.func.fn.FnError;
+import org.basex.query.iter.Iter;
+import org.basex.query.util.ASTVisitor;
+import org.basex.query.value.Value;
+import org.basex.query.value.ValueBuilder;
+import org.basex.query.value.item.Bln;
+import org.basex.query.value.item.Item;
+import org.basex.query.value.node.FElem;
+import org.basex.query.value.seq.Empty;
+import org.basex.query.value.type.SeqType;
 import org.basex.query.value.type.SeqType.Occ;
-import org.basex.query.var.*;
-import org.basex.util.*;
-import org.basex.util.hash.*;
+import org.basex.query.var.Var;
+import org.basex.query.var.VarRef;
+import org.basex.query.var.VarScope;
+import org.basex.query.var.VarUsage;
+import org.basex.util.Array;
+import org.basex.util.BitArray;
+import org.basex.util.InputInfo;
+import org.basex.util.Util;
+import org.basex.util.hash.IntObjMap;
+
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.ListIterator;
 
 /**
  * General FLWOR expression.
@@ -90,7 +111,7 @@ public final class GFLWOR extends ParseExpr {
       public Item next() throws QueryException {
         for(;;) {
           final Item it = sub.next();
-          qc.checkStop();
+//          qc.checkStop();
           if(it != null) return it;
           if(!ev.next(qc)) {
             sub = null;

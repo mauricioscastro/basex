@@ -1,29 +1,57 @@
 package org.basex.query.func;
 
-import static org.basex.query.QueryError.*;
-import static org.basex.query.QueryText.*;
+import org.basex.core.MainOptions;
+import org.basex.query.QueryContext;
+import org.basex.query.QueryException;
+import org.basex.query.Scope;
+import org.basex.query.StaticContext;
+import org.basex.query.ann.Annotation;
+import org.basex.query.expr.Expr;
+import org.basex.query.expr.ParseExpr;
+import org.basex.query.expr.Single;
+import org.basex.query.expr.TypeCheck;
+import org.basex.query.expr.XQFunctionExpr;
+import org.basex.query.expr.gflwor.GFLWOR;
+import org.basex.query.expr.gflwor.GFLWOR.Clause;
+import org.basex.query.expr.gflwor.Let;
+import org.basex.query.func.fn.FnError;
+import org.basex.query.iter.ValueIter;
+import org.basex.query.util.ASTVisitor;
+import org.basex.query.util.list.AnnList;
+import org.basex.query.value.Value;
+import org.basex.query.value.item.FuncItem;
+import org.basex.query.value.item.QNm;
+import org.basex.query.value.node.FElem;
+import org.basex.query.value.type.FuncType;
+import org.basex.query.value.type.SeqType;
+import org.basex.query.value.type.SeqType.Occ;
+import org.basex.query.value.type.Type;
+import org.basex.query.var.Var;
+import org.basex.query.var.VarRef;
+import org.basex.query.var.VarScope;
+import org.basex.query.var.VarUsage;
+import org.basex.util.InputInfo;
+import org.basex.util.Util;
+import org.basex.util.hash.IntObjMap;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Map;
 import java.util.Map.Entry;
 
-import org.basex.core.*;
-import org.basex.query.*;
-import org.basex.query.ann.*;
-import org.basex.query.expr.*;
-import org.basex.query.expr.gflwor.*;
-import org.basex.query.expr.gflwor.GFLWOR.Clause;
-import org.basex.query.func.fn.*;
-import org.basex.query.iter.*;
-import org.basex.query.util.*;
-import org.basex.query.util.list.*;
-import org.basex.query.value.*;
-import org.basex.query.value.item.*;
-import org.basex.query.value.node.*;
-import org.basex.query.value.type.*;
-import org.basex.query.value.type.SeqType.Occ;
-import org.basex.query.var.*;
-import org.basex.util.*;
-import org.basex.util.hash.*;
+import static org.basex.query.QueryError.INVPROMOTE_X_X;
+import static org.basex.query.QueryError.UPEXPECTF;
+import static org.basex.query.QueryError.UPNOT_X;
+import static org.basex.query.QueryError.UUPFUNCTYPE;
+import static org.basex.query.QueryText.ARG;
+import static org.basex.query.QueryText.FUNCTION;
+import static org.basex.query.QueryText.OPTINLINE;
+import static org.basex.query.QueryText.PAREN1;
+import static org.basex.query.QueryText.PAREN2;
+import static org.basex.query.QueryText.RETURN;
 
 /**
  * Inline function.
@@ -179,7 +207,7 @@ public final class Closure extends Single implements Scope, XQFunctionExpr {
           final Closure cl = (Closure) c;
           if(!cl.has(Flag.NDT) && cl.nonLocal.size() < 5
               && expr.count(v) != VarUsage.MORE_THAN_ONCE
-              && cl.exprSize() < qc.context.options.get(MainOptions.INLINELIMIT)) {
+              && cl.exprSize() < qc.options.get(MainOptions.INLINELIMIT)) {
             qc.compInfo(OPTINLINE, e);
             for(final Entry<Var, Expr> e2 : cl.nonLocal.entrySet()) {
               final Var v2 = e2.getKey(), v2c = scope.newCopyOf(qc, v2);

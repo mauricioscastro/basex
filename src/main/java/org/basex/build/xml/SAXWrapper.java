@@ -1,17 +1,28 @@
 package org.basex.build.xml;
 
-import static org.basex.core.Text.*;
+import org.basex.build.SingleParser;
+import org.basex.core.MainOptions;
+import org.basex.io.IO;
+import org.basex.io.IOContent;
+import org.basex.io.IOFile;
+import org.basex.io.IOUrl;
+import org.basex.util.Util;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXParseException;
+import org.xml.sax.XMLReader;
 
-import java.io.*;
+import javax.xml.parsers.SAXParserFactory;
+import javax.xml.transform.sax.SAXSource;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
 
-import javax.xml.parsers.*;
-import javax.xml.transform.sax.*;
-
-import org.basex.build.*;
-import org.basex.core.*;
-import org.basex.io.*;
-import org.basex.util.*;
-import org.xml.sax.*;
+import static org.basex.core.Text.COLS;
+import static org.basex.core.Text.DOTS;
+import static org.basex.core.Text.SCANPOS_X_X;
 
 /**
  * This class parses an XML document with Java's internal SAX parser. Note that
@@ -81,8 +92,8 @@ public final class SAXWrapper extends SingleParser {
       final String msg = Util.info(SCANPOS_X_X, in, ex.getLineNumber(),
           ex.getColumnNumber()) + COLS + Util.message(ex);
       throw new IOException(msg, ex);
-    } catch(final ProcException ex) {
-      throw ex;
+//    } catch(final ProcException ex) {
+//      throw ex;
     } catch(final Exception ex) {
       // occurs, e.g. if document encoding is invalid:
       // prefix message with source id
@@ -155,12 +166,13 @@ public final class SAXWrapper extends SingleParser {
     return tmp;
   }
 
-  @Override
+//  @Override
   public String det() {
-    return length == 0 ? super.det() : Util.info(SCANPOS_X_X, source.name(), line);
+    return Util.info(SCANPOS_X_X, source.name(), line);
+    //length == 0 ? super.det() : Util.info(SCANPOS_X_X, source.name(), line);
   }
 
-  @Override
+//  @Override
   public double prog() {
     return length == 0 ? saxh == null ? 0 : saxh.nodes / 3000000d % 1 :
       (double) counter / length;

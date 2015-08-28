@@ -1,9 +1,10 @@
 package org.basex.index;
 
-import static org.basex.core.Text.*;
+import org.basex.core.MainOptions;
+import org.basex.data.Data;
 
-import org.basex.core.*;
-import org.basex.data.*;
+import static org.basex.core.Text.INDEX_ATTRIBUTES_D;
+import static org.basex.core.Text.INDEX_TEXT_D;
 
 /**
  * Builder for values-based index structures.
@@ -23,7 +24,7 @@ public abstract class ValuesBuilder extends IndexBuilder {
         text ? MainOptions.TEXTINCLUDE : MainOptions.ATTRINCLUDE, text);
   }
 
-  @Override
+//  @Override
   protected final String det() {
     return text ? INDEX_TEXT_D : INDEX_ATTRIBUTES_D;
   }

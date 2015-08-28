@@ -17,7 +17,7 @@ import org.basex.util.options.*;
  * @author BaseX Team 2005-15, BSD License
  * @author Christian Gruen
  */
-public abstract class IndexBuilder extends Proc {
+public abstract class IndexBuilder {
   /** Performance. */
   protected final Performance perf = new Performance();
 
@@ -79,7 +79,7 @@ public abstract class IndexBuilder extends Proc {
    */
   @SuppressWarnings("unused")
   protected void check() throws IOException {
-    checkStop();
+//    checkStop();
     if(Prop.debug && (pre & 0x1FFFFF) == 0) Util.err(".");
   }
 
@@ -139,12 +139,12 @@ public abstract class IndexBuilder extends Proc {
     Util.errln(sb);
   }
 
-  @Override
+//  @Override
   public final String tit() {
     return CREATING_INDEXES;
   }
 
-  @Override
+//  @Override
   public final double prog() {
     return pre / (size + (splits > 0 ? size / 50d : 0d));
   }

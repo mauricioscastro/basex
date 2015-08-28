@@ -22,7 +22,7 @@ public final class FnCount extends StandardFunc {
     long c = iter.size();
     if(c == -1) {
       do {
-        qc.checkStop();
+//        qc.checkStop();
         ++c;
       } while(iter.next() != null);
     }

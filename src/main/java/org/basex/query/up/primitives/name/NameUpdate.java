@@ -1,11 +1,13 @@
 package org.basex.query.up.primitives.name;
 
-import static org.basex.query.QueryError.*;
+import org.basex.query.QueryContext;
+import org.basex.query.QueryException;
+import org.basex.query.up.primitives.Update;
+import org.basex.query.up.primitives.UpdateType;
+import org.basex.util.InputInfo;
+import org.basex.util.list.StringList;
 
-import org.basex.query.*;
-import org.basex.query.up.primitives.*;
-import org.basex.util.*;
-import org.basex.util.list.*;
+import static org.basex.query.QueryError.BXDB_ONCE_X_X;
 
 /**
  * Update operation that references databases by their name. The targeted database need not
@@ -103,8 +105,8 @@ public abstract class NameUpdate extends Update implements Comparable<NameUpdate
       throws QueryException {
 
     // close data instance in query processor
-    qc.resources.remove(name);
+//    qc.resources.remove(name);
     // check if database is stilled pinned by another process
-    if(qc.context.pinned(name)) throw BXDB_OPENED_X.get(info, name);
+//    if(qc.context.pinned(name)) throw BXDB_OPENED_X.get(info, name);
   }
 }

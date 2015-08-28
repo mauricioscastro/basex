@@ -1,17 +1,22 @@
 package org.basex.query.func.fn;
 
-import static org.basex.query.QueryError.*;
-import static org.basex.query.func.Function.*;
-import static org.basex.util.Token.*;
+import org.basex.core.locks.DBLocking;
+import org.basex.query.QueryContext;
+import org.basex.query.QueryException;
+import org.basex.query.func.StandardFunc;
+import org.basex.query.util.ASTVisitor;
+import org.basex.query.value.Value;
+import org.basex.query.value.item.Item;
+import org.basex.query.value.item.Str;
+import org.basex.query.value.item.Uri;
+import org.basex.query.value.node.ANode;
+import org.basex.util.QueryInput;
 
-import org.basex.core.locks.*;
-import org.basex.query.*;
-import org.basex.query.func.*;
-import org.basex.query.util.*;
-import org.basex.query.value.*;
-import org.basex.query.value.item.*;
-import org.basex.query.value.node.*;
-import org.basex.util.*;
+import static org.basex.query.QueryError.INVCOLL_X;
+import static org.basex.query.QueryError.INVDOC_X;
+import static org.basex.query.func.Function.COLLECTION;
+import static org.basex.query.func.Function.URI_COLLECTION;
+import static org.basex.util.Token.string;
 
 /**
  * Document and collection functions.
@@ -51,7 +56,8 @@ public abstract class Docs extends StandardFunc {
     if(it == null) return null;
     final byte[] in = toToken(it);
     if(!Uri.uri(in).isValid()) throw INVDOC_X.get(info, in);
-    return qc.resources.doc(new QueryInput(string(in)), sc.baseIO(), info);
+    //return qc.resources.doc(new QueryInput(string(in)), sc.baseIO(), info);
+    return qc.resources.doc(string(in), info);
   }
 
   @Override

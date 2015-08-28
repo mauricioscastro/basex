@@ -58,7 +58,7 @@ final class DataUpdates {
    */
   DataUpdates(final Data data, final QueryContext qc) {
     this.data = data;
-    writeback = qc.context.options.get(MainOptions.WRITEBACK);
+    writeback = qc.options.get(MainOptions.WRITEBACK);
   }
 
   /**
@@ -179,7 +179,7 @@ final class DataUpdates {
     for(final Put put : puts.values()) put.apply();
 
     // Feature #1035: auto-optimize database
-    final MainOptions opts = qc.context.options;
+    final MainOptions opts = qc.options;
     if(data.meta.autoopt) {
       try {
         Optimize.optimize(data, opts, null);
@@ -197,7 +197,7 @@ final class DataUpdates {
     if(!original.isEmpty() && data.inMemory()) {
       if(writeback) {
         try {
-          Export.export(data, original, qc.context.options, null);
+          Export.export(data, original, qc.options, null);
         } catch(final IOException ex) {
           throw UPDBOPTERR_X.get(null, ex);
         }

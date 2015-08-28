@@ -1,16 +1,17 @@
 package org.basex.build;
 
-import java.io.*;
-
-import org.basex.build.csv.*;
-import org.basex.build.html.*;
-import org.basex.build.json.*;
-import org.basex.build.text.*;
-import org.basex.build.xml.*;
-import org.basex.core.*;
+import org.basex.build.csv.CsvParser;
+import org.basex.build.html.HtmlParser;
+import org.basex.build.json.JsonParser;
+import org.basex.build.text.TextParser;
+import org.basex.build.xml.SAXWrapper;
+import org.basex.build.xml.XMLParser;
+import org.basex.core.MainOptions;
 import org.basex.core.MainOptions.MainParser;
-import org.basex.io.*;
-import org.basex.util.*;
+import org.basex.io.IO;
+import org.basex.util.Atts;
+
+import java.io.IOException;
 
 /**
  * This class defines a parser, which is used to create new databases instances.
@@ -18,7 +19,7 @@ import org.basex.util.*;
  * @author BaseX Team 2005-15, BSD License
  * @author Christian Gruen
  */
-public abstract class Parser extends Proc {
+public abstract class Parser {
   /** Source document or {@code null}. */
   public IO source;
   /** Attributes of currently parsed element. */

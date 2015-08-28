@@ -72,7 +72,7 @@ public final class TransformWith extends Arr {
       if(i2 != null) throw UPSOURCE_X.get(info, ValueBuilder.concat(i, i2));
 
       // copy node to main memory data instance
-      i = ((ANode) i).dbCopy(qc.context.options);
+      i = ((ANode) i).dbCopy(qc.options);
       // set resulting node as context
       qc.value = i;
       pu.addData(i.data());

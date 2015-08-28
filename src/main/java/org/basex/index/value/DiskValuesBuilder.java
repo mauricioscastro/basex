@@ -1,17 +1,21 @@
 package org.basex.index.value;
 
-import static org.basex.data.DataText.*;
-import static org.basex.util.Token.*;
-
-import java.io.*;
-
-import org.basex.core.*;
-import org.basex.data.*;
-import org.basex.index.*;
+import org.basex.core.MainOptions;
+import org.basex.data.Data;
+import org.basex.index.IndexTree;
+import org.basex.index.ValuesBuilder;
 import org.basex.io.out.DataOutput;
-import org.basex.io.random.*;
-import org.basex.util.*;
-import org.basex.util.list.*;
+import org.basex.io.random.DataAccess;
+import org.basex.util.Num;
+import org.basex.util.Performance;
+import org.basex.util.Util;
+import org.basex.util.list.IntList;
+
+import java.io.IOException;
+
+import static org.basex.data.DataText.DATAATV;
+import static org.basex.data.DataText.DATATXT;
+import static org.basex.util.Token.diff;
 
 /**
  * <p>This class builds an index for attribute values and text contents in a
@@ -100,7 +104,7 @@ public final class DiskValuesBuilder extends ValuesBuilder {
 
       // parse through all values
       while(true) {
-        checkStop();
+//        checkStop();
 
         // find first index which is not completely parsed yet
         int min = -1;
@@ -210,7 +214,7 @@ public final class DiskValuesBuilder extends ValuesBuilder {
     il.reset();
   }
 
-  @Override
+//  @Override
   protected void abort() {
     // drop index files
     data.meta.drop((text ? DATATXT : DATAATV) + ".+");

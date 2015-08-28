@@ -33,7 +33,7 @@ public class ZipXmlEntry extends ZipBinaryEntry {
    * @throws QueryException query exception
    */
   final ANode xmlEntry(final QueryContext qc, final boolean html) throws QueryException {
-    final MainOptions opts = qc.context.options;
+    final MainOptions opts = qc.options;
     final IO io = new IOContent(entry(qc));
     try {
       return new DBNode(html ? new HtmlParser(io, opts) : Parser.xmlParser(io));

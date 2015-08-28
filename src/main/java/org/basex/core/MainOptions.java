@@ -7,6 +7,7 @@ import org.basex.build.html.*;
 import org.basex.build.json.*;
 import org.basex.build.text.*;
 import org.basex.io.serial.*;
+import org.basex.util.Prop;
 import org.basex.util.options.*;
 
 /**
@@ -17,6 +18,11 @@ import org.basex.util.options.*;
  */
 public final class MainOptions extends Options {
   // General
+  public static final StringOption DBPATH = new StringOption("DBPATH", System.getProperty(Prop.PATH) + "/data");
+  public static final StringOption REPOPATH = new StringOption("REPOPATH", System.getProperty(Prop.PATH) + "/repo");
+  public static final StringOption MODPATH = new StringOption("MODPATH", System.getProperty(Prop.PATH) + "/module");
+  public static final StringOption XMLPATH = new StringOption("XMLPATH", System.getProperty(Prop.PATH) + "/xml");
+
 
   /** Flag for creating a main memory database. */
   public static final BooleanOption MAINMEM = new BooleanOption("MAINMEM", false);

@@ -29,7 +29,7 @@ public final class BaseXLastFrom extends StandardFunc {
     // loop through all items
     Item litem = null;
     for(Item item; (item = iter.next()) != null;) {
-      qc.checkStop();
+//      qc.checkStop();
       litem = item;
     }
     return litem;

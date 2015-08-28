@@ -1,19 +1,27 @@
 package org.basex.query.util;
 
-import static org.basex.util.Token.*;
-
-import java.util.*;
-
-import org.basex.core.*;
-import org.basex.data.*;
-import org.basex.query.iter.*;
+import org.basex.core.MainOptions;
+import org.basex.data.Data;
+import org.basex.data.MemData;
+import org.basex.query.iter.BasicNodeIter;
 import org.basex.query.util.DataFTBuilder.DataFTMarker;
-import org.basex.query.util.ft.*;
-import org.basex.query.util.list.*;
-import org.basex.query.value.item.*;
-import org.basex.query.value.node.*;
-import org.basex.query.value.type.*;
-import org.basex.util.*;
+import org.basex.query.util.ft.FTPosData;
+import org.basex.query.util.list.ANodeList;
+import org.basex.query.value.item.QNm;
+import org.basex.query.value.node.ANode;
+import org.basex.query.value.node.DBNode;
+import org.basex.query.value.type.NodeType;
+import org.basex.util.Atts;
+
+import java.util.ArrayList;
+
+import static org.basex.util.Token.EMPTY;
+import static org.basex.util.Token.SPACE;
+import static org.basex.util.Token.XML;
+import static org.basex.util.Token.concat;
+import static org.basex.util.Token.eq;
+import static org.basex.util.Token.prefix;
+import static org.basex.util.Token.trim;
 
 /**
  * Data builder. Provides methods for copying XML nodes into a main-memory database instance.
@@ -256,13 +264,13 @@ public final class DataBuilder {
    * Returns a new node without the specified namespace.
    * @param node node to be copied
    * @param ns namespace to be stripped
-   * @param ctx database context
+//   * @param ctx database context
    * @return new node
    */
-  public static ANode stripNS(final ANode node, final byte[] ns, final Context ctx) {
+  public static ANode stripNS(final ANode node, final byte[] ns, final MainOptions options) {
     if(node.type != NodeType.ELM) return node;
 
-    final MemData data = new MemData(ctx.options);
+    final MemData data = new MemData(options);
     final DataBuilder db = new DataBuilder(data);
     db.build(node);
 

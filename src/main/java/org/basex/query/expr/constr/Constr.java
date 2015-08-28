@@ -1,17 +1,28 @@
 package org.basex.query.expr.constr;
 
-import static org.basex.query.QueryError.*;
-
-import org.basex.query.*;
-import org.basex.query.expr.*;
-import org.basex.query.iter.*;
-import org.basex.query.util.list.*;
-import org.basex.query.value.*;
+import org.basex.query.QueryContext;
+import org.basex.query.QueryException;
+import org.basex.query.StaticContext;
+import org.basex.query.expr.Expr;
+import org.basex.query.iter.BasicNodeIter;
+import org.basex.query.iter.Iter;
+import org.basex.query.util.list.ANodeList;
+import org.basex.query.value.Value;
 import org.basex.query.value.array.Array;
-import org.basex.query.value.item.*;
-import org.basex.query.value.node.*;
-import org.basex.query.value.type.*;
-import org.basex.util.*;
+import org.basex.query.value.item.FItem;
+import org.basex.query.value.item.Item;
+import org.basex.query.value.item.QNm;
+import org.basex.query.value.node.ANode;
+import org.basex.query.value.node.FAttr;
+import org.basex.query.value.node.FTxt;
+import org.basex.query.value.type.NodeType;
+import org.basex.query.value.type.Type;
+import org.basex.util.Atts;
+import org.basex.util.InputInfo;
+import org.basex.util.Token;
+import org.basex.util.TokenBuilder;
+
+import static org.basex.query.QueryError.CONSFUNC_X;
 
 /**
  * Element constructor.
@@ -160,7 +171,7 @@ public final class Constr {
         if(!text.isEmpty()) children.add(new FTxt(text.next()));
 
         // [CG] XQuery, element construction: avoid full copy of sub tree if not needed
-        node = node.deepCopy(qc.context.options);
+        node = node.deepCopy(qc.options);
         children.add(node);
       }
       more = false;

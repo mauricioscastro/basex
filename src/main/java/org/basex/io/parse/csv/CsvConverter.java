@@ -18,7 +18,7 @@ import org.basex.util.list.*;
  * @author BaseX Team 2005-15, BSD License
  * @author Christian Gruen
  */
-public abstract class CsvConverter extends Proc {
+public abstract class CsvConverter {
   /** CSV token. */
   public static final byte[] CSV = token("csv");
   /** CSV token. */

@@ -77,7 +77,7 @@ public final class MemData extends Data {
   public void close() { }
 
   @Override
-  public void createIndex(final IndexType type, final MainOptions options, final Command cmd)
+  public void createIndex(final IndexType type, final MainOptions options)
       throws IOException {
 
     final IndexBuilder ib;
@@ -87,7 +87,7 @@ public final class MemData extends Data {
       case FULLTEXT:  throw new BaseXException(NO_MAINMEM);
       default:        throw Util.notExpected();
     }
-    if(cmd != null) cmd.proc(ib);
+//    if(cmd != null) cmd.proc(ib);
     set(type, ib.build());
   }
 

@@ -59,7 +59,7 @@ public abstract class Inspect {
    * @throws QueryException query exception
    */
   final QueryParser parseQuery(final IO io) throws QueryException {
-    try(final QueryContext qctx = new QueryContext(qc.context)) {
+    try(final QueryContext qctx = new QueryContext(qc)) {
       final String input = string(io.read());
       // parse query
       final QueryParser qp = new QueryParser(input, io.path(), qctx, null);

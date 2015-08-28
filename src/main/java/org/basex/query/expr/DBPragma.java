@@ -35,9 +35,9 @@ public final class DBPragma extends Pragma {
 
   @Override
   void init(final QueryContext qc, final InputInfo info) throws QueryException {
-    old = qc.context.options.get(option);
+    old = qc.options.get(option);
     try {
-      qc.context.options.assign(option.name(), string(value));
+      qc.options.assign(option.name(), string(value));
     } catch(final BaseXException ex) {
       throw BASX_VALUE_X_X.get(info, option.name(), value);
     }
@@ -45,7 +45,7 @@ public final class DBPragma extends Pragma {
 
   @Override
   void finish(final QueryContext qc) {
-    qc.context.options.put(option, old);
+    qc.options.put(option, old);
   }
 
   @Override

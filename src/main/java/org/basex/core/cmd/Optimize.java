@@ -1,15 +1,12 @@
 package org.basex.core.cmd;
 
-import static org.basex.core.Text.*;
+import org.basex.core.MainOptions;
+import org.basex.data.Data;
+import org.basex.data.MetaData;
+import org.basex.index.IndexType;
+import org.basex.util.list.IntList;
 
-import java.io.*;
-
-import org.basex.core.*;
-import org.basex.core.users.*;
-import org.basex.data.*;
-import org.basex.index.*;
-import org.basex.util.*;
-import org.basex.util.list.*;
+import java.io.IOException;
 
 /**
  * Evaluates the 'optimize' command and optimizes the data structures of
@@ -19,7 +16,7 @@ import org.basex.util.list.*;
  * @author BaseX Team 2005-15, BSD License
  * @author Christian Gruen
  */
-public final class Optimize extends ACreate {
+public final class Optimize {
   /** Current pre value. */
   private int pre;
   /** Data size. */
@@ -29,42 +26,43 @@ public final class Optimize extends ACreate {
    * Default constructor.
    */
   public Optimize() {
-    super(Perm.WRITE, true);
+
+    //super(Perm.WRITE, true);
   }
 
-  @Override
-  protected boolean run() {
-    final Data data = context.data();
-    final MetaData meta = data.meta;
-    size = meta.size;
-
-    if(!startUpdate()) return false;
-    boolean ok = true;
-    try {
-      optimize(data, options, this);
-      ok = info(DB_OPTIMIZED_X, meta.name, perf);
-    } catch(final IOException ex) {
-      ok = error(Util.message(ex));
-    } finally {
-      ok &= finishUpdate();
-    }
-    return ok;
-  }
-
-  @Override
-  public double prog() {
-    return (double) pre / size;
-  }
-
-  @Override
-  public boolean stoppable() {
-    return false;
-  }
-
-  @Override
-  public String det() {
-    return CREATE_STATS_D;
-  }
+//  @Override
+//  protected boolean run() {
+//    final Data data = context.data();
+//    final MetaData meta = data.meta;
+//    size = meta.size;
+//
+//    if(!startUpdate()) return false;
+//    boolean ok = true;
+//    try {
+//      optimize(data, options, this);
+//      ok = info(DB_OPTIMIZED_X, meta.name, perf);
+//    } catch(final IOException ex) {
+//      ok = error(Util.message(ex));
+//    } finally {
+//      ok &= finishUpdate();
+//    }
+//    return ok;
+//  }
+//
+//  @Override
+//  public double prog() {
+//    return (double) pre / size;
+//  }
+//
+//  @Override
+//  public boolean stoppable() {
+//    return false;
+//  }
+//
+//  @Override
+//  public String det() {
+//    return CREATE_STATS_D;
+//  }
 
   /**
    * Optimizes the structures of a database.
@@ -167,10 +165,10 @@ public final class Optimize extends ACreate {
       throws IOException {
 
     // check if flags have changed
-    if(create == old && !enforce) return;
+//    if(create == old && !enforce) return;
 
     // create or drop index
-    if(create) CreateIndex.create(type, data, options, cmd);
-    else DropIndex.drop(type, data);
+//    if(create) CreateIndex.create(type, data, options, cmd);
+//    else DropIndex.drop(type, data);
   }
 }

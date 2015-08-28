@@ -132,7 +132,7 @@ public class ZipZipFile extends ZipFn {
               // serialize new nodes
               try(final Serializer ser = Serializer.get(zos, so(node))) {
                 do {
-                  ser.serialize(DataBuilder.stripNS(n, ZIP_URI, qc.context));
+                  ser.serialize(DataBuilder.stripNS(n, ZIP_URI, qc.options));
                 } while((n = ch.next()) != null);
               } catch(final QueryIOException ex) {
                 throw ex.getCause(info);

@@ -1,16 +1,30 @@
 package org.basex.build.xml;
 
-import static org.basex.core.Text.*;
-import static org.basex.util.Token.*;
-
-import java.io.*;
-import java.util.*;
-
-import org.basex.build.*;
-import org.basex.core.*;
-import org.basex.util.*;
-import org.w3c.dom.*;
+import org.basex.build.Builder;
+import org.basex.build.Parser;
+import org.basex.core.MainOptions;
+import org.basex.util.Util;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Comment;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.ProcessingInstruction;
 import org.w3c.dom.Text;
+
+import java.io.IOException;
+import java.util.Stack;
+
+import static org.basex.core.Text.NODES_PARSED_X;
+import static org.basex.util.Token.EMPTY;
+import static org.basex.util.Token.XMLNS;
+import static org.basex.util.Token.XMLNSC;
+import static org.basex.util.Token.eq;
+import static org.basex.util.Token.local;
+import static org.basex.util.Token.startsWith;
+import static org.basex.util.Token.token;
 
 /**
  * This class converts an DOM document instance to a database representation.
@@ -90,12 +104,12 @@ public final class DOMWrapper extends Parser {
     builder.closeDoc();
   }
 
-  @Override
+//  @Override
   public String det() {
     return Util.info(NODES_PARSED_X, filename, nodes);
   }
 
-  @Override
+//  @Override
   public double prog() {
     return nodes / 1000000d % 1;
   }

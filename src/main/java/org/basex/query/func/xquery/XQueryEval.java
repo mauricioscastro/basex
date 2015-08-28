@@ -1,23 +1,33 @@
 package org.basex.query.func.xquery;
 
-import static org.basex.query.QueryError.*;
-import static org.basex.query.QueryText.*;
-import static org.basex.util.Token.*;
+import org.basex.query.QueryContext;
+import org.basex.query.QueryException;
+import org.basex.query.StaticContext;
+import org.basex.query.func.StandardFunc;
+import org.basex.query.iter.Iter;
+import org.basex.query.util.ASTVisitor;
+import org.basex.query.util.list.ItemList;
+import org.basex.query.value.Value;
+import org.basex.query.value.item.QNm;
+import org.basex.util.Performance;
+import org.basex.util.options.EnumOption;
+import org.basex.util.options.NumberOption;
+import org.basex.util.options.Options;
 
-import java.util.*;
+import java.util.HashMap;
 import java.util.Map.Entry;
+import java.util.Timer;
+import java.util.TimerTask;
 
-import org.basex.core.*;
-import org.basex.core.users.*;
-import org.basex.query.*;
-import org.basex.query.func.*;
-import org.basex.query.iter.*;
-import org.basex.query.util.*;
-import org.basex.query.util.list.*;
-import org.basex.query.value.*;
-import org.basex.query.value.item.*;
-import org.basex.util.*;
-import org.basex.util.options.*;
+import static org.basex.query.QueryError.BASX_PERM_X;
+import static org.basex.query.QueryError.BXXQ_NOUPDATE;
+import static org.basex.query.QueryError.BXXQ_PERM2_X;
+import static org.basex.query.QueryError.BXXQ_PERM_X;
+import static org.basex.query.QueryError.BXXQ_STOPPED;
+import static org.basex.query.QueryError.BXXQ_UPDATING;
+import static org.basex.query.QueryText.XQUERY_PREFIX;
+import static org.basex.query.QueryText.XQUERY_URI;
+import static org.basex.util.Token.string;
 
 /**
  * Function implementation.
@@ -32,7 +42,7 @@ public class XQueryEval extends StandardFunc {
   /** XQuery options. */
   public static class XQueryOptions extends Options {
     /** Permission. */
-    public static final EnumOption<Perm> PERMISSION = new EnumOption<>("permission", Perm.ADMIN);
+//    public static final EnumOption<Perm> PERMISSION = new EnumOption<>("permission", Perm.ADMIN);
     /** Timeout in seconds. */
     public static final NumberOption TIMEOUT = new NumberOption("timeout", 0);
     /** Maximum amount of megabytes that may be allocated by the query. */
@@ -73,16 +83,16 @@ public class XQueryEval extends StandardFunc {
 
     // bind variables and context value
     final HashMap<String, Value> bindings = toBindings(1, qc);
-    final User user = qc.context.user();
-    final Perm tmp = user.perm("");
+//    final User user = qc.context.user();
+//    final Perm tmp = user.perm("");
     Timer to = null;
 
-    try(final QueryContext qctx = qc.proc(new QueryContext(qc))) {
+    try(final QueryContext qctx = new QueryContext(qc)) {
       if(exprs.length > 2) {
         final Options opts = toOptions(2, Q_OPTIONS, new XQueryOptions(), qc);
-        final Perm perm = Perm.get(opts.get(XQueryOptions.PERMISSION).toString());
-        if(!user.has(perm)) throw BXXQ_PERM2_X.get(info, perm);
-        user.perm(perm, "");
+//        final Perm perm = Perm.get(opts.get(XQueryOptions.PERMISSION).toString());
+//        if(!user.has(perm)) throw BXXQ_PERM2_X.get(info, perm);
+//        user.perm(perm, "");
 
         // initial memory consumption: perform garbage collection and calculate usage
         final long mb = opts.get(XQueryOptions.MEMORY);
@@ -93,18 +103,18 @@ public class XQueryEval extends StandardFunc {
             @Override
             public void run() {
               // limit reached: perform garbage collection and check again
-              if(Performance.memory() > limit) qctx.stop();
+              if(Performance.memory() > limit) System.err.println("EVALUATING FOR TOO LONG!"); //qctx.stop();
             }
           }, 500, 500);
         }
-        final long ms = opts.get(XQueryOptions.TIMEOUT) * 1000L;
-        if(ms != 0) {
-          if(to == null) to = new Timer(true);
-          to.schedule(new TimerTask() {
-            @Override
-            public void run() { qctx.stop(); }
-          }, ms);
-        }
+//        final long ms = opts.get(XQueryOptions.TIMEOUT) * 1000L;
+//        if(ms != 0) {
+//          if(to == null) to = new Timer(true);
+//          to.schedule(new TimerTask() {
+//            @Override
+//            public void run() { qctx.stop(); }
+//          }, ms);
+//        }
       }
 
       // evaluate query
@@ -128,16 +138,16 @@ public class XQueryEval extends StandardFunc {
         final ItemList cache = new ItemList();
         cache(qctx.iter(), cache, qctx);
         return cache;
-      } catch(final ProcException ex) {
-        throw BXXQ_STOPPED.get(info);
+//      } catch(final ProcException ex) {
+//        throw BXXQ_STOPPED.get(info);
       } catch(final QueryException ex) {
         throw ex.error() == BASX_PERM_X ? BXXQ_PERM_X.get(info, ex.getLocalizedMessage()) :
           ex.info(info);
       }
 
     } finally {
-      user.perm(tmp, "");
-      qc.proc(null);
+//      user.perm(tmp, "");
+//      qc.proc(null);
       if(to != null) to.cancel();
     }
   }

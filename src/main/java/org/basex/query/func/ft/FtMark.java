@@ -72,7 +72,7 @@ public class FtMark extends StandardFunc {
             if(it == null) return null;
 
             // copy node to main memory data instance
-            final MemData md = new MemData(qc.context.options);
+            final MemData md = new MemData(qc.options);
             final DataBuilder db = new DataBuilder(md);
             db.ftpos(mark, qc.ftPosData, len).build(toDBNode(it));
 

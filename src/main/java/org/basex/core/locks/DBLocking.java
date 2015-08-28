@@ -100,91 +100,91 @@ public final class DBLocking implements Locking {
   }
 
   @Override
-  public void acquire(final Proc pr, final StringList read, final StringList write) {
-    final long thread = Thread.currentThread().getId();
-    if(writeLocked.containsKey(thread) || readLocked.containsKey(thread))
-      throw new IllegalMonitorStateException("Thread already holds one or more locks.");
-
-    // Wait in queue if necessary
-    synchronized(queue) { // Guard queue and transaction, monitor for waiting in queue
-      queue.add(thread);
-      while(transactions >= Math.max(sopts.get(StaticOptions.PARALLEL), 1)
-          || queue.peek() != thread) {
-        try {
-          queue.wait();
-        } catch(final InterruptedException ex) {
-          Thread.currentThread().interrupt();
-        }
-      }
-      final int t = transactions++;
-      assert t <= Math.max(sopts.get(StaticOptions.PARALLEL), 1);
-      queue.remove(thread);
-    }
-
-    // Global write lock if write StringList is not set
-    (write == null ? writeAll.writeLock() : writeAll.readLock()).lock();
-
-    synchronized(globalLock) {
-      // local write locking
-      if(write != null && !write.isEmpty()) {
-        while(globalReaders > 0) {
-          try {
-            globalLock.wait();
-          } catch(final InterruptedException ex) {
-            Thread.currentThread().interrupt();
-          }
-        }
-        localWriters++;
-      }
-      // global read locking
-      if(read == null) {
-        while(localWriters > 0 &&
-            // We're the only writer, allow global read lock anyway
-            !(1 == localWriters && !(null == write || write.isEmpty()))) {
-          try {
-            globalLock.wait();
-          } catch(final InterruptedException ex) {
-            Thread.currentThread().interrupt();
-          }
-        }
-        globalReaders++;
-      }
-    }
-
-    // Local locking
-    final StringList writeObjects;
-    if(write != null) {
-      writeObjects = write.sort().unique();
-      writeLocked.put(thread, writeObjects);
-    } else {
-      writeObjects = new StringList(0);
-    }
-    final StringList readObjects;
-    if(read != null) {
-      readObjects = read.sort().unique();
-      readLocked.put(thread, readObjects);
-    } else {
-      readObjects = new StringList(0);
-    }
-
-    // Use pattern similar to merge sort
-    int w = 0, r = 0;
-    final int rs = readObjects.size(), ws = writeObjects.size();
-    while(r < rs || w < ws) {
-      // Look what token comes earlier in alphabet, prefer writing against reading
-      if(w < ws && (r >= rs || writeObjects.get(w).compareTo(readObjects.get(r)) <= 0)) {
-        final String writeObject = writeObjects.get(w++);
-        setLockUsed(writeObject);
-        getOrCreateLock(writeObject).writeLock().lock();
-      } else
-      // Read lock only if not global write locking; otherwise no lock downgrading from
-      // global write lock is possible
-      if(write != null) {
-        final String readObject = readObjects.get(r++);
-        setLockUsed(readObject);
-        getOrCreateLock(readObject).readLock().lock();
-      }
-    }
+  public void acquire(final StringList read, final StringList write) {
+//    final long thread = Thread.currentThread().getId();
+//    if(writeLocked.containsKey(thread) || readLocked.containsKey(thread))
+//      throw new IllegalMonitorStateException("Thread already holds one or more locks.");
+//
+//    // Wait in queue if necessary
+//    synchronized(queue) { // Guard queue and transaction, monitor for waiting in queue
+//      queue.add(thread);
+//      while(transactions >= Math.max(sopts.get(StaticOptions.PARALLEL), 1)
+//          || queue.peek() != thread) {
+//        try {
+//          queue.wait();
+//        } catch(final InterruptedException ex) {
+//          Thread.currentThread().interrupt();
+//        }
+//      }
+//      final int t = transactions++;
+//      assert t <= Math.max(sopts.get(StaticOptions.PARALLEL), 1);
+//      queue.remove(thread);
+//    }
+//
+//    // Global write lock if write StringList is not set
+//    (write == null ? writeAll.writeLock() : writeAll.readLock()).lock();
+//
+//    synchronized(globalLock) {
+//      // local write locking
+//      if(write != null && !write.isEmpty()) {
+//        while(globalReaders > 0) {
+//          try {
+//            globalLock.wait();
+//          } catch(final InterruptedException ex) {
+//            Thread.currentThread().interrupt();
+//          }
+//        }
+//        localWriters++;
+//      }
+//      // global read locking
+//      if(read == null) {
+//        while(localWriters > 0 &&
+//            // We're the only writer, allow global read lock anyway
+//            !(1 == localWriters && !(null == write || write.isEmpty()))) {
+//          try {
+//            globalLock.wait();
+//          } catch(final InterruptedException ex) {
+//            Thread.currentThread().interrupt();
+//          }
+//        }
+//        globalReaders++;
+//      }
+//    }
+//
+//    // Local locking
+//    final StringList writeObjects;
+//    if(write != null) {
+//      writeObjects = write.sort().unique();
+//      writeLocked.put(thread, writeObjects);
+//    } else {
+//      writeObjects = new StringList(0);
+//    }
+//    final StringList readObjects;
+//    if(read != null) {
+//      readObjects = read.sort().unique();
+//      readLocked.put(thread, readObjects);
+//    } else {
+//      readObjects = new StringList(0);
+//    }
+//
+//    // Use pattern similar to merge sort
+//    int w = 0, r = 0;
+//    final int rs = readObjects.size(), ws = writeObjects.size();
+//    while(r < rs || w < ws) {
+//      // Look what token comes earlier in alphabet, prefer writing against reading
+//      if(w < ws && (r >= rs || writeObjects.get(w).compareTo(readObjects.get(r)) <= 0)) {
+//        final String writeObject = writeObjects.get(w++);
+//        setLockUsed(writeObject);
+//        getOrCreateLock(writeObject).writeLock().lock();
+//      } else
+//      // Read lock only if not global write locking; otherwise no lock downgrading from
+//      // global write lock is possible
+//      if(write != null) {
+//        final String readObject = readObjects.get(r++);
+//        setLockUsed(readObject);
+//        getOrCreateLock(readObject).readLock().lock();
+//      }
+//    }
   }
 
   /**
@@ -205,42 +205,42 @@ public final class DBLocking implements Locking {
   }
 
   @Override
-  public void release(final Proc pr) {
-    // Release all write locks
-    final Long thread = Thread.currentThread().getId();
-    final StringList writeObjects = writeLocked.remove(thread);
-    if(writeObjects != null) for(final String object : writeObjects) {
-      final ReentrantReadWriteLock lock = getOrCreateLock(object);
-      assert lock.getWriteHoldCount() == 1 : "Unexpected write lock count: "
-          + lock.getWriteHoldCount();
-      lock.writeLock().unlock();
-      unsetLockIfUnused(object);
-    }
-
-    // Release all read locks
-    final StringList readObjects = readLocked.remove(thread);
-    if(!writeAll.isWriteLocked() && readObjects != null)
-      for(final String object : readObjects) {
-        getOrCreateLock(object).readLock().unlock();
-        unsetLockIfUnused(object);
-      }
-
-    // Release global locks
-    (writeAll.isWriteLocked() ? writeAll.writeLock() : writeAll.readLock()).unlock();
-    if(writeObjects != null && !writeObjects.isEmpty()) synchronized(globalLock) {
-      localWriters--;
-      globalLock.notifyAll();
-    }
-    if(readObjects == null) synchronized(globalLock) {
-      globalReaders--;
-      globalLock.notifyAll();
-    }
-
-    // Allow another transaction to run
-    synchronized(queue) {
-      transactions--;
-      queue.notifyAll();
-    }
+  public void release() {
+//    // Release all write locks
+//    final Long thread = Thread.currentThread().getId();
+//    final StringList writeObjects = writeLocked.remove(thread);
+//    if(writeObjects != null) for(final String object : writeObjects) {
+//      final ReentrantReadWriteLock lock = getOrCreateLock(object);
+//      assert lock.getWriteHoldCount() == 1 : "Unexpected write lock count: "
+//          + lock.getWriteHoldCount();
+//      lock.writeLock().unlock();
+//      unsetLockIfUnused(object);
+//    }
+//
+//    // Release all read locks
+//    final StringList readObjects = readLocked.remove(thread);
+//    if(!writeAll.isWriteLocked() && readObjects != null)
+//      for(final String object : readObjects) {
+//        getOrCreateLock(object).readLock().unlock();
+//        unsetLockIfUnused(object);
+//      }
+//
+//    // Release global locks
+//    (writeAll.isWriteLocked() ? writeAll.writeLock() : writeAll.readLock()).unlock();
+//    if(writeObjects != null && !writeObjects.isEmpty()) synchronized(globalLock) {
+//      localWriters--;
+//      globalLock.notifyAll();
+//    }
+//    if(readObjects == null) synchronized(globalLock) {
+//      globalReaders--;
+//      globalLock.notifyAll();
+//    }
+//
+//    // Allow another transaction to run
+//    synchronized(queue) {
+//      transactions--;
+//      queue.notifyAll();
+//    }
   }
 
   /**

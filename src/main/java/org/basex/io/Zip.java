@@ -1,11 +1,19 @@
 package org.basex.io;
 
-import java.io.*;
-import java.util.zip.*;
+import org.basex.util.Prop;
+import org.basex.util.list.ByteList;
+import org.basex.util.list.StringList;
 
-import org.basex.core.*;
-import org.basex.util.*;
-import org.basex.util.list.*;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Contains methods for zipping and unzipping archives.
@@ -13,7 +21,7 @@ import org.basex.util.list.*;
  * @author BaseX Team 2005-15, BSD License
  * @author Christian Gruen
  */
-public final class Zip extends Proc {
+public final class Zip {
   /** Archive. */
   private final IO file;
   /** Total files in a zip operation. */
@@ -110,7 +118,7 @@ public final class Zip extends Proc {
     }
   }
 
-  @Override
+//  @Override
   protected double prog() {
     return (double) curr / total;
   }

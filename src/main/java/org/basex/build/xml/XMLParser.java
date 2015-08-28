@@ -1,16 +1,28 @@
 package org.basex.build.xml;
 
-import static org.basex.build.BuildText.*;
-import static org.basex.util.Token.*;
-
-import java.io.*;
-
-import org.basex.build.*;
+import org.basex.build.BuildException;
 import org.basex.build.BuildText.Type;
-import org.basex.core.*;
-import org.basex.data.*;
-import org.basex.io.*;
-import org.basex.util.list.*;
+import org.basex.build.SingleParser;
+import org.basex.core.MainOptions;
+import org.basex.data.DataText;
+import org.basex.io.IO;
+import org.basex.util.list.BoolList;
+import org.basex.util.list.TokenList;
+
+import java.io.IOException;
+
+import static org.basex.build.BuildText.CLOSINGELEM;
+import static org.basex.build.BuildText.DOCOPEN;
+import static org.basex.build.BuildText.MOREROOTS;
+import static org.basex.build.BuildText.OPEN;
+import static org.basex.build.BuildText.PARSEINV;
+import static org.basex.util.Token.EMPTY;
+import static org.basex.util.Token.XMLNS;
+import static org.basex.util.Token.XMLNSC;
+import static org.basex.util.Token.eq;
+import static org.basex.util.Token.local;
+import static org.basex.util.Token.startsWith;
+import static org.basex.util.Token.ws;
 
 /**
  * This class parses the tokens that are delivered by the {@link XMLScanner} and
@@ -221,12 +233,12 @@ public class XMLParser extends SingleParser {
     if(scanner.type == Type.WS) scanner.more();
   }
 
-  @Override
+//  @Override
   protected final String det() {
     return scanner.det();
   }
 
-  @Override
+//  @Override
   public final double prog() {
     return scanner.prog();
   }

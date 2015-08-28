@@ -200,8 +200,8 @@ public final class ValueAccess extends IndexAccess {
   @Override
   public String toString() {
     final TokenBuilder string = new TokenBuilder();
-    string.add((text ? Function._DB_TEXT : Function._DB_ATTRIBUTE).get(
-        null, info, Str.get(ictx.data.meta.name), expr).toString());
+//    string.add((text ? Function._DB_TEXT : Function._DB_ATTRIBUTE).get(  // TODO: basex-lmdb: review
+//        null, info, Str.get(ictx.data.meta.name), expr).toString());
     if(test != null) string.add("/parent::").addExt(test);
     return string.toString();
   }
