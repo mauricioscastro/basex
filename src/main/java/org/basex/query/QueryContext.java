@@ -191,6 +191,11 @@ public final class QueryContext implements Closeable {
 
   public MainOptions options;
 
+    public QueryContext() {
+        this(new MainOptions());
+    }
+
+
   /**
    * Constructor.
    * @param qcParent parent context
@@ -253,6 +258,12 @@ public final class QueryContext implements Closeable {
       final StaticContext sc) throws QueryException {
     return library ? parseLibrary(query, path, sc) : parseMain(query, path, sc);
   }
+
+
+    public StaticScope parse(final String query)
+            throws QueryException {
+        return parse(query, QueryProcessor.isLibrary(query), null, new StaticContext(this));
+    }
 
   /**
    * Parses the specified query.
@@ -523,6 +534,10 @@ public final class QueryContext implements Closeable {
     ctxItem = new MainModule(val, new VarScope(sc), null, sc);
   }
 
+    public void context(final Value val) {
+        StaticContext sc = new StaticContext(this);
+        ctxItem = new MainModule(val, new VarScope(sc), null, sc);
+    }
   /**
    * Binds a value to a global variable. The specified type is interpreted as follows:
    * <ul>
@@ -543,7 +558,18 @@ public final class QueryContext implements Closeable {
     bind(name, cast(val, type), sc);
   }
 
-  /**
+    public void bind(final String name, final Object val, final StaticContext sc)
+            throws QueryException {
+        bind(name, cast(val, null), sc);
+    }
+
+    public void bind(final String name, final Object val)
+            throws QueryException {
+        bind(name, cast(val, null), new StaticContext(this));
+    }
+
+
+    /**
    * Binds a value to a global variable.
    * @param name name of variable
    * @param val value to be bound
