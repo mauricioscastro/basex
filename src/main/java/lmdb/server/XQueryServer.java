@@ -1,6 +1,5 @@
 package lmdb.server;
 
-import lmdb.db.DiskDataManager;
 import lmdb.db.JdbcDataManager;
 import lmdb.handler.XQueryHandler;
 import lmdb.util.XQuery;
@@ -57,7 +56,10 @@ public class XQueryServer {
 
     public static void main(String[] arg) {
         try {
-            if(arg.length > 0) home = arg[0];
+            if(arg.length > 0) {
+                home = arg[0];
+                System.setProperty("org.basex.path", home+"/db");
+            }
             xqserver = new XQueryServer(new File(home+"/etc/config.xml"));
             xqserver.start();
         } catch (Exception e) {
@@ -86,7 +88,6 @@ public class XQueryServer {
         threadPool.setMaxThreads(1000);
         threadPool.setMinThreads(250);
 
-//        DiskDataManager.config(new ThreadPoolImpl(threadPool));
         JdbcDataManager.config(config);
         httpServerConfig();
     }

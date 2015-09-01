@@ -30,6 +30,16 @@
   
     <dependencies>
       <dependency>
+        <groupId>com.alexkasko.springjdbc</groupId>
+        <artifactId>springjdbc-iterable</artifactId>
+        <version>1.0.3</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>2.4</version>
+      </dependency>
+      <dependency>
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
         <version>2.4.1</version>
