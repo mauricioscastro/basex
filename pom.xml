@@ -30,6 +30,26 @@
   
     <dependencies>
       <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>1.7.12</version>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-log4j12</artifactId>
+        <version>1.7.12</version>
+      </dependency>
+      <dependency>
+        <groupId>org.deephacks.lmdbjni</groupId>
+        <artifactId>lmdbjni-linux64</artifactId>
+        <version>0.4.3-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>org.deephacks.lmdbjni</groupId>
+        <artifactId>lmdbjni</artifactId>
+        <version>0.4.3-SNAPSHOT</version>
+      </dependency>
+      <dependency>
         <groupId>com.alexkasko.springjdbc</groupId>
         <artifactId>springjdbc-iterable</artifactId>
         <version>1.0.3</version>
@@ -181,11 +201,6 @@
         <groupId>com.vividsolutions</groupId>
         <artifactId>jts</artifactId>
         <version>1.13</version>
-      </dependency>
-      <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-simple</artifactId>
-        <version>1.7.10</version>
       </dependency>
     </dependencies>
 

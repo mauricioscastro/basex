@@ -228,7 +228,7 @@ public final class QueryContext implements Closeable {
   }
 
     private void addEmbeddedNamespaces(final StaticContext sc) throws QueryException {
-        // TODO: BXK: add a read only LmdbDataManager version ?
+        // TODO: basex-lmdb: add a read only LmdbDataManager version ?
         //sc.namespace("DiskDataManager","java:br.net.bsocial.db.DiskDataManager");
     }
 
