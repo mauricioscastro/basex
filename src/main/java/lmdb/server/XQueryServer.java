@@ -1,5 +1,6 @@
 package lmdb.server;
 
+import lmdb.basex.LmdbDataManager;
 import lmdb.db.JdbcDataManager;
 import lmdb.handler.XQueryHandler;
 import lmdb.util.XQuery;
@@ -85,11 +86,15 @@ public class XQueryServer {
         logger.info("start");
         logger.debug("home=" + home);
 
+        LmdbDataManager.config(System.getProperty("org.basex.path",home+"/db"));
+
         threadPool.setMaxThreads(1000);
         threadPool.setMinThreads(250);
 
         JdbcDataManager.config(config);
         httpServerConfig();
+
+
     }
 
     private void httpServerConfig() {
@@ -153,8 +158,8 @@ public class XQueryServer {
     }
 
     public void stop() throws Exception {
-//        DiskDataManager.stop();
         JdbcDataManager.stop();
+        LmdbDataManager.stop();
         server.stop();
         threadPool.stop();
         logger.info("stop");
