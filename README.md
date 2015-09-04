@@ -1,6 +1,6 @@
 BaseX over LMDB
 
-After BaseX Core stripped to its bare essentials a LMDBData snd TableLMDBAccess will be created to work on top of [LMDB](http://symas.com/mdb/) with [lmdbjni](https://github.com/deephacks/lmdbjni).
+After BaseX Core stripped to its bare essentials a LmdbData and a TableLmdbAccess will be created to work on top of [LMDB](http://symas.com/mdb/) with [lmdbjni](https://github.com/deephacks/lmdbjni).
 
 This is a POC.
 
