@@ -152,6 +152,7 @@ public class XQueryServer {
     public void start() throws Exception {
         if (server.isStarted()) return;
         Runtime.getRuntime().addShutdownHook(new ShutdownHook());
+        LmdbDataManager.start();
         server.start();
         server.join();
         while(!server.isStopped());
