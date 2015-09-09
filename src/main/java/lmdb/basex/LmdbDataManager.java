@@ -1,5 +1,6 @@
 package lmdb.basex;
 
+import lmdb.util.Byte;
 import org.apache.log4j.Logger;
 import org.fusesource.lmdbjni.Database;
 import org.fusesource.lmdbjni.Entry;
@@ -7,7 +8,9 @@ import org.fusesource.lmdbjni.EntryIterator;
 import org.fusesource.lmdbjni.Env;
 import org.fusesource.lmdbjni.Transaction;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -42,7 +45,8 @@ public class LmdbDataManager {
     private static Database ftindexydb;
     private static Database ftindexzdb;
 
-    private static final byte[] COLLECTION_LIST_KEY = new byte[]{0};
+    private static final byte[] LAST_DOCUMENT_INDEX_KEY = new byte[]{0};
+    private static final byte[] COLLECTION_LIST_KEY = new byte[]{1};
 
     public static void config(String home) {
         if(env != null) return;
@@ -97,7 +101,7 @@ public class LmdbDataManager {
             if (cl != null) {
                 String collections = string(cl,1,cl.length-2);
                 HashSet<String> collection = new HashSet<String>(Arrays.asList(collections.split(", ")));
-                if(collection.contains(name)) throw new IOException("collection " + name + " exists");
+                if(collection.contains(name)) return;
                 collection.add(name);
                 coldb.put(tx, COLLECTION_LIST_KEY, bytes(collection.toString()));
             } else {
@@ -111,6 +115,7 @@ public class LmdbDataManager {
         byte[] cl = coldb.get(COLLECTION_LIST_KEY);
         if (cl == null) return new ArrayList<String>();
         String[] clist = string(cl,1,cl.length-2).split(", ");
+        Arrays.sort(clist);
         ArrayList<String> collection = new ArrayList<String>(clist.length);
         for(String c: clist) if(!c.endsWith("/r")) collection.add(c);
         return collection;
@@ -119,7 +124,7 @@ public class LmdbDataManager {
     public static synchronized void removeCollection(final String name) throws IOException {
         byte[] cl = coldb.get(COLLECTION_LIST_KEY);
         if (cl == null) return;
-        String collections =string(cl,1,cl.length-2);
+        String collections = string(cl, 1, cl.length - 2);
         HashSet<String> collection = new HashSet<String>(Arrays.asList(collections.split(", ")));
         if(collection.remove(name)) {
             collection.add(name+"/r");
@@ -128,11 +133,39 @@ public class LmdbDataManager {
         }
     }
 
+    public static void createDocument(final String name, InputStream content) throws IOException {
+        byte[] docid = getNextDocumentId(name);
+        System.out.println("docid=" + Byte.getInt(docid));
+    }
+
+    private static synchronized byte[] getNextDocumentId(final String name) throws IOException {
+        if(coldb.get(bytes(name)) != null) throw new IOException("document " + name + " exists");
+        int i = name.indexOf('/');
+        if(i != -1) {
+            String docname = name.substring(i+1);
+            if(docname.indexOf('/') != -1) throw new IOException("document " + docname + " is malformed");
+            createCollection(name.substring(0,i));
+        }
+        try(Transaction tx = env.createWriteTransaction()) {
+            byte[] docid = coldb.get(tx,LAST_DOCUMENT_INDEX_KEY);
+            if(docid == null) {
+                docid = new byte[]{0,0,0,0};
+            } else {
+                Byte.setInt(Byte.getInt(docid)+1,docid);
+            }
+            coldb.put(tx,LAST_DOCUMENT_INDEX_KEY,docid);
+            coldb.put(tx,bytes(name),docid);
+            tx.commit();
+            return docid;
+        }
+    }
+
     private static synchronized void removeAllDocuments(String collection) {
         try(Transaction tx = env.createWriteTransaction()) {
             EntryIterator ei = coldb.seek(tx, bytes(collection));
             while (ei.hasNext()) {
                 Entry e = ei.next();
+                if (!string(e.getKey()).startsWith(collection)) break;
                 if(coldb.delete(tx, e.getKey())) coldb.put(tx, bytes(string(e.getKey())+"/r"), e.getValue());
             }
             tx.commit();
@@ -148,7 +181,21 @@ public class LmdbDataManager {
         LmdbDataManager.removeCollection("c1");
         LmdbDataManager.createCollection("c1");
         LmdbDataManager.removeCollection("c1");
+        LmdbDataManager.createDocument("c4/d0", new ByteArrayInputStream(new byte[]{}));
+        LmdbDataManager.createDocument("c2/d0", new ByteArrayInputStream(new byte[]{}));
+        LmdbDataManager.createDocument("c4/d1", new ByteArrayInputStream(new byte[]{}));
+        LmdbDataManager.removeCollection("c4");
+
         System.out.println(LmdbDataManager.listCollections());
+        try(Transaction tx = env.createReadTransaction()) {
+            EntryIterator ei = coldb.iterate(tx);
+            while (ei.hasNext()) {
+                Entry e = ei.next();
+                System.err.println(string(e.getKey()) + ":" + string(e.getValue()));
+            }
+        }
+
+
         LmdbDataManager.stop();
     }
 }
