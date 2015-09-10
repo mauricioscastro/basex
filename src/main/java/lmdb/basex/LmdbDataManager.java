@@ -1,7 +1,10 @@
 package lmdb.basex;
 
 import lmdb.util.Byte;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.log4j.Logger;
+import org.basex.util.list.StringList;
 import org.fusesource.lmdbjni.Database;
 import org.fusesource.lmdbjni.Entry;
 import org.fusesource.lmdbjni.EntryIterator;
@@ -9,10 +12,12 @@ import org.fusesource.lmdbjni.Env;
 import org.fusesource.lmdbjni.Transaction;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
@@ -138,13 +143,42 @@ public class LmdbDataManager {
         System.out.println("docid=" + Byte.getInt(docid));
     }
 
+    public static List<String> listDocuments(String collection) throws IOException {
+        ArrayList<String> docs = new ArrayList<String>();
+        try(Transaction tx = env.createWriteTransaction()) {
+            EntryIterator ei = coldb.seek(tx, bytes(collection));
+            while (ei.hasNext()) {
+                Entry e = ei.next();
+                String key = string(e.getKey());
+                if(key.endsWith("/r")) continue;
+                if(!key.startsWith(collection)) break;
+                docs.add(key.substring(key.indexOf('/')+1));
+            }
+            tx.commit();
+        }
+        return docs;
+    }
+
+    public static void removeDocument(final String name) throws IOException {
+        try(Transaction tx = env.createWriteTransaction()) {
+            byte[] docid = coldb.get(tx,bytes(name));
+            if(docid == null) return;
+            coldb.delete(tx, bytes(name));
+            coldb.put(tx, bytes(name + "/r"), docid);
+            tx.commit();
+        }
+    }
+
     private static synchronized byte[] getNextDocumentId(final String name) throws IOException {
         if(coldb.get(bytes(name)) != null) throw new IOException("document " + name + " exists");
         int i = name.indexOf('/');
-        if(i != -1) {
+        if(i > 0 && name.length() > 2) {
             String docname = name.substring(i+1);
-            if(docname.indexOf('/') != -1) throw new IOException("document " + docname + " is malformed");
-            createCollection(name.substring(0,i));
+            if(docname.indexOf('/') != -1) throw new IOException("document " + docname + " name is malformed");
+            String collection = name.substring(0,i);
+            if(!listCollections().contains(collection)) throw new IOException("unknown collection " + collection);
+        } else {
+            throw new IOException("malformed document name " + name +  " or unknown collection. 'collection_name/document_name' needed");
         }
         try(Transaction tx = env.createWriteTransaction()) {
             byte[] docid = coldb.get(tx,LAST_DOCUMENT_INDEX_KEY);
@@ -181,10 +215,19 @@ public class LmdbDataManager {
         LmdbDataManager.removeCollection("c1");
         LmdbDataManager.createCollection("c1");
         LmdbDataManager.removeCollection("c1");
+        LmdbDataManager.createCollection("c4");
         LmdbDataManager.createDocument("c4/d0", new ByteArrayInputStream(new byte[]{}));
         LmdbDataManager.createDocument("c2/d0", new ByteArrayInputStream(new byte[]{}));
         LmdbDataManager.createDocument("c4/d1", new ByteArrayInputStream(new byte[]{}));
-        LmdbDataManager.removeCollection("c4");
+        LmdbDataManager.createDocument("c4/d2", new ByteArrayInputStream(new byte[]{}));
+
+        System.out.println(LmdbDataManager.listDocuments("c4"));
+
+        //LmdbDataManager.removeCollection("c4");
+
+        LmdbDataManager.removeDocument("c4/d1");
+
+        System.out.println(LmdbDataManager.listDocuments("c4"));
 
         System.out.println(LmdbDataManager.listCollections());
         try(Transaction tx = env.createReadTransaction()) {
@@ -194,7 +237,6 @@ public class LmdbDataManager {
                 System.err.println(string(e.getKey()) + ":" + string(e.getValue()));
             }
         }
-
 
         LmdbDataManager.stop();
     }
