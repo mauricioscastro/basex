@@ -1,6 +1,7 @@
 package lmdb.basex;
 
 import lmdb.util.Byte;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.log4j.Logger;
@@ -161,7 +162,7 @@ public class LmdbDataManager {
 
     public static void removeDocument(final String name) throws IOException {
         try(Transaction tx = env.createWriteTransaction()) {
-            byte[] docid = coldb.get(tx,bytes(name));
+            byte[] docid = coldb.get(tx, bytes(name));
             if(docid == null) return;
             coldb.delete(tx, bytes(name));
             coldb.put(tx, bytes(name + "/r"), docid);
@@ -187,7 +188,7 @@ public class LmdbDataManager {
             } else {
                 Byte.setInt(Byte.getInt(docid)+1,docid);
             }
-            coldb.put(tx,LAST_DOCUMENT_INDEX_KEY,docid);
+            coldb.put(tx, LAST_DOCUMENT_INDEX_KEY, docid);
             coldb.put(tx,bytes(name),docid);
             tx.commit();
             return docid;
@@ -206,6 +207,14 @@ public class LmdbDataManager {
         }
     }
 
+    public static void t() {
+        coldb.put(key(10,0),bytes("a"));
+        coldb.put(key(10,10),bytes("a"));
+        coldb.put(key(20,100),bytes("a"));
+        coldb.put(key(10,11),bytes("b"));
+        coldb.put(key(20,101),bytes("b"));
+    }
+
     public static void main(String[] arg) throws Exception {
         LmdbDataManager.config("/home/mscastro/dev/basex-lmdb/db");
         LmdbDataManager.start();
@@ -221,23 +230,55 @@ public class LmdbDataManager {
         LmdbDataManager.createDocument("c4/d1", new ByteArrayInputStream(new byte[]{}));
         LmdbDataManager.createDocument("c4/d2", new ByteArrayInputStream(new byte[]{}));
 
-        System.out.println(LmdbDataManager.listDocuments("c4"));
+//        System.out.println(LmdbDataManager.listDocuments("c4"));
 
         //LmdbDataManager.removeCollection("c4");
 
         LmdbDataManager.removeDocument("c4/d1");
 
-        System.out.println(LmdbDataManager.listDocuments("c4"));
+//        System.out.println(LmdbDataManager.listDocuments("c4"));
 
-        System.out.println(LmdbDataManager.listCollections());
-        try(Transaction tx = env.createReadTransaction()) {
-            EntryIterator ei = coldb.iterate(tx);
+//        System.out.println(LmdbDataManager.listCollections());
+
+        LmdbDataManager.t();
+
+        //System.err.println(Hex.encodeHexString(key(10, 11)));
+
+        try(Transaction tx = env.createWriteTransaction()) {
+
+            EntryIterator ei = coldb.seek(tx, key(10,0));
             while (ei.hasNext()) {
                 Entry e = ei.next();
-                System.err.println(string(e.getKey()) + ":" + string(e.getValue()));
+                if(Byte.getInt(e.getKey()) != 10) break;
+                System.err.println(Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
             }
+            tx.commit();
         }
 
+//        System.out.println("-----------------------------------------------------------------------");
+
+//        try(Transaction tx = env.createReadTransaction()) {
+//            EntryIterator ei = coldb.iterate(tx);
+//            while (ei.hasNext()) {
+//                Entry e = ei.next();
+//                System.err.println(Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
+//            }
+//        }
+
         LmdbDataManager.stop();
+    }
+
+    private static byte[] key(int did, int pre) {
+        byte[] docid = lmdb.util.Byte.getBytes(did);
+        return new byte[] {
+                docid[0],
+                docid[1],
+                docid[2],
+                docid[3],
+                (byte)(pre >> 24),
+                (byte)(pre >> 16),
+                (byte)(pre >> 8),
+                (byte)pre
+        };
     }
 }

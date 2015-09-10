@@ -52,4 +52,11 @@ public class Byte {
 
     public static int getInt(byte[] array) { return getInt(array, 0); }
 
+    public static byte[] getBytes(int value) {
+        return new byte[] {
+            (byte) (value >> 24),
+            (byte) (value >> 16),
+            (byte) (value >> 8),
+            (byte) value};
+    }
 }
