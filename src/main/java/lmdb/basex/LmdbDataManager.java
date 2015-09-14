@@ -2,10 +2,7 @@ package lmdb.basex;
 
 import lmdb.util.Byte;
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.log4j.Logger;
-import org.basex.util.list.StringList;
 import org.fusesource.lmdbjni.Database;
 import org.fusesource.lmdbjni.Entry;
 import org.fusesource.lmdbjni.EntryIterator;
@@ -13,19 +10,16 @@ import org.fusesource.lmdbjni.Env;
 import org.fusesource.lmdbjni.Transaction;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.ListIterator;
 
+import static lmdb.Constants.string;
 import static org.fusesource.lmdbjni.Constants.FIXEDMAP;
 import static org.fusesource.lmdbjni.Constants.bytes;
-import static lmdb.Constants.string;
 
 public class LmdbDataManager {
 // TODO: basex-lmdb: add collections + documents cleaner based on removal flag
@@ -36,10 +30,10 @@ public class LmdbDataManager {
 
     private static Env env = null;
     private static Database coldb;
-    private static Database pathsdb;
-    private static Database namespacedb;
     private static Database elementdb;
     private static Database attributedb;
+    private static Database pathsdb;
+    private static Database namespacedb;
     private static Database tableaccessdb;
     private static Database textdatadb;
     private static Database attributevaldb;
@@ -54,10 +48,10 @@ public class LmdbDataManager {
     private static final byte[] LAST_DOCUMENT_INDEX_KEY = new byte[]{0};
     private static final byte[] COLLECTION_LIST_KEY = new byte[]{1};
 
-    public static void config(String home) {
+    public static void config(String home, long size) {
         if(env != null) return;
         env = new Env();
-        env.setMapSize(1024 * 1024 * 1024);
+        env.setMapSize(size);
         env.setMaxDbs(15);
         env.open(home, FIXEDMAP);
     }
@@ -130,8 +124,7 @@ public class LmdbDataManager {
     public static synchronized void removeCollection(final String name) throws IOException {
         byte[] cl = coldb.get(COLLECTION_LIST_KEY);
         if (cl == null) return;
-        String collections = string(cl, 1, cl.length - 2);
-        HashSet<String> collection = new HashSet<String>(Arrays.asList(collections.split(", ")));
+        HashSet<String> collection = new HashSet<String>(Arrays.asList(string(cl,1,cl.length-2).split(", ")));
         if(collection.remove(name)) {
             collection.add(name+"/r");
             coldb.put(COLLECTION_LIST_KEY, bytes(collection.toString()));
@@ -170,6 +163,11 @@ public class LmdbDataManager {
         }
     }
 
+
+    public static Transaction createWriteTransaction() {
+        return env.createWriteTransaction();
+    }
+
     private static synchronized byte[] getNextDocumentId(final String name) throws IOException {
         if(coldb.get(bytes(name)) != null) throw new IOException("document " + name + " exists");
         int i = name.indexOf('/');
@@ -182,7 +180,7 @@ public class LmdbDataManager {
             throw new IOException("malformed document name " + name +  " or unknown collection. 'collection_name/document_name' needed");
         }
         try(Transaction tx = env.createWriteTransaction()) {
-            byte[] docid = coldb.get(tx,LAST_DOCUMENT_INDEX_KEY);
+            byte[] docid = coldb.get(tx, LAST_DOCUMENT_INDEX_KEY);
             if(docid == null) {
                 docid = new byte[]{0,0,0,0};
             } else {
@@ -207,16 +205,16 @@ public class LmdbDataManager {
         }
     }
 
-    public static void t() {
-        coldb.put(key(10,0),bytes("a"));
-        coldb.put(key(10,10),bytes("a"));
-        coldb.put(key(20,100),bytes("a"));
-        coldb.put(key(10,11),bytes("b"));
-        coldb.put(key(20,101),bytes("b"));
-    }
+//    public static void t() {
+//        coldb.put(key(10,0),bytes("a"));
+//        coldb.put(key(10,10),bytes("a"));
+//        coldb.put(key(20,100),bytes("a"));
+//        coldb.put(key(10,11),bytes("b"));
+//        coldb.put(key(20,101),bytes("b"));
+//    }
 
     public static void main(String[] arg) throws Exception {
-        LmdbDataManager.config("/home/mscastro/dev/basex-lmdb/db");
+        LmdbDataManager.config("/home/mscastro/dev/basex-lmdb/db", 102400000000000l);
         LmdbDataManager.start();
         LmdbDataManager.createCollection("c1");
         LmdbDataManager.createCollection("c2");
@@ -240,20 +238,27 @@ public class LmdbDataManager {
 
 //        System.out.println(LmdbDataManager.listCollections());
 
-        LmdbDataManager.t();
+//        LmdbDataManager.t();
 
         //System.err.println(Hex.encodeHexString(key(10, 11)));
 
-        try(Transaction tx = env.createWriteTransaction()) {
+//        try(Transaction tx = env.createWriteTransaction()) {
+//
+//            EntryIterator ei = coldb.seek(tx, key(10,0));
+//            while (ei.hasNext()) {
+//                Entry e = ei.next();
+//                if(Byte.getInt(e.getKey()) != 10) break;
+//                System.err.println(Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
+//            }
+//            tx.commit();
+//        }
 
-            EntryIterator ei = coldb.seek(tx, key(10,0));
-            while (ei.hasNext()) {
-                Entry e = ei.next();
-                if(Byte.getInt(e.getKey()) != 10) break;
-                System.err.println(Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
-            }
-            tx.commit();
-        }
+//        for(int i = 0; i < 100000; i++) {
+//            try(Transaction tx = env.createWriteTransaction()) {
+//                for (int j = 0; j < 10000; j++) coldb.put(tx, key(i, j), bytes("--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------"));
+//                tx.commit();
+//            }
+//        }
 
 //        System.out.println("-----------------------------------------------------------------------");
 
@@ -266,19 +271,5 @@ public class LmdbDataManager {
 //        }
 
         LmdbDataManager.stop();
-    }
-
-    private static byte[] key(int did, int pre) {
-        byte[] docid = lmdb.util.Byte.getBytes(did);
-        return new byte[] {
-                docid[0],
-                docid[1],
-                docid[2],
-                docid[3],
-                (byte)(pre >> 24),
-                (byte)(pre >> 16),
-                (byte)(pre >> 8),
-                (byte)pre
-        };
     }
 }

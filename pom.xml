@@ -47,12 +47,7 @@
       <dependency>
         <groupId>org.deephacks.lmdbjni</groupId>
         <artifactId>lmdbjni-linux64</artifactId>
-        <version>0.4.3-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>org.deephacks.lmdbjni</groupId>
-        <artifactId>lmdbjni</artifactId>
-        <version>0.4.3-SNAPSHOT</version>
+        <version>LATEST</version>
       </dependency>
       <dependency>
         <groupId>com.alexkasko.springjdbc</groupId>

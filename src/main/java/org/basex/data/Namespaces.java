@@ -50,7 +50,7 @@ public final class Namespaces {
    * @param in input stream
    * @throws IOException I/O exception
    */
-  Namespaces(final DataInput in) throws IOException {
+  public Namespaces(final DataInput in) throws IOException {
     prefixes = new TokenSet(in);
     uris = new TokenSet(in);
     root = new NSNode(in, null);

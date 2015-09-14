@@ -59,4 +59,17 @@ public class Byte {
             (byte) (value >> 8),
             (byte) value};
     }
+
+    public static byte[] lmdbkey(byte[] docid, int pre) {
+        return new byte[] {
+                docid[0],
+                docid[1],
+                docid[2],
+                docid[3],
+                (byte)(pre >> 24),
+                (byte)(pre >> 16),
+                (byte)(pre >> 8),
+                (byte)pre
+        };
+    }
 }

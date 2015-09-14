@@ -86,7 +86,7 @@ public class XQueryServer {
         logger.info("start");
         logger.debug("home=" + home);
 
-        LmdbDataManager.config(System.getProperty("org.basex.path",home+"/db"));
+        LmdbDataManager.config(System.getProperty("org.basex.path",home+"/db"), 10000000000000l);
 
         threadPool.setMaxThreads(1000);
         threadPool.setMinThreads(250);
