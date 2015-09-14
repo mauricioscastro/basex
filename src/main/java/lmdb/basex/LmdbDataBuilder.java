@@ -1,12 +1,14 @@
 package lmdb.basex;
 
-import com.google.common.primitives.UnsignedInteger;
 import org.basex.core.MainOptions;
 import org.basex.data.Namespaces;
 import org.basex.index.name.Names;
 import org.basex.index.path.PathSummary;
+import org.basex.io.out.DataOutput;
 import org.fusesource.lmdbjni.Database;
-import org.fusesource.lmdbjni.Transaction;
+import org.fusesource.lmdbjni.Env;
+import org.apache.commons.io.output.ByteArrayOutputStream;
+
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -16,25 +18,29 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import static lmdb.basex.LmdbDataManager.createWriteTransaction;
-import static com.google.common.primitives.UnsignedInteger.ZERO;
-import static com.google.common.primitives.UnsignedInteger.ONE;
-
 import static lmdb.util.Byte.lmdbkey;
 
 public class LmdbDataBuilder extends LmdbData {
 
+    private Env env;
     private DataOutputStream tempBuffer;
     private File tmpFile;
-    private UnsignedInteger pre = ZERO;
+    private long pre = -1;
 
-    public LmdbDataBuilder(final String name, final byte[] docid, final Database elemNames,
-                    final Database attrNames, final Database paths, final Database nspaces,
+    public LmdbDataBuilder(final String name, final byte[] docid, final Env env,
+                    final Database txtdb, final Database attdb,
+                    final Database elemNames, final Database attrNames,
+                    final Database paths, final Database nspaces,
                     final Database tableAccess, final MainOptions options) throws IOException {
 
         super(name, options);
 
-        table = new TableLmdbAccessBuilder(meta,tableAccess,docid);
+        this.docid = docid;
+        this.env = env;
+        this.txtdb = txtdb;
+        this.attdb = attdb;
+
+        table = new TableLmdbAccessBuilder(meta,env,tableAccess,docid);
         elementdb = elemNames;
         attributedb = attrNames;
         pathsdb = paths;
@@ -56,30 +62,58 @@ public class LmdbDataBuilder extends LmdbData {
             table.close();
             tempBuffer.close();
 
-            Transaction t = createWriteTransaction();
+            tx = env.createWriteTransaction();
 
             DataInputStream di = new DataInputStream(new FileInputStream(tmpFile));
 
             int c = 0;
-            while(true) try {
-                int len = di.readInt();
-                byte[] key = new byte[8];
-                di.readFully(key);
-                byte[] value = new byte[len];
-                di.readFully(value);
-                boolean text = di.readBoolean();
-                (text ? txtdb : attdb).put(t, key, value);
-                c++;
-                if (c > 1024 * 10) {
-                    t.commit();
-                    c = 0;
-                    t = createWriteTransaction();
+            try {
+                while (true) try {
+                    int len = di.readInt();
+                    byte[] key = new byte[8];
+                    di.readFully(key);
+                    byte[] value = new byte[len];
+                    di.readFully(value);
+                    boolean text = di.readBoolean();
+                    (text ? txtdb : attdb).put(tx, key, value);
+                    c++;
+                    if (c > 1024 * 10) {
+                        tx.commit();
+                        c = 0;
+                        tx = env.createWriteTransaction();
+                    }
+                } catch (EOFException eofe) {
+                    break;
                 }
-            } catch(EOFException eofe) {
-                break;
+                if (c > 0) tx.commit();
+            } finally {
+                tx.close();
             }
-            if (c > 0) t.commit();
-            else t.close();
+
+            tx = env.createWriteTransaction();
+            try {
+
+                ByteArrayOutputStream bos = new ByteArrayOutputStream(1024*16);
+
+                paths.write(new DataOutput(bos));
+                pathsdb.put(tx, docid, bos.toByteArray());
+                bos.reset();
+
+                nspaces.write(new DataOutput(bos));
+                namespacedb.put(tx, docid, bos.toByteArray());
+                bos.reset();
+
+                elemNames.write(new DataOutput(bos));
+                elementdb.put(tx, docid, bos.toByteArray());
+                bos.reset();
+
+                attrNames.write(new DataOutput(bos));
+                attributedb.put(tx, docid, bos.toByteArray());
+
+            } finally {
+                tx.close();
+            }
+
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -88,16 +122,14 @@ public class LmdbDataBuilder extends LmdbData {
 
     @Override
     protected long textRef(byte[] value, boolean text) {
-        long r = pre.longValue();
         try {
             tempBuffer.writeInt(value.length);
-            tempBuffer.write(lmdbkey(docid, pre.intValue()));
+            tempBuffer.write(lmdbkey(docid, (int)++pre));
             tempBuffer.write(value);
             tempBuffer.writeBoolean(text);
-            pre.plus(ONE);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return r;
+        return pre;
     }
 }

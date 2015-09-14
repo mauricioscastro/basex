@@ -37,12 +37,17 @@ public class LmdbData extends Data {
         super(new MetaData(name, options, null));
     }
 
-    public LmdbData(final String name, final byte[] docid, final Database elemNames,
-                    final Database attrNames, final Database paths, final Database nspaces,
-                    final Database tableAccess, final Transaction tx, final MainOptions options) throws IOException {
+    public LmdbData(final String name, final byte[] docid, final Database txtdb, final Database attdb,
+                    final Database elemNames, final Database attrNames, final Database paths,
+                    final Database nspaces, final Database tableAccess, final Transaction tx, final MainOptions options) throws IOException {
 
         super(new MetaData(name, options, null));
+
+        this.docid = docid;
         this.tx = tx;
+        this.txtdb = txtdb;
+        this.attdb = attdb;
+
         table = new TableLmdbAccess(meta,tx,tableAccess,docid);
         elementdb = elemNames;
         attributedb = attrNames;

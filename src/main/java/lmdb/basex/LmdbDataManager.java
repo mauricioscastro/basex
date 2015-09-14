@@ -3,6 +3,10 @@ package lmdb.basex;
 import lmdb.util.Byte;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.log4j.Logger;
+import org.basex.build.xml.XMLParser;
+import org.basex.core.MainOptions;
+import org.basex.io.IOContent;
+import org.basex.io.IOStream;
 import org.fusesource.lmdbjni.Database;
 import org.fusesource.lmdbjni.Entry;
 import org.fusesource.lmdbjni.EntryIterator;
@@ -134,6 +138,7 @@ public class LmdbDataManager {
 
     public static void createDocument(final String name, InputStream content) throws IOException {
         byte[] docid = getNextDocumentId(name);
+        LmdbBuilder.build(name,docid,env,textdatadb,attributevaldb,elementdb,attributedb,pathsdb,namespacedb,tableaccessdb,new XMLParser(new IOStream(content), new MainOptions()));
         System.out.println("docid=" + Byte.getInt(docid));
     }
 
@@ -161,11 +166,6 @@ public class LmdbDataManager {
             coldb.put(tx, bytes(name + "/r"), docid);
             tx.commit();
         }
-    }
-
-
-    public static Transaction createWriteTransaction() {
-        return env.createWriteTransaction();
     }
 
     private static synchronized byte[] getNextDocumentId(final String name) throws IOException {
@@ -213,7 +213,53 @@ public class LmdbDataManager {
 //        coldb.put(key(20,101),bytes("b"));
 //    }
 
+
+
+    public static final String CONTENT = "\n" +
+            "<root xmlns:h=\"http://www.w3.org/TR/html4/\"\n" +
+            "xmlns:f=\"http://www.w3schools.com/furniture\">\n" +
+            "<h:table border=\"0\" cellspacing=\"0\">\n" +
+            "  <h:tr>\n" +
+            "    <h:td width=\"100%\">Apples</h:td>\n" +
+            "    <h:td>Bananas</h:td>\n" +
+            "  </h:tr>\n" +
+            "</h:table>\n" +
+            "<f:table>\n" +
+            "  <f:name>African Coffee Table</f:name>\n" +
+            "  <f:width>80</f:width>\n" +
+            "  <f:length>120</f:length>\n" +
+            "</f:table>\n" +
+            "<f:table>\n" +
+            "  <f:name>African Coffee Table</f:name>\n" +
+            "  <f:width>80</f:width>\n" +
+            "  <f:length>120</f:length>\n" +
+            "</f:table>\n" +
+            "<f:table>\n" +
+            "  <f:name>African Coffee Table</f:name>\n" +
+            "  <f:width>80</f:width>\n" +
+            "  <f:length>120</f:length>\n" +
+            "</f:table>\n" +
+            "<f:table cellspacing=\"0\">\n" +
+            "  <f:name>African Coffee Table</f:name>\n" +
+            "  <f:width>80</f:width>\n" +
+            "  <f:length>120</f:length>\n" +
+            "</f:table>\n" +
+            "<f:table>\n" +
+            "  <f:name>African Coffee Table</f:name>\n" +
+            "  <f:width>80</f:width>\n" +
+            "  <f:length>120</f:length>\n" +
+            "</f:table>\n" +
+            "<f:table>\n" +
+            "  <f:name>African Coffee Table</f:name>\n" +
+            "  <f:width>80</f:width>\n" +
+            "  <f:length>120</f:length>\n" +
+            "</f:table>\n" +
+            "</root> ";
+
+
     public static void main(String[] arg) throws Exception {
+
+
 
 
         LmdbDataManager.config("/home/mscastro/dev/basex-lmdb/db", 102400000000000l);
@@ -225,16 +271,16 @@ public class LmdbDataManager {
         LmdbDataManager.createCollection("c1");
         LmdbDataManager.removeCollection("c1");
         LmdbDataManager.createCollection("c4");
-        LmdbDataManager.createDocument("c4/d0", new ByteArrayInputStream(new byte[]{}));
-        LmdbDataManager.createDocument("c2/d0", new ByteArrayInputStream(new byte[]{}));
-        LmdbDataManager.createDocument("c4/d1", new ByteArrayInputStream(new byte[]{}));
-        LmdbDataManager.createDocument("c4/d2", new ByteArrayInputStream(new byte[]{}));
+        LmdbDataManager.createDocument("c4/d0", new ByteArrayInputStream(CONTENT.getBytes()));
+//        LmdbDataManager.createDocument("c2/d0", new ByteArrayInputStream(new byte[]{}));
+//        LmdbDataManager.createDocument("c4/d1", new ByteArrayInputStream(new byte[]{}));
+//        LmdbDataManager.createDocument("c4/d2", new ByteArrayInputStream(new byte[]{}));
 
 //        System.out.println(LmdbDataManager.listDocuments("c4"));
 
         //LmdbDataManager.removeCollection("c4");
 
-        LmdbDataManager.removeDocument("c4/d1");
+//        LmdbDataManager.removeDocument("c4/d1");
 
 //        System.out.println(LmdbDataManager.listDocuments("c4"));
 
@@ -262,15 +308,35 @@ public class LmdbDataManager {
 //            }
 //        }
 
-//        System.out.println("-----------------------------------------------------------------------");
+        System.out.println("-----------------------------------------------------------------------");
 
-//        try(Transaction tx = env.createReadTransaction()) {
-//            EntryIterator ei = coldb.iterate(tx);
-//            while (ei.hasNext()) {
-//                Entry e = ei.next();
-//                System.err.println(Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
-//            }
-//        }
+        try(Transaction tx = env.createReadTransaction()) {
+            EntryIterator ei = tableaccessdb.iterate(tx);
+            while (ei.hasNext()) {
+                Entry e = ei.next();
+                System.err.println(Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
+            }
+        }
+
+        System.out.println("-----------------------------------------------------------------------");
+
+        try(Transaction tx = env.createReadTransaction()) {
+            EntryIterator ei = textdatadb.iterate(tx);
+            while (ei.hasNext()) {
+                Entry e = ei.next();
+                System.err.println(Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
+            }
+        }
+
+        System.out.println("-----------------------------------------------------------------------");
+
+        try(Transaction tx = env.createReadTransaction()) {
+            EntryIterator ei = attributevaldb.iterate(tx);
+            while (ei.hasNext()) {
+                Entry e = ei.next();
+                System.err.println(Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
+            }
+        }
 
         LmdbDataManager.stop();
     }

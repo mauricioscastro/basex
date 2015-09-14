@@ -27,7 +27,7 @@ public abstract class Parser {
   /** Namespaces of currently parsed element. */
   protected final Atts nsp = new Atts();
   /** Main options. */
-  protected final MainOptions options;
+  public final MainOptions options;
   /** Target path (empty, or suffixed with a single slash). */
   String target = "";
 

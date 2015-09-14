@@ -62,7 +62,7 @@ public final class Namespaces {
    * @param out output stream
    * @throws IOException I/O exception
    */
-  void write(final DataOutput out) throws IOException {
+  public void write(final DataOutput out) throws IOException {
     prefixes.write(out);
     uris.write(out);
     root.write(out);

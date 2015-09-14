@@ -25,13 +25,13 @@ import org.basex.util.list.*;
  */
 public abstract class Builder {
   /** Tree structure. */
-  final PathSummary path = new PathSummary();
+  protected final PathSummary path = new PathSummary();
   /** Namespace index. */
-  final Namespaces nspaces = new Namespaces();
+  protected final Namespaces nspaces = new Namespaces();
   /** Parser instance. */
-  final Parser parser;
+  protected final Parser parser;
   /** Database name. */
-  final String dbname;
+  protected final String dbname;
 
   /** Number of cached size values. */
   int ssize;
@@ -39,11 +39,11 @@ public abstract class Builder {
   int spos;
 
   /** Meta data on built database. */
-  MetaData meta;
+  protected MetaData meta;
   /** Element name index. */
-  Names elemNames;
+  protected Names elemNames;
   /** Attribute name index. */
-  Names attrNames;
+  protected Names attrNames;
 
   /** Parent stack. */
   private final IntList parStack = new IntList();
@@ -57,7 +57,7 @@ public abstract class Builder {
    * @param dbname name of database
    * @param parser parser
    */
-  Builder(final String dbname, final Parser parser) {
+  protected Builder(final String dbname, final Parser parser) {
     this.dbname = dbname;
     this.parser = parser;
   }
@@ -68,7 +68,7 @@ public abstract class Builder {
    * Parses the given input source and builds the database.
    * @throws IOException I/O exception
    */
-  final void parse() throws IOException {
+  protected final void parse() throws IOException {
     // add document node and parse document
     parser.parse(this);
     meta.lastid = meta.size - 1;

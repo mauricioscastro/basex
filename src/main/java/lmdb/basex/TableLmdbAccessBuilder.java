@@ -13,15 +13,16 @@ import java.io.RandomAccessFile;
 
 import static lmdb.util.Byte.getInt;
 import static lmdb.util.Byte.lmdbkey;
-import static lmdb.basex.LmdbDataManager.createWriteTransaction;
 
 public class TableLmdbAccessBuilder extends TableLmdbAccess {
 
+    private Env env;
     private RandomAccessFile tempBuffer = null;
     private File tmpFile;
 
-    public TableLmdbAccessBuilder(final MetaData md, Database db, byte[] docid) throws IOException {
+    public TableLmdbAccessBuilder(final MetaData md, Env env, Database db, byte[] docid) throws IOException {
         super(md,null,db,docid);
+        this.env = env;
         tmpFile = File.createTempFile("tbl.",".tmp",null);
         tmpFile.deleteOnExit();
         tempBuffer = new RandomAccessFile(tmpFile,"rw");
@@ -36,22 +37,22 @@ public class TableLmdbAccessBuilder extends TableLmdbAccess {
             tempBuffer.getFD().sync();
             tempBuffer.seek(0);
 
-            Transaction t = createWriteTransaction();
+            tx = env.createWriteTransaction();
 
             for (int k = 0; k < (tempBuffer.length() / IO.NODESIZE); k++) {
                 byte v[] = new byte[IO.NODESIZE];
                 tempBuffer.readFully(v);
 
-                db.put(t, lmdbkey(docid, k), v);
+                db.put(tx, lmdbkey(docid, k), v);
                 c++;
                 if (c > 1024 * 10) {
-                    tx.commit();
+                    this.tx.commit();
                     c = 0;
-                    t = createWriteTransaction();
+                    tx = env.createWriteTransaction();
                 }
             }
-            if (c > 0) t.commit();
-            else t.close();
+            if (c > 0) tx.commit();
+            else tx.close();
 
             tempBuffer.close();
 

@@ -29,16 +29,16 @@
   </repositories>  
   
     <dependencies>
-      <!--<dependency>-->
-        <!--<groupId>commons-codec</groupId>-->
-        <!--<artifactId>commons-codec</artifactId>-->
-        <!--<version>LATEST</version>-->
-      <!--</dependency>-->
       <dependency>
-        <groupId>com.google.guava</groupId>
-        <artifactId>guava</artifactId>
-        <version>19.0-rc1</version>
+        <groupId>commons-codec</groupId>
+        <artifactId>commons-codec</artifactId>
+        <version>1.10</version>
       </dependency>
+      <!--<dependency>-->
+        <!--<groupId>com.google.guava</groupId>-->
+        <!--<artifactId>guava</artifactId>-->
+        <!--<version>19.0-rc1</version>-->
+      <!--</dependency>-->
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
@@ -52,7 +52,7 @@
       <dependency>
         <groupId>org.deephacks.lmdbjni</groupId>
         <artifactId>lmdbjni-linux64</artifactId>
-        <version>LATEST</version>
+        <version>0.4.4</version>
       </dependency>
       <dependency>
         <groupId>com.alexkasko.springjdbc</groupId>
@@ -238,8 +238,10 @@
             <manifest>
               <addClasspath>true</addClasspath>
               <classpathPrefix>lib</classpathPrefix>
-              <mainClass>lmdb.server.XQueryServer</mainClass>
-              <packageName>lmdb.server</packageName>
+              <mainClass>lmdb.basex.LmdbDataManager</mainClass>
+              <packageName>lmdb.basex</packageName>
+              <!--<mainClass>lmdb.server.XQueryServer</mainClass>-->
+              <!--<packageName>lmdb.server</packageName>-->
             </manifest>
             <manifestEntries></manifestEntries>
           </archive>
