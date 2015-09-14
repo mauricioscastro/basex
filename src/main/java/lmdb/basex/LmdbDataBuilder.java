@@ -1,5 +1,6 @@
 package lmdb.basex;
 
+import com.google.common.primitives.UnsignedInteger;
 import org.basex.core.MainOptions;
 import org.basex.data.Namespaces;
 import org.basex.index.name.Names;
@@ -16,13 +17,16 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import static lmdb.basex.LmdbDataManager.createWriteTransaction;
+import static com.google.common.primitives.UnsignedInteger.ZERO;
+import static com.google.common.primitives.UnsignedInteger.ONE;
+
 import static lmdb.util.Byte.lmdbkey;
 
 public class LmdbDataBuilder extends LmdbData {
 
-
     private DataOutputStream tempBuffer;
     private File tmpFile;
+    private UnsignedInteger pre = ZERO;
 
     public LmdbDataBuilder(final String name, final byte[] docid, final Database elemNames,
                     final Database attrNames, final Database paths, final Database nspaces,
@@ -83,14 +87,17 @@ public class LmdbDataBuilder extends LmdbData {
     }
 
     @Override
-    protected void put(int pre, byte[] value, boolean text) {
+    protected long textRef(byte[] value, boolean text) {
+        long r = pre.longValue();
         try {
             tempBuffer.writeInt(value.length);
-            tempBuffer.write(lmdbkey(docid, pre));
+            tempBuffer.write(lmdbkey(docid, pre.intValue()));
             tempBuffer.write(value);
             tempBuffer.writeBoolean(text);
+            pre.plus(ONE);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        return r;
     }
 }

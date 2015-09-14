@@ -214,6 +214,8 @@ public class LmdbDataManager {
 //    }
 
     public static void main(String[] arg) throws Exception {
+
+
         LmdbDataManager.config("/home/mscastro/dev/basex-lmdb/db", 102400000000000l);
         LmdbDataManager.start();
         LmdbDataManager.createCollection("c1");

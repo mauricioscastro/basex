@@ -118,10 +118,9 @@ public class LmdbData extends Data {
     }
 
     @Override
-    protected long textRef(byte[] value, boolean text) { return -1; }
+    protected long textRef(byte[] value, boolean text) { return 0; }
 
-
-    protected void put(int pre, byte[] value, boolean text) {
+    private void put(int pre, byte[] value, boolean text) {
         (text ? txtdb : attdb).put(tx, lmdbkey(docid, pre), value);
     }
 }

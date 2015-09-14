@@ -109,29 +109,29 @@ public class TableLmdbAccess extends TableAccess {
     }
 
     @Override
-    protected void dirty() {
-        dirty = true;
-    }
-
-    @Override
-    protected void copy(byte[] entries, int pre, int last) {
-        for(int i = pre; i < last; i++) db.put(tx, lmdbkey(docid, i), entries);
-        dirty();
-    }
-
-    @Override
     public void delete(int pre, int nr) {
         if(nr == 0) return;
-        for(int i = pre; i < pre+nr; i++) db.delete(tx, lmdbkey(docid, i));
         dirty();
+        for(int i = pre; i < pre+nr; i++) db.delete(tx, lmdbkey(docid, i));
     }
 
     @Override
     public void insert(int pre, byte[] entries) {
         if (entries.length == 0) return;
-        meta.size += (pre + (entries.length >>> IO.NODEPOWER)) - pre;
-        db.put(tx, lmdbkey(docid, pre), entries);
         dirty();
+        meta.size += (pre + (entries.length >>> IO.NODEPOWER)) - pre;
+        put(lmdbkey(docid, pre), entries);
+    }
+
+    @Override
+    protected void copy(byte[] entries, int pre, int last) {
+        dirty();
+        for(int i = pre; i < last; i++) put(lmdbkey(docid, i), entries);
+    }
+
+    @Override
+    protected void dirty() {
+        dirty = true;
     }
 
     protected byte[] get(int pre) {

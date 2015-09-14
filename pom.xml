@@ -29,10 +29,15 @@
   </repositories>  
   
     <dependencies>
+      <!--<dependency>-->
+        <!--<groupId>commons-codec</groupId>-->
+        <!--<artifactId>commons-codec</artifactId>-->
+        <!--<version>LATEST</version>-->
+      <!--</dependency>-->
       <dependency>
-        <groupId>commons-codec</groupId>
-        <artifactId>commons-codec</artifactId>
-        <version>1.10</version>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>19.0-rc1</version>
       </dependency>
       <dependency>
         <groupId>org.slf4j</groupId>
