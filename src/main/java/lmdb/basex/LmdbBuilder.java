@@ -9,6 +9,8 @@ import org.fusesource.lmdbjni.Env;
 
 import java.io.IOException;
 
+import static org.fusesource.lmdbjni.Constants.bytes;
+
 public class LmdbBuilder extends Builder {
 
     private LmdbDataBuilder data;
@@ -62,7 +64,7 @@ public class LmdbBuilder extends Builder {
 
     @Override
     protected void addDoc(byte[] value) throws IOException {
-        data.doc(0, value);
+        data.doc(0, bytes(dbname));
         data.insert(meta.size);
     }
 

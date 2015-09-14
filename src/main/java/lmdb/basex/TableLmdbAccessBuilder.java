@@ -23,7 +23,7 @@ public class TableLmdbAccessBuilder extends TableLmdbAccess {
     public TableLmdbAccessBuilder(final MetaData md, Env env, Database db, byte[] docid) throws IOException {
         super(md,null,db,docid);
         this.env = env;
-        tmpFile = File.createTempFile("tbl.",".tmp",null);
+        tmpFile = File.createTempFile("tbl." + md.name.replace('/','.') + ".",".tmp",null);
         tmpFile.deleteOnExit();
         tempBuffer = new RandomAccessFile(tmpFile,"rw");
     }

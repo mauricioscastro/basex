@@ -25,7 +25,8 @@ public class LmdbDataBuilder extends LmdbData {
     private Env env;
     private DataOutputStream tempBuffer;
     private File tmpFile;
-    private long pre = -1;
+    private long pret = -1;
+    private long prea = -1;
 
     public LmdbDataBuilder(final String name, final byte[] docid, final Env env,
                     final Database txtdb, final Database attdb,
@@ -46,7 +47,7 @@ public class LmdbDataBuilder extends LmdbData {
         pathsdb = paths;
         namespacedb = nspaces;
 
-        tmpFile = File.createTempFile("txt.",".tmp",null);
+        tmpFile = File.createTempFile("txt." + meta.name.replace('/','.') + ".",".tmp",null);
         tmpFile.deleteOnExit();
         tempBuffer = new DataOutputStream(new FileOutputStream(tmpFile));
 
@@ -110,6 +111,8 @@ public class LmdbDataBuilder extends LmdbData {
                 attrNames.write(new DataOutput(bos));
                 attributedb.put(tx, docid, bos.toByteArray());
 
+                tx.commit();
+
             } finally {
                 tx.close();
             }
@@ -122,9 +125,10 @@ public class LmdbDataBuilder extends LmdbData {
 
     @Override
     protected long textRef(byte[] value, boolean text) {
+        long pre = text ? ++pret : ++prea;
         try {
             tempBuffer.writeInt(value.length);
-            tempBuffer.write(lmdbkey(docid, (int)++pre));
+            tempBuffer.write(lmdbkey(docid, (int)pre));
             tempBuffer.write(value);
             tempBuffer.writeBoolean(text);
         } catch (IOException e) {

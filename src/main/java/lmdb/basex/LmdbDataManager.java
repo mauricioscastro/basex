@@ -138,8 +138,9 @@ public class LmdbDataManager {
 
     public static void createDocument(final String name, InputStream content) throws IOException {
         byte[] docid = getNextDocumentId(name);
-        LmdbBuilder.build(name,docid,env,textdatadb,attributevaldb,elementdb,attributedb,pathsdb,namespacedb,tableaccessdb,new XMLParser(new IOStream(content), new MainOptions()));
-        System.out.println("docid=" + Byte.getInt(docid));
+        LmdbBuilder.build(name, docid, env, textdatadb, attributevaldb, elementdb,
+                          attributedb, pathsdb, namespacedb, tableaccessdb,
+                          new XMLParser(new IOStream(content), new MainOptions()));
     }
 
     public static List<String> listDocuments(String collection) throws IOException {
@@ -308,35 +309,68 @@ public class LmdbDataManager {
 //            }
 //        }
 
-        System.out.println("-----------------------------------------------------------------------");
+//        System.out.println("-----------------------------------------------------------------------");
 
         try(Transaction tx = env.createReadTransaction()) {
             EntryIterator ei = tableaccessdb.iterate(tx);
             while (ei.hasNext()) {
                 Entry e = ei.next();
-                System.err.println(Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
+                System.err.println("tableaccessdb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
             }
         }
 
-        System.out.println("-----------------------------------------------------------------------");
+//        System.out.println("-----------------------------------------------------------------------");
 
         try(Transaction tx = env.createReadTransaction()) {
             EntryIterator ei = textdatadb.iterate(tx);
             while (ei.hasNext()) {
                 Entry e = ei.next();
-                System.err.println(Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
+                System.err.println("textdatadb: " + Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
             }
         }
 
-        System.out.println("-----------------------------------------------------------------------");
+//        System.out.println("-----------------------------------------------------------------------");
 
         try(Transaction tx = env.createReadTransaction()) {
             EntryIterator ei = attributevaldb.iterate(tx);
             while (ei.hasNext()) {
                 Entry e = ei.next();
-                System.err.println(Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
+                System.err.println("attributevaldb: " + Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
             }
         }
+
+        try(Transaction tx = env.createReadTransaction()) {
+            EntryIterator ei = elementdb.iterate(tx);
+            while (ei.hasNext()) {
+                Entry e = ei.next();
+                System.err.println("elementdb: " + Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
+            }
+        }
+
+        try(Transaction tx = env.createReadTransaction()) {
+            EntryIterator ei = attributedb.iterate(tx);
+            while (ei.hasNext()) {
+                Entry e = ei.next();
+                System.err.println("attributedb: " + Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
+            }
+        }
+
+        try(Transaction tx = env.createReadTransaction()) {
+            EntryIterator ei = namespacedb.iterate(tx);
+            while (ei.hasNext()) {
+                Entry e = ei.next();
+                System.err.println("namespacedb: " + Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
+            }
+        }
+
+        try(Transaction tx = env.createReadTransaction()) {
+            EntryIterator ei = pathsdb.iterate(tx);
+            while (ei.hasNext()) {
+                Entry e = ei.next();
+                System.err.println("pathsdb: " + Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
+            }
+        }
+
 
         LmdbDataManager.stop();
     }
