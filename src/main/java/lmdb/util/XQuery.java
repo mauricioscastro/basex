@@ -52,7 +52,7 @@ public class XQuery {
 
     public static void query(QueryContext ctx, OutputStream result, String method, String indent) throws QueryException {
         try {
-            Serializer s = Serializer.get(result, getSerializerOptions(method, indent == null ? false    : Boolean.parseBoolean(indent)));
+            Serializer s = Serializer.get(result, getSerializerOptions(method, indent == null ? false : Boolean.parseBoolean(indent)));
             Iter iter = ctx.iter();
             Item i = null;
             while ((i = iter.next()) != null) {

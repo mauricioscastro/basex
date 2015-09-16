@@ -27,7 +27,7 @@ public abstract class Builder {
   /** Tree structure. */
   protected final PathSummary path = new PathSummary();
   /** Namespace index. */
-  protected final Namespaces nspaces = new Namespaces();
+  protected Namespaces nspaces = new Namespaces();
   /** Parser instance. */
   protected final Parser parser;
   /** Database name. */

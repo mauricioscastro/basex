@@ -1,12 +1,14 @@
 package lmdb.basex;
 
 import lmdb.util.Byte;
+import lmdb.util.XQuery;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.log4j.Logger;
 import org.basex.build.xml.XMLParser;
 import org.basex.core.MainOptions;
-import org.basex.io.IOContent;
+import org.basex.data.Data;
 import org.basex.io.IOStream;
+import org.basex.query.value.node.DBNode;
 import org.fusesource.lmdbjni.Database;
 import org.fusesource.lmdbjni.Entry;
 import org.fusesource.lmdbjni.EntryIterator;
@@ -32,7 +34,7 @@ public class LmdbDataManager {
 
     private static final Logger logger = Logger.getLogger(LmdbDataManager.class);
 
-    private static Env env = null;
+    static Env env = null;
     private static Database coldb;
     private static Database elementdb;
     private static Database attributedb;
@@ -139,8 +141,8 @@ public class LmdbDataManager {
     public static void createDocument(final String name, InputStream content) throws IOException {
         byte[] docid = getNextDocumentId(name);
         LmdbBuilder.build(name, docid, env, textdatadb, attributevaldb, elementdb,
-                          attributedb, pathsdb, namespacedb, tableaccessdb,
-                          new XMLParser(new IOStream(content), new MainOptions()));
+                attributedb, pathsdb, namespacedb, tableaccessdb,
+                new XMLParser(new IOStream(content), new MainOptions()));
     }
 
     public static List<String> listDocuments(String collection) throws IOException {
@@ -167,6 +169,12 @@ public class LmdbDataManager {
             coldb.put(tx, bytes(name + "/r"), docid);
             tx.commit();
         }
+    }
+
+    static Data openDocument(String name, MainOptions options, Transaction tx) throws IOException {
+        byte[] docid = coldb.get(tx,bytes(name));
+        if(docid == null) throw new IOException("document " + name + " not found");
+        return new LmdbData(name, docid, textdatadb, attributevaldb, elementdb, attributedb, pathsdb, namespacedb, tableaccessdb, tx, options);
     }
 
     private static synchronized byte[] getNextDocumentId(final String name) throws IOException {
@@ -265,12 +273,12 @@ public class LmdbDataManager {
 
         LmdbDataManager.config("/home/mscastro/dev/basex-lmdb/db", 102400000000000l);
         LmdbDataManager.start();
-        LmdbDataManager.createCollection("c1");
-        LmdbDataManager.createCollection("c2");
-        LmdbDataManager.createCollection("c3");
-        LmdbDataManager.removeCollection("c1");
-        LmdbDataManager.createCollection("c1");
-        LmdbDataManager.removeCollection("c1");
+//        LmdbDataManager.createCollection("c1");
+//        LmdbDataManager.createCollection("c2");
+//        LmdbDataManager.createCollection("c3");
+//        LmdbDataManager.removeCollection("c1");
+//        LmdbDataManager.createCollection("c1");
+//        LmdbDataManager.removeCollection("c1");
         LmdbDataManager.createCollection("c4");
         LmdbDataManager.createDocument("c4/d0", new ByteArrayInputStream(CONTENT.getBytes()));
 //        LmdbDataManager.createDocument("c2/d0", new ByteArrayInputStream(new byte[]{}));
@@ -369,6 +377,12 @@ public class LmdbDataManager {
                 Entry e = ei.next();
                 System.err.println("pathsdb: " + Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
             }
+        }
+
+        try(QueryContext qctx = new QueryContext()) {
+            qctx.parse("doc('c4/d0')");
+            qctx.compile();
+            XQuery.query(qctx, System.out, null, "true");
         }
 
 

@@ -57,6 +57,7 @@ import org.basex.util.list.TokenList;
 import org.basex.util.options.Option;
 
 import java.io.Closeable;
+import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -83,7 +84,7 @@ import static org.basex.util.Token.token;
  * @author BaseX Team 2005-15, BSD License
  * @author Christian Gruen
  */
-public final class QueryContext implements Closeable {
+public class QueryContext implements Closeable {
   /** The evaluation stack. */
   public final QueryStack stack = new QueryStack();
   /** Static variables. */
@@ -220,7 +221,7 @@ public final class QueryContext implements Closeable {
 //   * @param context database context
    * @param qcParent parent context (optional)
    */
-  private QueryContext(final MainOptions opt, final QueryContext qcParent) {
+  protected QueryContext(final MainOptions opt, final QueryContext qcParent) {
     options = opt;
 //    this.context = context;
     this.qcParent = qcParent;
@@ -662,7 +663,7 @@ public final class QueryContext implements Closeable {
   }
 
   @Override
-  public void close() {
+  public void close() throws IOException {
     // close only once
     if(closed) return;
 

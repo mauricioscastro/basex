@@ -168,6 +168,8 @@ public final class Thesaurus {
   private Value nodes(final String query, final Value value) throws QueryException {
     try(final QueryProcessor qp = new QueryProcessor(query, options).context(value)) {
       return qp.value();
+    } catch(IOException ioe) {
+      throw new QueryException(ioe);
     }
   }
 
@@ -181,6 +183,8 @@ public final class Thesaurus {
   private byte[] text(final String query, final Value value) throws QueryException {
     try(final QueryProcessor qp = new QueryProcessor(query, options).context(value)) {
       return qp.iter().next().string(null);
+    } catch(IOException ioe) {
+      throw new QueryException(ioe);
     }
   }
 

@@ -14,6 +14,7 @@ import org.basex.util.options.EnumOption;
 import org.basex.util.options.NumberOption;
 import org.basex.util.options.Options;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.Timer;
@@ -145,6 +146,8 @@ public class XQueryEval extends StandardFunc {
           ex.info(info);
       }
 
+    }  catch(IOException ioe) {
+      throw new QueryException(ioe);
     } finally {
 //      user.perm(tmp, "");
 //      qc.proc(null);

@@ -248,7 +248,7 @@ public final class QueryProcessor implements Closeable {
   }
 
   @Override
-  public void close() {
+  public void close() throws IOException {
     qc.close();
   }
 

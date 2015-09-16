@@ -1,5 +1,6 @@
 package org.basex.query;
 
+import lmdb.basex.LmdbDataManager;
 import lmdb.db.JdbcDataManager;
 import org.apache.commons.io.FilenameUtils;
 import org.basex.build.MemBuilder;
@@ -15,6 +16,7 @@ import org.basex.query.value.Value;
 import org.basex.query.value.item.QNm;
 import org.basex.query.value.node.ANode;
 import org.basex.query.value.node.DBNode;
+import org.basex.query.value.node.FDoc;
 import org.basex.query.value.node.FElem;
 import org.basex.util.InputInfo;
 import org.basex.util.QueryInput;
@@ -43,12 +45,12 @@ import static org.basex.query.QueryError.WHICHRES_X;
  * @author BaseX Team 2005-15, BSD License
  * @author Christian Gruen
  */
-public final class QueryResources {
+public class QueryResources {
   /** Textual resources. */
   public final HashMap<String, String[]> texts = new HashMap<>();
 
   /** Database context. */
-  private final QueryContext qc;
+  protected final QueryContext qc;
 
   /** Collections: single nodes and sequences. */
   private final ArrayList<Value> colls = new ArrayList<>(1);
@@ -57,7 +59,7 @@ public final class QueryResources {
   /** Opened databases. */
   private final ArrayList<Data> datas = new ArrayList<>(1);
   private ArrayList<String> docs = new ArrayList<String>();
-  private ArrayList<Data> data = new ArrayList<Data>();
+  protected ArrayList<Data> data = new ArrayList<Data>();
   /** Indicates if the first database in the context is globally opened. */
   private boolean globalData;
 
@@ -75,7 +77,7 @@ public final class QueryResources {
    * Constructor.
    * @param qc query context
    */
-  QueryResources(final QueryContext qc) {
+  protected QueryResources(final QueryContext qc) {
     this.qc = qc;
   }
 
@@ -123,7 +125,7 @@ public final class QueryResources {
   /**
    * Closes all opened data references that have not been added by the global context.
    */
-  void close() {
+  protected void close() {
     for(Data d: data) d.close();
 //    for(final Data data : datas) Close.close(data, qc.context);
 //    datas.clear();
@@ -181,7 +183,7 @@ public final class QueryResources {
       throws QueryException {
       try {
           String docURI = input.trim();
-          if(!docURI.contains("://")) docURI = "bxk://" + docURI;
+          if(!docURI.contains("://")) docURI = "bxl://" + docURI;
           ANode doc = resolveURI(docURI);
           if(doc != null) return doc;
       } catch(Exception e) {
@@ -215,21 +217,15 @@ public final class QueryResources {
 //    return doc(dt, qi, info);
   }
 
+    protected ANode resolveBasexLmdb(String uri) throws IOException {
+        return new FDoc();
+    }
+
 
     private ANode resolveURI(String uri) throws IOException {
 
         // TODO: basex-lmdb: review
-
-//        if (uri.startsWith("bxk://")) {
-//            if(!DiskDataManager.isRunning()) throw new IOException("DiskDataManager must be configured and running for bxk:// uri to work correctly");
-//            String docURI = uri.substring(6);
-//            DBNode d = DiskDataManager.openDocument(docURI, qc.options);
-//            if(d != null) {
-//                //docs.add(docURI);
-//                data.add(d.data);
-//                return d;
-//            }
-//        }
+        if (uri.startsWith("bxl://")) return resolveBasexLmdb(uri);
 
         if (uri.startsWith("file://")) {
             File d = new File(FilenameUtils.normalize(qc.options.get(MainOptions.XMLPATH) + "/" + uri.substring(7)));
@@ -304,7 +300,7 @@ public final class QueryResources {
 //      List col = null;
 //      try {
 //          String docURI = qi.original.trim();
-//          if(docURI.startsWith("bxk://")) docURI = docURI.substring(6);
+//          if(docURI.startsWith("bxl://")) docURI = docURI.substring(6);
 //          col = DiskDataManager.openCollection(docURI);
 //      } catch (IOException e) {
 //          throw new QueryException(e);

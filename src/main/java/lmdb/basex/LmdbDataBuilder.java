@@ -9,7 +9,6 @@ import org.fusesource.lmdbjni.Database;
 import org.fusesource.lmdbjni.Env;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
@@ -25,13 +24,11 @@ public class LmdbDataBuilder extends LmdbData {
     private Env env;
     private DataOutputStream tempBuffer;
     private File tmpFile;
-    private long pret = -1;
-    private long prea = -1;
 
     public LmdbDataBuilder(final String name, final byte[] docid, final Env env,
                     final Database txtdb, final Database attdb,
-                    final Database elemNames, final Database attrNames,
-                    final Database paths, final Database nspaces,
+                    final Database elementdb, final Database attributedb,
+                    final Database pathsdb, final Database namespacedb,
                     final Database tableAccess, final MainOptions options) throws IOException {
 
         super(name, options);
@@ -41,15 +38,15 @@ public class LmdbDataBuilder extends LmdbData {
         this.txtdb = txtdb;
         this.attdb = attdb;
 
-        table = new TableLmdbAccessBuilder(meta,env,tableAccess,docid);
-        elementdb = elemNames;
-        attributedb = attrNames;
-        pathsdb = paths;
-        namespacedb = nspaces;
+        this.table = new TableLmdbAccessBuilder(meta,env,tableAccess,docid);
+        this.elementdb = elementdb;
+        this.attributedb = attributedb;
+        this.pathsdb = pathsdb;
+        this.namespacedb = namespacedb;
 
-        tmpFile = File.createTempFile("txt." + meta.name.replace('/','.') + ".",".tmp",null);
-        tmpFile.deleteOnExit();
-        tempBuffer = new DataOutputStream(new FileOutputStream(tmpFile));
+        this.tmpFile = File.createTempFile("txt." + meta.name.replace('/','.') + ".",".tmp",null);
+        this.tmpFile.deleteOnExit();
+        this.tempBuffer = new DataOutputStream(new FileOutputStream(tmpFile));
 
         this.elemNames = new Names(meta);
         this.attrNames = new Names(meta);
@@ -125,15 +122,14 @@ public class LmdbDataBuilder extends LmdbData {
 
     @Override
     protected long textRef(byte[] value, boolean text) {
-        long pre = text ? ++pret : ++prea;
         try {
             tempBuffer.writeInt(value.length);
-            tempBuffer.write(lmdbkey(docid, (int)pre));
+            tempBuffer.write(lmdbkey(docid, meta.lastid));
             tempBuffer.write(value);
             tempBuffer.writeBoolean(text);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return pre;
+        return meta.lastid;
     }
 }

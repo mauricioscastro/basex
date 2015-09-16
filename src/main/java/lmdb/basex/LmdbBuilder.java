@@ -38,13 +38,13 @@ public class LmdbBuilder extends Builder {
         elemNames = data.elemNames;
         attrNames = data.attrNames;
         path.data(data);
+        nspaces = data.nspaces;
         dataClip();
         return null;
     }
 
     @Override
     public DataClip dataClip() throws IOException {
-//        meta.assign(parser);
         try {
             parse();
         } catch(final IOException ex) {

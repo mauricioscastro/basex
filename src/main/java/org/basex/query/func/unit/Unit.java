@@ -328,6 +328,8 @@ final class Unit {
       // ignore results
       final Iter iter = qctx.iter();
       while(iter.next() != null);
+    }  catch(IOException ioe) {
+      throw new QueryException(ioe);
     }
 //    finally {
 //      proc.proc(null);

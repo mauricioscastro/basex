@@ -38,8 +38,8 @@ public class LmdbData extends Data {
     }
 
     public LmdbData(final String name, final byte[] docid, final Database txtdb, final Database attdb,
-                    final Database elemNames, final Database attrNames, final Database paths,
-                    final Database nspaces, final Database tableAccess, final Transaction tx, final MainOptions options) throws IOException {
+                    final Database elementdb, final Database attributedb, final Database pathsdb,
+                    final Database namespacedb, final Database tableAccess, final Transaction tx, final MainOptions options) throws IOException {
 
         super(new MetaData(name, options, null));
 
@@ -48,16 +48,16 @@ public class LmdbData extends Data {
         this.txtdb = txtdb;
         this.attdb = attdb;
 
-        table = new TableLmdbAccess(meta,tx,tableAccess,docid);
-        elementdb = elemNames;
-        attributedb = attrNames;
-        pathsdb = paths;
-        namespacedb = nspaces;
+        this.table = new TableLmdbAccess(meta,tx,tableAccess,docid);
+        this.elementdb = elementdb;
+        this.attributedb = attributedb;
+        this.pathsdb = pathsdb;
+        this.namespacedb = namespacedb;
 //        if(meta.updindex) idmap = new IdPreMap(meta.lastid); // TODO: check DiskData on old basex-kaha
-        this.elemNames = new Names(new DataInput(new IOContent(elemNames.get(docid))),meta);
-        this.attrNames = new Names(new DataInput(new IOContent(attrNames.get(docid))),meta);
-        this.paths = new PathSummary(this, new DataInput(new IOContent(paths.get(docid))));
-        this.nspaces = new Namespaces(new DataInput(new IOContent(nspaces.get(docid))));
+        this.elemNames = new Names(new DataInput(new IOContent(elementdb.get(tx,docid))),meta);
+        this.attrNames = new Names(new DataInput(new IOContent(attributedb.get(tx,docid))),meta);
+        this.paths = new PathSummary(this, new DataInput(new IOContent(pathsdb.get(tx,docid))));
+        this.nspaces = new Namespaces(new DataInput(new IOContent(namespacedb.get(tx,docid))));
     }
 
     @Override
@@ -114,7 +114,7 @@ public class LmdbData extends Data {
 
     @Override
     protected void updateText(int pre, byte[] value, int kind) {
-        put(pre, value, kind == TEXT);
+        put(pre, value, kind != ATTR);
     }
 
     @Override
@@ -123,7 +123,9 @@ public class LmdbData extends Data {
     }
 
     @Override
-    protected long textRef(byte[] value, boolean text) { return 0; }
+    protected long textRef(byte[] value, boolean text) {
+        return 0;
+    }
 
     private void put(int pre, byte[] value, boolean text) {
         (text ? txtdb : attdb).put(tx, lmdbkey(docid, pre), value);

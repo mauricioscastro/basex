@@ -12,6 +12,8 @@ import org.basex.util.InputInfo;
 import org.basex.util.options.BooleanOption;
 import org.basex.util.options.Options;
 
+import java.io.IOException;
+
 import static org.basex.util.Token.string;
 import static org.basex.util.Token.token;
 
@@ -76,6 +78,8 @@ public final class XQueryParse extends StandardFunc {
       return root;
     } catch(final QueryException ex) {
       throw ex.info(info);
+    }  catch(IOException ioe) {
+      throw new QueryException(ioe);
     }
   }
 }
