@@ -27,7 +27,7 @@ public class LmdbDataBuilder extends LmdbData {
 
     public LmdbDataBuilder(final String name, final byte[] docid, final Env env,
                     final Database txtdb, final Database attdb,
-                    final Database elementdb, final Database attributedb,
+                    final Database metadatadb, final Database elementdb, final Database attributedb,
                     final Database pathsdb, final Database namespacedb,
                     final Database tableAccess, final MainOptions options) throws IOException {
 
@@ -39,6 +39,7 @@ public class LmdbDataBuilder extends LmdbData {
         this.attdb = attdb;
 
         this.table = new TableLmdbAccessBuilder(meta,env,tableAccess,docid);
+        this.metadatadb = metadatadb;
         this.elementdb = elementdb;
         this.attributedb = attributedb;
         this.pathsdb = pathsdb;
@@ -95,16 +96,21 @@ public class LmdbDataBuilder extends LmdbData {
 
                 paths.write(new DataOutput(bos));
                 pathsdb.put(tx, docid, bos.toByteArray());
-                bos.reset();
 
+                bos.reset();
+                meta.write(new DataOutput(bos));
+                metadatadb.put(tx, docid, bos.toByteArray());
+
+                bos.reset();
+                if(nspaces.isEmpty()) nspaces.add(0, new byte[]{0}, new byte[]{0}, this);
                 nspaces.write(new DataOutput(bos));
                 namespacedb.put(tx, docid, bos.toByteArray());
-                bos.reset();
 
+                bos.reset();
                 elemNames.write(new DataOutput(bos));
                 elementdb.put(tx, docid, bos.toByteArray());
-                bos.reset();
 
+                bos.reset();
                 attrNames.write(new DataOutput(bos));
                 attributedb.put(tx, docid, bos.toByteArray());
 

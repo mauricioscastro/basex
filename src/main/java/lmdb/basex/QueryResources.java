@@ -8,7 +8,7 @@ import org.fusesource.lmdbjni.Transaction;
 
 import java.io.IOException;
 
-public class QueryResources extends org.basex.query.QueryResources{
+public class QueryResources extends org.basex.query.QueryResources {
 
     Transaction tx;
 

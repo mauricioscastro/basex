@@ -2,9 +2,8 @@ package lmdb.basex;
 
 import org.basex.core.MainOptions;
 import org.basex.data.Data;
-import org.basex.data.MetaData;
+import lmdb.basex.MetaData;
 import org.basex.data.Namespaces;
-import org.basex.index.IdPreMap;
 import org.basex.index.IndexType;
 import org.basex.index.name.Names;
 import org.basex.index.path.PathSummary;
@@ -25,6 +24,7 @@ public class LmdbData extends Data {
 
     protected Database txtdb;
     protected Database attdb;
+    protected Database metadatadb;
     protected Database elementdb;
     protected Database attributedb;
     protected Database pathsdb;
@@ -38,26 +38,34 @@ public class LmdbData extends Data {
     }
 
     public LmdbData(final String name, final byte[] docid, final Database txtdb, final Database attdb,
-                    final Database elementdb, final Database attributedb, final Database pathsdb,
+                    final Database metadatadb, final Database elementdb, final Database attributedb, final Database pathsdb,
                     final Database namespacedb, final Database tableAccess, final Transaction tx, final MainOptions options) throws IOException {
 
         super(new MetaData(name, options, null));
+
+        byte[] dbmeta = metadatadb.get(tx,docid);
+        if(dbmeta != null) meta.read(new DataInput(new IOContent(dbmeta)));
 
         this.docid = docid;
         this.tx = tx;
         this.txtdb = txtdb;
         this.attdb = attdb;
-
         this.table = new TableLmdbAccess(meta,tx,tableAccess,docid);
+        this.metadatadb = metadatadb;
         this.elementdb = elementdb;
         this.attributedb = attributedb;
         this.pathsdb = pathsdb;
         this.namespacedb = namespacedb;
-//        if(meta.updindex) idmap = new IdPreMap(meta.lastid); // TODO: check DiskData on old basex-kaha
-        this.elemNames = new Names(new DataInput(new IOContent(elementdb.get(tx,docid))),meta);
-        this.attrNames = new Names(new DataInput(new IOContent(attributedb.get(tx,docid))),meta);
+
         this.paths = new PathSummary(this, new DataInput(new IOContent(pathsdb.get(tx,docid))));
-        this.nspaces = new Namespaces(new DataInput(new IOContent(namespacedb.get(tx,docid))));
+        byte[] dben = elementdb.get(tx,docid);
+        this.elemNames = dben == null ? new Names(meta) : new Names(new DataInput(new IOContent(dben)),meta);
+        byte[] dban = attributedb.get(tx,docid);
+        this.attrNames = dban == null ? new Names(meta) : new Names(new DataInput(new IOContent(dban)),meta);
+        byte[] dbns = namespacedb.get(tx,docid);
+        this.nspaces = dbns == null ? new Namespaces() : new Namespaces(new DataInput(new IOContent(dbns)));
+
+//        if(meta.updindex) idmap = new IdPreMap(meta.lastid); // TODO: check DiskData on old basex-kaha
     }
 
     @Override

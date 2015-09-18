@@ -16,25 +16,26 @@ public class LmdbBuilder extends Builder {
     private LmdbDataBuilder data;
 
     private LmdbBuilder(final String name, final byte[] docid, final Env env,
-                        final Database txtdb, final Database attdb,
+                        final Database txtdb, final Database attdb, final Database metadatadb,
                         final Database elemNames, final Database attrNames, final Database paths, final Database nspaces,
                         final Database tableAccess, final Parser parser) throws IOException {
 
         super(name, parser);
-        data = new LmdbDataBuilder(name, docid, env, txtdb, attdb, elemNames, attrNames, paths, nspaces, tableAccess, parser.options);
+        data = new LmdbDataBuilder(name, docid, env, txtdb, attdb, metadatadb, elemNames, attrNames, paths, nspaces, tableAccess, parser.options);
     }
 
     public static void build(final String name, final byte[] docid, final Env env, final Database txtdb, final Database attdb,
-                             final Database elemNames, final Database attrNames,
+                             final Database metadatadb, final Database elemNames, final Database attrNames,
                              final Database paths, final Database nspaces,
                              final Database tableAccess, final Parser parser) throws IOException {
-        new LmdbBuilder(name, docid, env, txtdb, attdb, elemNames, attrNames, paths, nspaces, tableAccess, parser).build();
+        new LmdbBuilder(name, docid, env, txtdb, attdb, metadatadb, elemNames, attrNames, paths, nspaces, tableAccess, parser).build();
     }
 
     @Override
     public LmdbData build() throws IOException {
         meta = data.meta;
         meta.name = dbname;
+        meta.original = dbname;
         elemNames = data.elemNames;
         attrNames = data.attrNames;
         path.data(data);

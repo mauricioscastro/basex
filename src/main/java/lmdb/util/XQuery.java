@@ -5,13 +5,14 @@ import org.basex.io.IOContent;
 import org.basex.io.serial.SerialMethod;
 import org.basex.io.serial.Serializer;
 import org.basex.io.serial.SerializerOptions;
-import org.basex.query.QueryContext;
 import org.basex.query.QueryException;
 import org.basex.query.iter.Iter;
 import org.basex.query.value.item.Item;
 import org.basex.query.value.node.DBNode;
 import org.basex.query.value.type.NodeType;
 import org.basex.query.value.type.SeqType;
+
+import lmdb.basex.QueryContext;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -51,8 +52,12 @@ public class XQuery {
     }
 
     public static void query(QueryContext ctx, OutputStream result, String method, String indent) throws QueryException {
+        query(ctx, result, method, Boolean.parseBoolean(indent));
+    }
+
+    public static void query(QueryContext ctx, OutputStream result, String method, boolean indent) throws QueryException {
         try {
-            Serializer s = Serializer.get(result, getSerializerOptions(method, indent == null ? false : Boolean.parseBoolean(indent)));
+            Serializer s = Serializer.get(result, getSerializerOptions(method, indent));
             Iter iter = ctx.iter();
             Item i = null;
             while ((i = iter.next()) != null) {
@@ -62,11 +67,12 @@ public class XQuery {
                 } else {
                     s.serialize(i);
                 }
-            }            
+            }
             s.close();
-            ctx.close();
         } catch(IOException ioe) {
             throw new QueryException(ioe);
+        } finally {
+            try { ctx.close(); } catch(IOException ioe) { throw new QueryException(ioe); }
         }
     }
 

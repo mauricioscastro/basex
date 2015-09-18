@@ -63,7 +63,7 @@ import static org.basex.util.Strings.toLong;
  * @author BaseX Team 2005-15, BSD License
  * @author Christian Gruen
  */
-public final class MetaData {
+public class MetaData {
   /** Database path. Set to {@code null} if database is in main memory. */
   public final IOFile path;
 
@@ -148,7 +148,7 @@ public final class MetaData {
    * Constructor for a main-memory database instance.
    * @param options database options
    */
-  MetaData(final MainOptions options) {
+   MetaData(final MainOptions options) {
     this("", options, null);
   }
 
@@ -322,7 +322,7 @@ public final class MetaData {
    * @param in input stream
    * @throws IOException I/O exception
    */
-  void read(final DataInput in) throws IOException {
+  public void read(final DataInput in) throws IOException {
     String storage = "", istorage = "";
     while(true) {
       final String k = Token.string(in.readToken());
@@ -384,7 +384,7 @@ public final class MetaData {
    * @param out output stream
    * @throws IOException I/O Exception
    */
-  void write(final DataOutput out) throws IOException {
+  public void write(final DataOutput out) throws IOException {
     writeInfo(out, DBSTR,      STORAGE);
     writeInfo(out, DBFNAME,    original);
     writeInfo(out, DBTIME,     time);
@@ -450,7 +450,7 @@ public final class MetaData {
    * @param value value
    * @return result
    */
-  private static boolean toBool(final String value) {
+  protected static boolean toBool(final String value) {
     return "1".equals(value);
   }
 

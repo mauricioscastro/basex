@@ -1,10 +1,9 @@
 package lmdb.handler;
 
-import lmdb.db.DiskDataManager;
+import lmdb.basex.QueryContext;
 import lmdb.util.XQuery;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import org.basex.query.QueryContext;
 import org.basex.query.QueryException;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
