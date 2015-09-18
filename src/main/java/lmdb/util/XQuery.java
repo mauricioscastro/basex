@@ -56,23 +56,19 @@ public class XQuery {
     }
 
     public static void query(QueryContext ctx, OutputStream result, String method, boolean indent) throws QueryException {
-        try {
-            Serializer s = Serializer.get(result, getSerializerOptions(method, indent));
+        try(Serializer s = Serializer.get(result, getSerializerOptions(method, indent))) {
             Iter iter = ctx.iter();
             Item i = null;
             while ((i = iter.next()) != null) {
-                if(i.type == NodeType.ATT || i.type == NodeType.NSP || i.type.instanceOf(SeqType.ANY_ARRAY)) {
+                if (i.type == NodeType.ATT || i.type == NodeType.NSP || i.type.instanceOf(SeqType.ANY_ARRAY)) {
                     result.flush();
                     result.write(i.toString().getBytes());
                 } else {
                     s.serialize(i);
                 }
             }
-            s.close();
         } catch(IOException ioe) {
             throw new QueryException(ioe);
-        } finally {
-            try { ctx.close(); } catch(IOException ioe) { throw new QueryException(ioe); }
         }
     }
 

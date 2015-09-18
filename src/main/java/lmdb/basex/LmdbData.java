@@ -1,5 +1,6 @@
 package lmdb.basex;
 
+import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.basex.core.MainOptions;
 import org.basex.data.Data;
 import lmdb.basex.MetaData;
@@ -9,6 +10,7 @@ import org.basex.index.name.Names;
 import org.basex.index.path.PathSummary;
 import org.basex.io.IOContent;
 import org.basex.io.in.DataInput;
+import org.basex.io.out.DataOutput;
 import org.basex.util.Token;
 import org.fusesource.lmdbjni.Database;
 import org.fusesource.lmdbjni.Transaction;
@@ -31,7 +33,6 @@ public class LmdbData extends Data {
     protected Database namespacedb;
 
     protected byte[] docid;
-
 
     protected LmdbData(final String name, final MainOptions options) {
         super(new MetaData(name, options, null));
@@ -58,12 +59,9 @@ public class LmdbData extends Data {
         this.namespacedb = namespacedb;
 
         this.paths = new PathSummary(this, new DataInput(new IOContent(pathsdb.get(tx,docid))));
-        byte[] dben = elementdb.get(tx,docid);
-        this.elemNames = dben == null ? new Names(meta) : new Names(new DataInput(new IOContent(dben)),meta);
-        byte[] dban = attributedb.get(tx,docid);
-        this.attrNames = dban == null ? new Names(meta) : new Names(new DataInput(new IOContent(dban)),meta);
-        byte[] dbns = namespacedb.get(tx,docid);
-        this.nspaces = dbns == null ? new Namespaces() : new Namespaces(new DataInput(new IOContent(dbns)));
+        this.elemNames = new Names(new DataInput(new IOContent(elementdb.get(tx,docid))),meta);
+        this.attrNames = new Names(new DataInput(new IOContent(attributedb.get(tx,docid))),meta);
+        this.nspaces = new Namespaces(new DataInput(new IOContent(namespacedb.get(tx,docid))));
 
 //        if(meta.updindex) idmap = new IdPreMap(meta.lastid); // TODO: check DiskData on old basex-kaha
     }
@@ -90,12 +88,38 @@ public class LmdbData extends Data {
 
     @Override
     public void startUpdate(MainOptions opts) throws IOException {
-
     }
 
     @Override
     public void finishUpdate(MainOptions opts) {
+        System.err.println(elemNames.toString());
+        ByteArrayOutputStream bos = new ByteArrayOutputStream(1024*16);
 
+        try {
+            paths.write(new DataOutput(bos));
+            pathsdb.put(tx, docid, bos.toByteArray());
+
+            bos.reset();
+            meta.write(new DataOutput(bos));
+            metadatadb.put(tx, docid, bos.toByteArray());
+
+            bos.reset();
+            if (nspaces.isEmpty()) nspaces.add(0, new byte[]{0}, new byte[]{0}, this);
+            nspaces.write(new DataOutput(bos));
+            namespacedb.put(tx, docid, bos.toByteArray());
+
+            bos.reset();
+            elemNames.write(new DataOutput(bos));
+            elementdb.put(tx, docid, bos.toByteArray());
+
+            bos.reset();
+            attrNames.write(new DataOutput(bos));
+            attributedb.put(tx, docid, bos.toByteArray());
+        } catch (IOException ioe) {
+
+        }
+
+        tx.commit();
     }
 
     @Override
