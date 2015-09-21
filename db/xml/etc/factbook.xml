@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mondial>
-	<x:test xmlns:x="a:b:c" xmlns:a="x:y:z"/>
   <continent id="f0_119" name="Europe"/>
   <continent id="f0_123" name="Asia"/>
   <continent id="f0_126" name="America"/>

@@ -335,13 +335,13 @@ public class LmdbDataManager {
 
 // -----------------------------------------------------------------------------------------------------------------------
 
-//        try(Transaction tx = env.createReadTransaction()) {
-//            EntryIterator ei = tableaccessdb.iterate(tx);
-//            while (ei.hasNext()) {
-//                Entry e = ei.next();
-//                System.err.println("tableaccessdb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
-//            }
-//        }
+        try(Transaction tx = env.createReadTransaction()) {
+            EntryIterator ei = tableaccessdb.iterate(tx);
+            while (ei.hasNext()) {
+                Entry e = ei.next();
+                System.err.println("tableaccessdb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
+            }
+        }
 //
 //        try(Transaction tx = env.createReadTransaction()) {
 //            EntryIterator ei = textdatadb.iterate(tx);
@@ -430,17 +430,17 @@ public class LmdbDataManager {
 //            XQuery.query(qctx, System.out, null, true);
 //        }
 
-//        try(QueryContext qctx = new QueryContext()) {
-//            qctx.parse("insert node <new_element/> after doc('c4/d0')/root/empty");
-//            qctx.compile();
-//            XQuery.query(qctx, System.out, null, true);
-//        }
-
         try(QueryContext qctx = new QueryContext()) {
-            qctx.parse("delete node ('c4/d0')/root/empty");
+            qctx.parse("insert node <new_element/> as first into doc('c4/d0')/root");
             qctx.compile();
             XQuery.query(qctx, System.out, null, true);
         }
+
+//        try(QueryContext qctx = new QueryContext()) {
+//            qctx.parse("delete node ('c4/d0')/root/empty");
+//            qctx.compile();
+//            XQuery.query(qctx, System.out, null, true);
+//        }
 
         try(QueryContext qctx = new QueryContext()) {
             qctx.parse("doc('c4/d0')");
@@ -511,7 +511,7 @@ public class LmdbDataManager {
 
 
         PrintWriter p = new PrintWriter(new FileOutputStream(File.createTempFile("xxx.", ".yyy", null)));
-
+//
 //        try(Transaction tx = env.createReadTransaction()) {
 //            EntryIterator ei = tableaccessdb.iterate(tx);
 //            while (ei.hasNext()) {
@@ -559,7 +559,7 @@ public class LmdbDataManager {
             EntryIterator ei = elementdb.iterate(tx);
             while (ei.hasNext()) {
                 Entry e = ei.next();
-                p.println("elementdb: " + Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
+                System.out.println("elementdb: " + Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
             }
         }
 //

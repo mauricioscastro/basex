@@ -10,8 +10,6 @@ import java.io.Closeable;
 
 public class QueryContext extends org.basex.query.QueryContext implements Closeable {
 
-
-
     public QueryContext() {
         this(new MainOptions(),null);
     }
@@ -28,8 +26,6 @@ public class QueryContext extends org.basex.query.QueryContext implements Closea
         super(opt, null);
         resources = new QueryResources(this,tx);
     }
-
-
 
     @Override
     public MainModule parseMain(final String query, final String path, final StaticContext sc) throws QueryException {
@@ -51,7 +47,14 @@ public class QueryContext extends org.basex.query.QueryContext implements Closea
     }
 
     private void createTransaction() {
-        if(((QueryResources) resources).tx != null) return;
-        ((QueryResources) resources).tx = updating ? LmdbDataManager.env.createWriteTransaction() :  LmdbDataManager.env.createReadTransaction();
+        QueryResources res = (QueryResources)resources;
+        if(res.tx != null) {
+            if(res.tx.isReadOnly() && updating) {
+                res.tx.close();
+                res.tx = LmdbDataManager.env.createWriteTransaction();
+            }
+            return;
+        }
+        res.tx = updating ? LmdbDataManager.env.createWriteTransaction() :  LmdbDataManager.env.createReadTransaction();
     }
 }

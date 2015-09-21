@@ -515,7 +515,6 @@ public final class TableDiskAccess extends TableAccess {
 
     final Buffer bf = bm.current();
     try {
-      if(bf.dirty) write(bf);
       bf.pos = p;
       if(p >= size) {
         size = p + 1;

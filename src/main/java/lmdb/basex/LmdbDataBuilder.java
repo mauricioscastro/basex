@@ -90,9 +90,8 @@ public class LmdbDataBuilder extends LmdbData {
             }
 
             tx = env.createWriteTransaction();
-            try {
 
-                ByteArrayOutputStream bos = new ByteArrayOutputStream(1024*16);
+            try(ByteArrayOutputStream bos = new ByteArrayOutputStream(1024*16)) {
 
                 paths.write(new DataOutput(bos));
                 pathsdb.put(tx, docid, bos.toByteArray());

@@ -10,9 +10,9 @@ import java.io.IOException;
 
 public class QueryResources extends org.basex.query.QueryResources {
 
-    Transaction tx;
+    Transaction tx = null;
 
-    public QueryResources(final QueryContext qc, Transaction tx) {
+    QueryResources(final QueryContext qc, Transaction tx) {
         super(qc);
         this.tx = tx;
     }
@@ -29,6 +29,7 @@ public class QueryResources extends org.basex.query.QueryResources {
     @Override
     protected void close() {
         super.close();
+        if(tx == null) return;
         if(!tx.isReadOnly()) tx.commit();
         tx.close();
     }

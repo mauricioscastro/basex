@@ -93,18 +93,18 @@ public class LmdbData extends Data {
     @Override
     public void finishUpdate(MainOptions opts) {
         System.err.println(elemNames.toString());
-        ByteArrayOutputStream bos = new ByteArrayOutputStream(1024*16);
 
-        try {
+        try(ByteArrayOutputStream bos = new ByteArrayOutputStream(1024*16)) {
+
             paths.write(new DataOutput(bos));
             pathsdb.put(tx, docid, bos.toByteArray());
 
             bos.reset();
+            meta.dirty = false;
             meta.write(new DataOutput(bos));
             metadatadb.put(tx, docid, bos.toByteArray());
 
             bos.reset();
-            if (nspaces.isEmpty()) nspaces.add(0, new byte[]{0}, new byte[]{0}, this);
             nspaces.write(new DataOutput(bos));
             namespacedb.put(tx, docid, bos.toByteArray());
 
@@ -115,11 +115,10 @@ public class LmdbData extends Data {
             bos.reset();
             attrNames.write(new DataOutput(bos));
             attributedb.put(tx, docid, bos.toByteArray());
+
         } catch (IOException ioe) {
-
+            throw new RuntimeException(ioe);
         }
-
-        tx.commit();
     }
 
     @Override
