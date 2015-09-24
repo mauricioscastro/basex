@@ -34,9 +34,9 @@ public abstract class Builder {
   protected final String dbname;
 
   /** Number of cached size values. */
-  int ssize;
+  protected int ssize;
   /** Currently stored size value. */
-  int spos;
+  protected int spos;
 
   /** Meta data on built database. */
   protected MetaData meta;

@@ -106,7 +106,7 @@ public final class StaticOptions extends Options {
    * Constructor, adopting system properties starting with "org.basex.".
    * @param file if {@code true}, options will be read from disk
    */
-  StaticOptions(final boolean file) {
+  public StaticOptions(final boolean file) {
     super(file ? new IOFile(Prop.HOME, IO.BASEXSUFFIX) : null);
     setSystem();
 

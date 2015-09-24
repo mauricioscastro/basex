@@ -8,11 +8,11 @@ import org.basex.io.*;
  * @author BaseX Team 2005-15, BSD License
  * @author Christian Gruen
  */
-final class Buffer {
+public final class Buffer {
   /** Buffer data. */
-  final byte[] data = new byte[IO.BLOCKSIZE];
+  public byte[] data = new byte[IO.BLOCKSIZE];
   /** Disk offset, or block position. */
-  long pos = -1;
+  public long pos = -1;
   /** Dirty flag. */
-  boolean dirty;
+  public boolean dirty;
 }

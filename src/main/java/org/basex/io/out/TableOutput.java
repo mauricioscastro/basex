@@ -12,22 +12,26 @@ import org.basex.io.*;
  * @author Christian Gruen
  * @author Tim Petrowsky
  */
-public final class TableOutput extends OutputStream {
+public class TableOutput extends OutputStream {
   /** Buffer. */
   private final byte[] buffer = new byte[IO.BLOCKSIZE];
 
   /** The underlying output stream. */
-  private final OutputStream os;
+  protected OutputStream os;
   /** Meta data. */
   private final MetaData meta;
   /** Current filename. */
-  private final String file;
+  protected String file;
 
   /** Position inside buffer. */
-  private int pos;
+  protected int pos;
   /** Number of pages. */
-  private int pages;
+  protected int pages;
 
+
+  public TableOutput(MetaData md) {
+      meta = md;
+  }
   /**
    * Initializes the output.
    * The database suffix will be added to all filenames.

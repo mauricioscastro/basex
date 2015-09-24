@@ -43,7 +43,7 @@ import static org.basex.util.Strings.toLong;
 public class MetaData extends org.basex.data.MetaData {
 
     MetaData(final String name, final MainOptions options, final StaticOptions sopts) {
-        super(name, options, null);
+        super(name, options, sopts);
     }
 
     public void read(final DataInput in) throws IOException {

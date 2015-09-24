@@ -6,7 +6,7 @@ package org.basex.io.random;
  * @author BaseX Team 2005-15, BSD License
  * @author Christian Gruen
  */
-final class Buffers {
+public final class Buffers {
   /** Number of buffers (must be 1 << n). */
   private static final int BUFFERS = 1 << 4;
   /** Buffers. */
@@ -17,7 +17,7 @@ final class Buffers {
   /**
    * Constructor.
    */
-  Buffers() {
+  public Buffers() {
     for(int b = 0; b < BUFFERS; ++b) buf[b] = new Buffer();
   }
 
@@ -25,7 +25,7 @@ final class Buffers {
    * Returns all buffers.
    * @return buffers
    */
-  Buffer[] all() {
+  public Buffer[] all() {
     return buf;
   }
 
@@ -33,7 +33,7 @@ final class Buffers {
    * Returns the current buffer.
    * @return current buffer
    */
-  Buffer current() {
+  public Buffer current() {
     return buf[off];
   }
 
@@ -42,7 +42,7 @@ final class Buffers {
    * @param p buffer pointer
    * @return true if cursor has changed
    */
-  boolean cursor(final long p) {
+  public boolean cursor(final long p) {
     final int o = off;
     do {
       if(buf[off].pos == p) return false;

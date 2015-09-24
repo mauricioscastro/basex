@@ -3,7 +3,6 @@ package lmdb.basex;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.basex.core.MainOptions;
 import org.basex.data.Data;
-import lmdb.basex.MetaData;
 import org.basex.data.Namespaces;
 import org.basex.index.IndexType;
 import org.basex.index.name.Names;
@@ -15,6 +14,9 @@ import org.basex.util.Token;
 import org.fusesource.lmdbjni.Database;
 import org.fusesource.lmdbjni.Transaction;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 
 import static lmdb.util.Byte.lmdbkey;
@@ -26,11 +28,7 @@ public class LmdbData extends Data {
 
     protected Database txtdb;
     protected Database attdb;
-    protected Database metadatadb;
-    protected Database elementdb;
-    protected Database attributedb;
-    protected Database pathsdb;
-    protected Database namespacedb;
+    protected Database structdb;
 
     protected byte[] docid;
 
@@ -39,29 +37,19 @@ public class LmdbData extends Data {
     }
 
     public LmdbData(final String name, final byte[] docid, final Database txtdb, final Database attdb,
-                    final Database metadatadb, final Database elementdb, final Database attributedb, final Database pathsdb,
-                    final Database namespacedb, final Database tableAccess, final Transaction tx, final MainOptions options) throws IOException {
+                    final Database structdb, final Database tableAccess, final Transaction tx, final MainOptions options) throws IOException {
 
         super(new MetaData(name, options, null));
-
-        byte[] dbmeta = metadatadb.get(tx,docid);
-        if(dbmeta != null) meta.read(new DataInput(new IOContent(dbmeta)));
 
         this.docid = docid;
         this.tx = tx;
         this.txtdb = txtdb;
         this.attdb = attdb;
-        this.table = new TableLmdbAccess(meta,tx,tableAccess,docid);
-        this.metadatadb = metadatadb;
-        this.elementdb = elementdb;
-        this.attributedb = attributedb;
-        this.pathsdb = pathsdb;
-        this.namespacedb = namespacedb;
+        this.structdb = structdb;
 
-        this.paths = new PathSummary(this, new DataInput(new IOContent(pathsdb.get(tx,docid))));
-        this.elemNames = new Names(new DataInput(new IOContent(elementdb.get(tx,docid))),meta);
-        this.attrNames = new Names(new DataInput(new IOContent(attributedb.get(tx,docid))),meta);
-        this.nspaces = new Namespaces(new DataInput(new IOContent(namespacedb.get(tx,docid))));
+        readStruct();
+
+        this.table = new TableLmdbAccess(meta, tx, tableAccess, docid);
 
 //        if(meta.updindex) idmap = new IdPreMap(meta.lastid); // TODO: check DiskData on old basex-kaha
     }
@@ -92,33 +80,7 @@ public class LmdbData extends Data {
 
     @Override
     public void finishUpdate(MainOptions opts) {
-        System.err.println(elemNames.toString());
-
-        try(ByteArrayOutputStream bos = new ByteArrayOutputStream(1024*16)) {
-
-            paths.write(new DataOutput(bos));
-            pathsdb.put(tx, docid, bos.toByteArray());
-
-            bos.reset();
-            meta.dirty = false;
-            meta.write(new DataOutput(bos));
-            metadatadb.put(tx, docid, bos.toByteArray());
-
-            bos.reset();
-            nspaces.write(new DataOutput(bos));
-            namespacedb.put(tx, docid, bos.toByteArray());
-
-            bos.reset();
-            elemNames.write(new DataOutput(bos));
-            elementdb.put(tx, docid, bos.toByteArray());
-
-            bos.reset();
-            attrNames.write(new DataOutput(bos));
-            attributedb.put(tx, docid, bos.toByteArray());
-
-        } catch (IOException ioe) {
-            throw new RuntimeException(ioe);
-        }
+        writeStruct();
     }
 
     @Override
@@ -160,5 +122,68 @@ public class LmdbData extends Data {
 
     private void put(int pre, byte[] value, boolean text) {
         (text ? txtdb : attdb).put(tx, lmdbkey(docid, pre), value);
+    }
+
+    private void readStruct() throws IOException {
+
+        DataInputStream structin = new DataInputStream(new ByteArrayInputStream(structdb.get(tx,docid)));
+
+        byte[] metastruct = new byte[structin.readInt()];
+        structin.readFully(metastruct);
+        meta.read(new DataInput(new IOContent(metastruct)));
+
+        byte[] pathstruct = new byte[structin.readInt()];
+        structin.readFully(pathstruct);
+        paths = new PathSummary(this, new DataInput(new IOContent(pathstruct)));
+
+        byte[] nspacestruct = new byte[structin.readInt()];
+        structin.readFully(nspacestruct);
+        nspaces = new Namespaces(new DataInput(new IOContent(nspacestruct)));
+
+        byte[] elementstruct = new byte[structin.readInt()];
+        structin.readFully(elementstruct);
+        elemNames = new Names(new DataInput(new IOContent(elementstruct)),meta);
+
+        byte[] attrstruct = new byte[structin.readInt()];
+        structin.readFully(attrstruct);
+        attrNames = new Names(new DataInput(new IOContent(attrstruct)),meta);
+    }
+
+    private void writeStruct() {
+
+        try(ByteArrayOutputStream bos = new ByteArrayOutputStream(1024*32);
+            DataOutputStream dos = new DataOutputStream(bos);
+            ByteArrayOutputStream b = new ByteArrayOutputStream(1024*8)) {
+
+            meta.dirty = false;
+            meta.write(new DataOutput(b));
+            dos.writeInt(b.size());
+            dos.write(b.toByteArray());
+
+            b.reset();
+            paths.write(new DataOutput(b));
+            dos.writeInt(b.size());
+            dos.write(b.toByteArray());
+
+            b.reset();
+            nspaces.write(new DataOutput(b));
+            dos.writeInt(b.size());
+            dos.write(b.toByteArray());
+
+            b.reset();
+            elemNames.write(new DataOutput(b));
+            dos.writeInt(b.size());
+            dos.write(b.toByteArray());
+
+            b.reset();
+            attrNames.write(new DataOutput(b));
+            dos.writeInt(b.size());
+            dos.write(b.toByteArray());
+
+            structdb.put(tx, docid, bos.toByteArray());
+
+        } catch (IOException ioe) {
+            throw new RuntimeException(ioe);
+        }
     }
 }
