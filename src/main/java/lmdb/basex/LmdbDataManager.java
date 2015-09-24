@@ -224,7 +224,7 @@ public class LmdbDataManager {
     public static final String CONTENT = "\n" +
             "<root xmlns:h=\"http://www.w3.org/TR/html4/\"\n" +
             "xmlns:f=\"http://www.w3schools.com/furniture\">\n" +
-            "<h:table border=\"0\" cellspacing=\"0\">\n" +
+            "<h:table border=\"1\" cellspacing=\"2\">\n" +
             "  <h:tr>\n" +
             "    <h:td width=\"100%\">Apples</h:td>\n" +
             "    <h:td>Bananas</h:td>\n" +
@@ -395,41 +395,83 @@ public class LmdbDataManager {
 //            XQuery.query(qctx, System.out, null, true);
 //        }
 
+//        try(Transaction tx = env.createReadTransaction()) {
+//            EntryIterator ei = tableaccessdb.iterate(tx);
+//            while (ei.hasNext()) {
+//                Entry e = ei.next();
+//                System.err.println("tableaccessdb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
+//            }
+//        }
+
+
+
+
+//        try(Transaction tx = env.createReadTransaction()) {
+//            EntryIterator ei = textdatadb.iterate(tx);
+//            while (ei.hasNext()) {
+//                Entry e = ei.next();
+//                System.err.println("textdatadb: " + Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
+//            }
+//        }
+//
+//        try(Transaction tx = env.createReadTransaction()) {
+//            EntryIterator ei = attributevaldb.iterate(tx);
+//            while (ei.hasNext()) {
+//                Entry e = ei.next();
+//                System.err.println("attributevaldb: " + Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
+//            }
+//        }
+//
+//
+//        try(QueryContext qctx = new QueryContext()) {
+//            qctx.parse("doc('c4/d0')");
+//            qctx.compile();
+//            XQuery.query(qctx, System.out, null, true);
+//        }
+
+
         try(Transaction tx = env.createReadTransaction()) {
             EntryIterator ei = tableaccessdb.iterate(tx);
             while (ei.hasNext()) {
                 Entry e = ei.next();
-                System.err.println("tableaccessdb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
+
+                int c = 0;
+                byte[] v = e.getValue();
+                for(int i = 0; i+16 < v.length; i+=16) {
+                    System.err.println(c++ + ": " + Hex.encodeHexString(Arrays.copyOfRange(v,i,i+16)));
+                }
+
+                //System.err.println("tableaccessdb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
             }
         }
 
         try(QueryContext qctx = new QueryContext()) {
-            qctx.parse("insert node <new_element/> into doc('c4/d0')/root");
+            qctx.parse("insert node <new_element/> as first into doc('c4/d0')/root");
             qctx.compile();
             XQuery.query(qctx, System.out, null, true);
         }
 
-        try(Transaction tx = env.createReadTransaction()) {
-            EntryIterator ei = tableaccessdb.iterate(tx);
-            while (ei.hasNext()) {
-                Entry e = ei.next();
-                System.err.println("tableaccessdb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
-            }
-        }
+//        try(Transaction tx = env.createReadTransaction()) {
+//            EntryIterator ei = tableaccessdb.iterate(tx);
+//            while (ei.hasNext()) {
+//                Entry e = ei.next();
+//                System.err.println("tableaccessdb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
+//            }
+//        }
 
-        try(QueryContext qctx = new QueryContext()) {
-            qctx.parse("delete node doc('c4/d0')/root/empty");
-            qctx.compile();
-            XQuery.query(qctx, System.out, null, true);
-        }
-
-        try(Transaction tx = env.createReadTransaction()) {
-            EntryIterator ei = tableaccessdb.iterate(tx);
-            while (ei.hasNext()) {
-                Entry e = ei.next();
-                System.err.println("tableaccessdb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
-            }
-        }
+//        try(QueryContext qctx = new QueryContext()) {
+//            qctx.parse("delete node doc('c4/d0')/root/empty");
+//            qctx.compile();
+//            XQuery.query(qctx, System.out, null, true);
+//        }
+//
+//        try(Transaction tx = env.createReadTransaction()) {
+//            EntryIterator ei = tableaccessdb.iterate(tx);
+//            while (ei.hasNext()) {
+//                Entry e = ei.next();
+//                System.err.println("tableaccessdb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
+//            }
+//        }
 
 //
 //        try(Transaction tx = env.createReadTransaction()) {
@@ -455,7 +497,39 @@ public class LmdbDataManager {
 //                System.err.println("structdb: " + Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
 //            }
 //        }
+//
+//
+//        try(Transaction tx = env.createReadTransaction()) {
+//            EntryIterator ei = textdatadb.iterate(tx);
+//            while (ei.hasNext()) {
+//                Entry e = ei.next();
+//                System.err.println("textdatadb: " + Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
+//            }
+//        }
+//
+//        try(Transaction tx = env.createReadTransaction()) {
+//            EntryIterator ei = attributevaldb.iterate(tx);
+//            while (ei.hasNext()) {
+//                Entry e = ei.next();
+//                System.err.println("attributevaldb: " + Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
+//            }
+//        }
 
+
+        try(Transaction tx = env.createReadTransaction()) {
+            EntryIterator ei = tableaccessdb.iterate(tx);
+            while (ei.hasNext()) {
+                Entry e = ei.next();
+
+                int c = 0;
+                byte[] v = e.getValue();
+                for(int i = 0; i+16 < v.length; i+=16) {
+                    System.err.println(c++ + ": " + Hex.encodeHexString(Arrays.copyOfRange(v,i,i+16)));
+                }
+
+                //System.err.println("tableaccessdb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
+            }
+        }
 
         try(QueryContext qctx = new QueryContext()) {
             qctx.parse("doc('c4/d0')");

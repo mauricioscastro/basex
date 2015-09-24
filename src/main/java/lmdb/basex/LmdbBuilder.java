@@ -151,11 +151,12 @@ public class LmdbBuilder extends Builder {
             else tx.close();
         }
 
-        FileUtils.deleteQuietly(new File(tblTmpName));
-        FileUtils.deleteQuietly(new File(tblBaseName));
-
         writeTextData();
         writeStruct();
+
+        FileUtils.deleteQuietly(new File(tblTmpName));
+        FileUtils.deleteQuietly(new File(tblBaseName));
+        FileUtils.deleteQuietly(tmpFile);
 
         // just create it. do not use right away
         return null;

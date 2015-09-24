@@ -31,25 +31,16 @@ public class TableLmdbAccess extends TableAccess {
     protected Database db;
     protected byte[] docid;
 
-    /** Buffer manager. */
     private final Buffers bm = new Buffers();
-    /** Bitmap storing free (=0) and used (=1) pages. */
     private BitArray usedPages;
 
-    /** First pre values (ascending order); will be initialized with the first update. */
     private int[] fpres;
-    /** Page index; will be initialized with the first update. */
     private int[] pages;
-    /** Total number of pages. */
     private int size;
-    /** Number of used pages. */
     private int used;
 
-    /** Pointer to current page. */
     private int page = -1;
-    /** Pre value of the first entry in the current page. */
     private int firstPre = -1;
-    /** First pre value of the next page. */
     private int nextPre = -1;
 
     public TableLmdbAccess(final MetaData md, final Transaction tx, Database db, byte[] docid) throws IOException {
@@ -578,138 +569,4 @@ public class TableLmdbAccess extends TableAccess {
                 (byte)(0xff)
         };
     }
-
-//    protected Transaction tx;
-//    protected Database db;
-//    protected byte[] docid;
-//
-//    public TableLmdbAccess(final MetaData md, final Transaction tx, Database db, byte[] docid) {
-//        super(md);
-//        this.tx = tx;
-//        this.db = db;
-//        this.docid = docid;
-//    }
-//
-//    @Override
-//    public void flush(boolean all) throws IOException {
-//
-//    }
-//
-//    @Override
-//    public void close() throws IOException {
-//
-//    }
-//
-//    @Override
-//    public boolean lock(boolean write) {
-//        return true;
-//    }
-//
-//    @Override
-//    public int read1(int p, int o) {
-//        int r = -1;
-//        byte[] x = get(p);
-//        r = x[o] & 0xFF;
-//        return r;
-//    }
-//
-//    @Override
-//    public int read2(int p, int o) {
-//        byte[] b = get(p);
-//        return (int)(((b[o] & 0xFF) << 8) + (b[o + 1] & 0xFF));
-//    }
-//
-//    @Override
-//    public int read4(int p, int o) {
-//        byte[] b = get(p);
-//        return (int)(((b[o] & 0xFF) << 24) + ((b[o + 1] & 0xFF) << 16) + ((b[o + 2] & 0xFF) << 8) + (b[o + 3] & 0xFF));
-//    }
-//
-//    @Override
-//    public long read5(int p, int o) {
-//        byte[] b = get(p);
-//        return (long) (((long) (b[o] & 0xFF) << 32) + ((long) (b[o + 1] & 0xFF) << 24) + ((b[o + 2] & 0xFF) << 16) + ((b[o + 3] & 0xFF) << 8) + (b[o + 4] & 0xFF));
-//    }
-//
-//    @Override
-//    public void write1(int p, int o, int v) {
-//        dirty();
-//        byte[] k = lmdbkey(docid, p);
-//        final byte[] b = get(k);
-//        b[o] = (byte) v;
-//        put(k, b);
-//    }
-//
-//    @Override
-//    public void write2(int p, int o, int v) {
-//        dirty();
-//        byte[] k = lmdbkey(docid, p);
-//        final byte[] b = get(k);
-//        b[o] = (byte) (v >>> 8);
-//        b[o + 1] = (byte) v;
-//        put(k, b);
-//    }
-//
-//    @Override
-//    public void write4(int p, int o, int v) {
-//        dirty();
-//        byte[] k = lmdbkey(docid, p);
-//        final byte[] b = get(k);
-//        b[o]     = (byte) (v >>> 24);
-//        b[o + 1] = (byte) (v >>> 16);
-//        b[o + 2] = (byte) (v >>> 8);
-//        b[o + 3] = (byte) v;
-//        put(k, b);
-//    }
-//
-//    @Override
-//    public void write5(int p, int o, long v) {
-//        dirty();
-//        byte[] k = lmdbkey(docid, p);
-//        final byte[] b = get(k);
-//        b[o]     = (byte) (v >>> 32);
-//        b[o + 1] = (byte) (v >>> 24);
-//        b[o + 2] = (byte) (v >>> 16);
-//        b[o + 3] = (byte) (v >>> 8);
-//        b[o + 4] = (byte) v;
-//        put(k, b);
-//    }
-//
-//    @Override
-//    public void delete(int pre, int nr) {
-//        if(nr == 0) return;
-//        dirty();
-//        for(int i = pre; i < pre+nr; i++) db.delete(tx, lmdbkey(docid, i));
-//    }
-//
-//    @Override
-//    public void insert(int pre, byte[] entries) {
-//        if (entries.length == 0) return;
-//        dirty();
-//        meta.size += (pre + (entries.length >>> IO.NODEPOWER)) - pre;
-//        put(lmdbkey(docid, pre), entries);
-//    }
-//
-//    @Override
-//    protected void copy(byte[] entries, int pre, int last) {
-//        dirty();
-//        for(int i = pre; i < last; i++) put(lmdbkey(docid, i), entries);
-//    }
-//
-//    @Override
-//    protected void dirty() {
-//        dirty = true;
-//    }
-//
-//    private byte[] get(int pre) {
-//        return db.get(tx, lmdbkey(docid, pre));
-//    }
-//
-//    protected byte[] get(byte[] key) {
-//        return db.get(tx,key);
-//    }
-//
-//    private void put(int pre, byte[] value) {
-//        db.put(tx, lmdbkey(docid, pre), value);
-//    }
 }
