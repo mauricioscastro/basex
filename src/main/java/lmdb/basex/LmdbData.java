@@ -95,7 +95,7 @@ public class LmdbData extends Data {
 
     @Override
     public byte[] text(int pre, boolean text) {
-        return (text ? txtdb : attdb).get(tx, lmdbkey(docid, pre));
+        return (text ? txtdb : attdb).get(tx, lmdbkey(docid, (int)textRef(pre)));
     }
 
     @Override
@@ -117,7 +117,7 @@ public class LmdbData extends Data {
 
     @Override
     protected void delete(int pre, boolean text) {
-        (text ? txtdb : attdb).delete(tx, lmdbkey(docid, pre));
+        (text ? txtdb : attdb).delete(tx, lmdbkey(docid, (int)textRef(pre)));
     }
 
     @Override
@@ -126,7 +126,7 @@ public class LmdbData extends Data {
     }
 
     private void put(int pre, byte[] value, boolean text) {
-        (text ? txtdb : attdb).put(tx, lmdbkey(docid, pre), value);
+        (text ? txtdb : attdb).put(tx, lmdbkey(docid, (int)textRef(pre)), value);
     }
 
     private void readStruct() throws IOException {
