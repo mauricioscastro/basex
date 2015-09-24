@@ -11,6 +11,7 @@ import org.basex.io.IOContent;
 import org.basex.io.in.DataInput;
 import org.basex.io.out.DataOutput;
 import org.basex.util.Token;
+import org.basex.util.Util;
 import org.fusesource.lmdbjni.Database;
 import org.fusesource.lmdbjni.Transaction;
 
@@ -61,7 +62,11 @@ public class LmdbData extends Data {
 
     @Override
     public void close() {
-
+        try {
+            table.close();
+        } catch(final IOException ex) {
+            Util.stack(ex);
+        }
     }
 
     @Override
