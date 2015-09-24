@@ -444,7 +444,49 @@ public class LmdbDataManager {
 //        }
 
         try(QueryContext qctx = new QueryContext()) {
-            qctx.parse("insert node <new_element/> as first into doc('c4/d0')/root");
+            qctx.parse("insert node <new_element_a/> into doc('c4/d0')/root");
+            qctx.compile();
+            XQuery.query(qctx, System.out, null, true);
+        }
+
+        try(QueryContext qctx = new QueryContext()) {
+            qctx.parse("insert node <new_element_b/> as first into doc('c4/d0')/root");
+            qctx.compile();
+            XQuery.query(qctx, System.out, null, true);
+        }
+
+        try(QueryContext qctx = new QueryContext()) {
+            qctx.parse("insert node <new_element_c/> as last into doc('c4/d0')/root");
+            qctx.compile();
+            XQuery.query(qctx, System.out, null, true);
+        }
+
+        try(QueryContext qctx = new QueryContext()) {
+            qctx.parse("insert node <new_element_d/> before doc('c4/d0')/root/new_element_c");
+            qctx.compile();
+            XQuery.query(qctx, System.out, null, true);
+        }
+
+        try(QueryContext qctx = new QueryContext()) {
+            qctx.parse("insert node <new_element_e/> after doc('c4/d0')/root/new_element_b");
+            qctx.compile();
+            XQuery.query(qctx, System.out, null, true);
+        }
+
+        try(QueryContext qctx = new QueryContext()) {
+            qctx.parse("delete node doc('c4/d0')/root/new_element_b");
+            qctx.compile();
+            XQuery.query(qctx, System.out, null, true);
+        }
+
+        try(QueryContext qctx = new QueryContext()) {
+            qctx.parse("replace node doc('c4/d0')/root/new_element_a with <aaa/>");
+            qctx.compile();
+            XQuery.query(qctx, System.out, null, true);
+        }
+
+        try(QueryContext qctx = new QueryContext()) {
+            qctx.parse("rename node doc('c4/d0')//empty/@att1 as 'HELLO'");
             qctx.compile();
             XQuery.query(qctx, System.out, null, true);
         }
