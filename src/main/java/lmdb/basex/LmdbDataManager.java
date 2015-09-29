@@ -274,13 +274,13 @@ public class LmdbDataManager {
 //        LmdbDataManager.removeCollection("c1");
 //        LmdbDataManager.createCollection("c1");
 //        LmdbDataManager.removeCollection("c1");
-        LmdbDataManager.createCollection("c4");
+//        LmdbDataManager.createCollection("c4");
 //        LmdbDataManager.createDocument("c4/d0", new ByteArrayInputStream(CONTENT.getBytes()));
 //        LmdbDataManager.createDocument("c4/d1", new FileInputStream("/home/mscastro/dev/basex-lmdb/db/xml/etc/factbook.xml"));
 //        LmdbDataManager.createDocument("c4/d2", new FileInputStream("/home/mscastro/download/shakespeare.xml"));
 //        LmdbDataManager.createDocument("c4/d3", new FileInputStream("/home/mscastro/download/medline15n0766.xml"));
 //        LmdbDataManager.createDocument("c4/d4", new FileInputStream("/home/mscastro/download/standard.xml"));
-        LmdbDataManager.createDocument("c4/d5", new FileInputStream("/tmp/test.xml"));
+//        LmdbDataManager.createDocument("c4/d5", new FileInputStream("/tmp/test.xml"));
 
 //        LmdbDataManager.createDocument("c2/d0", new ByteArrayInputStream(new byte[]{}));
 
@@ -491,6 +491,12 @@ public class LmdbDataManager {
 //            XQuery.query(qctx, System.out, null, true);
 //        }
 
+        try(QueryContext qctx = new QueryContext()) {
+            qctx.parse("doc('c4/d0')");
+            qctx.compile();
+            XQuery.query(qctx, System.out, null, true);
+        }
+
 //        try(Transaction tx = env.createReadTransaction()) {
 //            EntryIterator ei = tableaccessdb.iterate(tx);
 //            while (ei.hasNext()) {
@@ -575,11 +581,11 @@ public class LmdbDataManager {
 //
 //        System.out.println("\n--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
 //
-        try(QueryContext qctx = new QueryContext()) {
-            qctx.parse("doc('c4/d5')//LINE");
-            qctx.compile();
-            XQuery.query(qctx, System.out, null, true);
-        }
+//        try(QueryContext qctx = new QueryContext()) {
+//            qctx.parse("doc('c4/d5')//LINE");
+//            qctx.compile();
+//            XQuery.query(qctx, System.out, null, true);
+//        }
 
 
 
@@ -616,9 +622,13 @@ public class LmdbDataManager {
 //        System.out.println("result dump finish: " + new Date());
 
 
+//        try(QueryContext qctx = new QueryContext()) {
+//            qctx.parse("count(doc('c4/d3')//node())");
+//            qctx.compile();
+//            XQuery.query(qctx, System.out, null, "true");
+//        }
 
-
-
+//
 //        System.out.println("         ctx start: " + new Date());
 //
 //        try(QueryContext qctx = new QueryContext()) {

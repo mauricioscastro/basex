@@ -77,7 +77,7 @@ public class LmdbBuilder extends Builder {
         this.structdb = structdb;
         this.tableAccess = tableAccess;
 
-        this.tmpFile = File.createTempFile("txt." + meta.name.replace('/', '.') + ".", ".tmp", null);
+        this.tmpFile = new File(System.getProperty("java.io.tmpdir", "/tmp"), meta.name.replace('/', '.') + ".txt");
         this.tmpFile.deleteOnExit();
         this.tempBuffer = new DataOutputStream(new FileOutputStream(tmpFile));
     }
@@ -123,7 +123,7 @@ public class LmdbBuilder extends Builder {
             byte[] b = new byte[IO.BLOCKSIZE];
             if(IOUtils.read(tbl,b) == 0) break;
             tableAccess.put(tx,lmdbkey(docid,i),b);
-            if(++p > 1000) {
+            if(++p > 10000) {
                 tx.commit();
                 tx = env.createWriteTransaction();
                 p = 0;
@@ -139,8 +139,8 @@ public class LmdbBuilder extends Builder {
             try {
                 for(; spos < ssize; ++spos) {
                     ta.write4(in.readNum(), 8, in.readNum());
-                    ta.bufferFlush();
-                    if(++p > 1000) {
+                    ta.flush(true);
+                    if(++p > 10000) {
                         tx.commit();
                         tx = env.createWriteTransaction();
                         ta.setTx(tx);

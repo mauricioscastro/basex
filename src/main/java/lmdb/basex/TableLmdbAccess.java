@@ -31,6 +31,8 @@ public class TableLmdbAccess extends TableAccess {
     protected Database db;
     protected byte[] docid;
 
+    // TODO: basex-lmdb: use only one. flush often by put() to lmdb inside current tx
+    // TODO: basex-lmdb: use only one Buffer and check page struct dirty use only one flush !
     private final Buffers bm = new Buffers();
     private BitArray usedPages;
 
@@ -77,8 +79,8 @@ public class TableLmdbAccess extends TableAccess {
 
     @Override
     public synchronized void flush(final boolean all) throws IOException {
-        if(tx.isReadOnly()) return;
-        bufferFlush();
+        if(tx.isReadOnly()) { System.err.print(".");  return; }
+        for(final Buffer b : bm.all()) if(b.dirty) write(b);
         if(!dirty || !all) return;
 
         try(ByteArrayOutputStream bos = new ByteArrayOutputStream(1024*32); final DataOutput out = new DataOutput(bos)) {
@@ -397,10 +399,6 @@ public class TableLmdbAccess extends TableAccess {
 
     void setTx(Transaction tx) {
         this.tx = tx;
-    }
-
-    void bufferFlush() throws IOException {
-        for(final Buffer b : bm.all()) if(b.dirty) write(b);
     }
 
     // PRIVATE METHODS ==========================================================
