@@ -57,6 +57,8 @@ public class LmdbBuilder extends Builder {
     private byte[] docid;
     private DataOutputStream tempBuffer;
     private File tmpFile;
+    private long txtref = 0;
+    private long attref = 0;
 
     private LmdbBuilder(final String name, final byte[] docid, final Env env,
                         final Database txtdb, final Database attdb, final Database structdb,
@@ -137,6 +139,7 @@ public class LmdbBuilder extends Builder {
             try {
                 for(; spos < ssize; ++spos) {
                     ta.write4(in.readNum(), 8, in.readNum());
+                    ta.bufferFlush();
                     if(++p > 1000) {
                         tx.commit();
                         tx = env.createWriteTransaction();
@@ -162,14 +165,6 @@ public class LmdbBuilder extends Builder {
         return null;
     }
 
-    public void abort() {
-        try {
-            close();
-        } catch(final IOException ex) {
-            Util.debug(ex);
-        }
-        //if(meta != null) DropDB.drop(meta.name, sopts);
-    }
 
     @Override
     public DataClip dataClip() throws IOException {
@@ -191,7 +186,6 @@ public class LmdbBuilder extends Builder {
     protected void addDoc(final byte[] value) throws IOException {
         tout.write1(Data.DOC);
         tout.write2(0);
-//        tout.write5(textRef(value, true));
         tout.write5(textRef(meta.name.getBytes(UTF_8), true));
         tout.write4(0);
         tout.write4(meta.size++);
@@ -238,15 +232,12 @@ public class LmdbBuilder extends Builder {
     }
 
     private long textRef(final byte[] value, final boolean text) throws IOException {
-        try {
-            tempBuffer.writeInt(value.length);
-            tempBuffer.write(lmdbkey(docid, meta.size));
-            tempBuffer.write(value);
-            tempBuffer.writeBoolean(text);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return meta.size;
+        long ref = text ? txtref++ : attref++;
+        tempBuffer.writeInt(value.length);
+        tempBuffer.write(lmdbkey(docid, (int)ref));
+        tempBuffer.write(value);
+        tempBuffer.writeBoolean(text);
+        return ref;
     }
 
 
@@ -320,81 +311,4 @@ public class LmdbBuilder extends Builder {
             throw new RuntimeException(ioe);
         }
     }
-
-//    private LmdbDataBuilder data;
-//
-//    private LmdbBuilder(final String name, final byte[] docid, final Env env,
-//                        final Database txtdb, final Database attdb, final Database metadatadb,
-//                        final Database elemNames, final Database attrNames, final Database paths, final Database nspaces,
-//                        final Database tableAccess, final Parser parser) throws IOException {
-//
-//        super(name, parser);
-//        data = new LmdbDataBuilder(name, docid, env, txtdb, attdb, metadatadb, elemNames, attrNames, paths, nspaces, tableAccess, parser.options);
-//    }
-//
-//    public static void build(final String name, final byte[] docid, final Env env, final Database txtdb, final Database attdb,
-//                             final Database metadatadb, final Database elemNames, final Database attrNames,
-//                             final Database paths, final Database nspaces,
-//                             final Database tableAccess, final Parser parser) throws IOException {
-//        new LmdbBuilder(name, docid, env, txtdb, attdb, metadatadb, elemNames, attrNames, paths, nspaces, tableAccess, parser).build();
-//    }
-//
-//    @Override
-//    public LmdbData build() throws IOException {
-//        meta = data.meta;
-//        meta.name = dbname;
-//        meta.original = dbname;
-//        elemNames = data.elemNames;
-//        attrNames = data.attrNames;
-//        path.data(data);
-//        nspaces = data.nspaces;
-//        dataClip();
-//        return null;
-//    }
-//
-//    @Override
-//    public DataClip dataClip() throws IOException {
-//        try {
-//            parse();
-//        } catch(final IOException ex) {
-//            try { close(); } catch(final IOException ignored) { }
-//            throw ex;
-//        }
-//        close();
-//        return new DataClip(data);
-//    }
-//
-//    @Override
-//    public void close() throws IOException {
-//        data.close();
-//        parser.close();
-//    }
-//
-//
-//    @Override
-//    protected void addDoc(byte[] value) throws IOException {
-//        data.doc(0, bytes(dbname));
-//        data.insert(meta.size);
-//    }
-//
-//    @Override
-//    protected void addElem(int dist, int nameId, int asize, int uriId, boolean ne) throws IOException {
-//        data.elem(dist, nameId, asize, asize, uriId, ne);
-//        data.insert(meta.size);
-//    }
-//
-//    @Override
-//    protected void addAttr(int nameId, byte[] value, int dist, int uriId) throws IOException {
-//        data.attr(dist, nameId, value, uriId);
-//        data.insert(meta.size);
-//    }
-//
-//    @Override
-//    protected void addText(byte[] value, int dist, byte kind) throws IOException {
-//        data.text(dist, value, kind);
-//        data.insert(meta.size);
-//    }
-//
-//    @Override
-//    protected void setSize(int pre, int size) throws IOException { data.size(pre, Data.ELEM, size); }
 }

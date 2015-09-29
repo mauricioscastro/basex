@@ -78,7 +78,7 @@ public class TableLmdbAccess extends TableAccess {
     @Override
     public synchronized void flush(final boolean all) throws IOException {
         if(tx.isReadOnly()) return;
-        for(final Buffer b : bm.all()) if(b.dirty) write(b);
+        bufferFlush();
         if(!dirty || !all) return;
 
         try(ByteArrayOutputStream bos = new ByteArrayOutputStream(1024*32); final DataOutput out = new DataOutput(bos)) {
@@ -399,6 +399,10 @@ public class TableLmdbAccess extends TableAccess {
         this.tx = tx;
     }
 
+    void bufferFlush() throws IOException {
+        for(final Buffer b : bm.all()) if(b.dirty) write(b);
+    }
+
     // PRIVATE METHODS ==========================================================
 
     /**
@@ -505,6 +509,8 @@ public class TableLmdbAccess extends TableAccess {
         db.put(tx, lmdbkey(docid, (int) bf.pos), bf.data);
         bf.dirty = false;
     }
+
+
 
     /**
      * Updates the firstPre index entries.

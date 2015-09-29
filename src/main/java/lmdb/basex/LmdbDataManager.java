@@ -546,7 +546,7 @@ public class LmdbDataManager {
 //                System.err.println("textdatadb: " + Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
 //            }
 //        }
-//
+////
 //        try(Transaction tx = env.createReadTransaction()) {
 //            EntryIterator ei = attributevaldb.iterate(tx);
 //            while (ei.hasNext()) {
@@ -556,34 +556,38 @@ public class LmdbDataManager {
 //        }
 
 
-        try(Transaction tx = env.createReadTransaction()) {
-            EntryIterator ei = tableaccessdb.iterate(tx);
-            while (ei.hasNext()) {
-                Entry e = ei.next();
-
-                int c = 0;
-                byte[] v = e.getValue();
-                for(int i = 0; i+16 <= v.length; i+=16) {
-                    System.err.println(c++ + ": " + Hex.encodeHexString(Arrays.copyOfRange(v,i,i+16)));
-                }
-
-                //System.err.println("tableaccessdb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
-            }
+//        try(Transaction tx = env.createReadTransaction()) {
+//            EntryIterator ei = tableaccessdb.iterate(tx);
+//            while (ei.hasNext()) {
+//                Entry e = ei.next();
+//
+//                int c = 0;
+//                byte[] v = e.getValue();
+//                for(int i = 0; i+16 <= v.length; i+=16) {
+//                    System.err.println(c++ + ": " + Hex.encodeHexString(Arrays.copyOfRange(v,i,i+16)));
+//                }
+//
+//                //System.err.println("tableaccessdb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
+//            }
+//        }
+//
+//
+//
+//        System.out.println("\n--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+//
+        try(QueryContext qctx = new QueryContext()) {
+            qctx.parse("doc('c4/d5')//LINE");
+            qctx.compile();
+            XQuery.query(qctx, System.out, null, true);
         }
+
+
 
 //        try(QueryContext qctx = new QueryContext()) {
 //            qctx.parse("doc('c4/d2')//LINE");
 //            qctx.compile();
 //            XQuery.query(qctx, System.out, null, true);
 //        }
-
-        System.out.println("\n--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
-
-        try(QueryContext qctx = new QueryContext()) {
-            qctx.parse("doc('c4/d5')//LINE");
-            qctx.compile();
-            XQuery.query(qctx, System.out, null, true);
-        }
 
 
 //        try(QueryContext qctx = new QueryContext()) {
