@@ -77,6 +77,7 @@ public class TableLmdbAccess extends TableAccess {
 
     @Override
     public synchronized void flush(final boolean all) throws IOException {
+        if(tx.isReadOnly()) return;
         for(final Buffer b : bm.all()) if(b.dirty) write(b);
         if(!dirty || !all) return;
 

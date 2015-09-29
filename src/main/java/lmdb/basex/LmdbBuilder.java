@@ -119,7 +119,7 @@ public class LmdbBuilder extends Builder {
         FileInputStream tbl = new FileInputStream(tblBaseName);
         for(int i = 0; ; i++) {
             byte[] b = new byte[IO.BLOCKSIZE];
-            try { IOUtils.readFully(tbl,b); } catch(Exception e) { break; }
+            if(IOUtils.read(tbl,b) == 0) break;
             tableAccess.put(tx,lmdbkey(docid,i),b);
             if(++p > 1000) {
                 tx.commit();
@@ -130,9 +130,9 @@ public class LmdbBuilder extends Builder {
         if(p > 0) tx.commit();
         else tx.close();
 
-        p = 0;
-        tx = env.createWriteTransaction();
         try(final DataInput in = new DataInput(new IOFile(tblTmpName))) {
+            p = 0;
+            tx = env.createWriteTransaction();
             final TableLmdbAccess ta = new TableLmdbAccess(meta, tx, tableAccess, docid);
             try {
                 for(; spos < ssize; ++spos) {

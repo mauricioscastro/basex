@@ -275,12 +275,12 @@ public class LmdbDataManager {
 //        LmdbDataManager.createCollection("c1");
 //        LmdbDataManager.removeCollection("c1");
         LmdbDataManager.createCollection("c4");
-        LmdbDataManager.createDocument("c4/d0", new ByteArrayInputStream(CONTENT.getBytes()));
+//        LmdbDataManager.createDocument("c4/d0", new ByteArrayInputStream(CONTENT.getBytes()));
 //        LmdbDataManager.createDocument("c4/d1", new FileInputStream("/home/mscastro/dev/basex-lmdb/db/xml/etc/factbook.xml"));
 //        LmdbDataManager.createDocument("c4/d2", new FileInputStream("/home/mscastro/download/shakespeare.xml"));
 //        LmdbDataManager.createDocument("c4/d3", new FileInputStream("/home/mscastro/download/medline15n0766.xml"));
 //        LmdbDataManager.createDocument("c4/d4", new FileInputStream("/home/mscastro/download/standard.xml"));
-//        LmdbDataManager.createDocument("c4/d5", new FileInputStream("/home/mscastro/download/standard.xml"));
+        LmdbDataManager.createDocument("c4/d5", new FileInputStream("/tmp/test.xml"));
 
 //        LmdbDataManager.createDocument("c2/d0", new ByteArrayInputStream(new byte[]{}));
 
@@ -290,7 +290,7 @@ public class LmdbDataManager {
 
 //        LmdbDataManager.removeDocument("c4/d1");
 
-        System.out.println(LmdbDataManager.listDocuments("c4"));
+//        System.out.println(LmdbDataManager.listDocuments("c4"));
 
 //        System.out.println(LmdbDataManager.listCollections());
 
@@ -442,54 +442,54 @@ public class LmdbDataManager {
 //                //System.err.println("tableaccessdb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
 //            }
 //        }
-
-        try(QueryContext qctx = new QueryContext()) {
-            qctx.parse("insert node <new_element_a/> into doc('c4/d0')/root");
-            qctx.compile();
-            XQuery.query(qctx, System.out, null, true);
-        }
-
-        try(QueryContext qctx = new QueryContext()) {
-            qctx.parse("insert node <new_element_b/> as first into doc('c4/d0')/root");
-            qctx.compile();
-            XQuery.query(qctx, System.out, null, true);
-        }
-
-        try(QueryContext qctx = new QueryContext()) {
-            qctx.parse("insert node <new_element_c/> as last into doc('c4/d0')/root");
-            qctx.compile();
-            XQuery.query(qctx, System.out, null, true);
-        }
-
-        try(QueryContext qctx = new QueryContext()) {
-            qctx.parse("insert node <new_element_d/> before doc('c4/d0')/root/new_element_c");
-            qctx.compile();
-            XQuery.query(qctx, System.out, null, true);
-        }
-
-        try(QueryContext qctx = new QueryContext()) {
-            qctx.parse("insert node <new_element_e/> after doc('c4/d0')/root/new_element_b");
-            qctx.compile();
-            XQuery.query(qctx, System.out, null, true);
-        }
-
-        try(QueryContext qctx = new QueryContext()) {
-            qctx.parse("delete node doc('c4/d0')/root/new_element_b");
-            qctx.compile();
-            XQuery.query(qctx, System.out, null, true);
-        }
-
-        try(QueryContext qctx = new QueryContext()) {
-            qctx.parse("replace node doc('c4/d0')/root/new_element_a with <aaa/>");
-            qctx.compile();
-            XQuery.query(qctx, System.out, null, true);
-        }
-
-        try(QueryContext qctx = new QueryContext()) {
-            qctx.parse("rename node doc('c4/d0')//empty/@att1 as 'HELLO'");
-            qctx.compile();
-            XQuery.query(qctx, System.out, null, true);
-        }
+//
+//        try(QueryContext qctx = new QueryContext()) {
+//            qctx.parse("insert node <new_element_a/> into doc('c4/d0')/root");
+//            qctx.compile();
+//            XQuery.query(qctx, System.out, null, true);
+//        }
+//
+//        try(QueryContext qctx = new QueryContext()) {
+//            qctx.parse("insert node <new_element_b/> as first into doc('c4/d0')/root");
+//            qctx.compile();
+//            XQuery.query(qctx, System.out, null, true);
+//        }
+//
+//        try(QueryContext qctx = new QueryContext()) {
+//            qctx.parse("insert node <new_element_c/> as last into doc('c4/d0')/root");
+//            qctx.compile();
+//            XQuery.query(qctx, System.out, null, true);
+//        }
+//
+//        try(QueryContext qctx = new QueryContext()) {
+//            qctx.parse("insert node <new_element_d/> before doc('c4/d0')/root/new_element_c");
+//            qctx.compile();
+//            XQuery.query(qctx, System.out, null, true);
+//        }
+//
+//        try(QueryContext qctx = new QueryContext()) {
+//            qctx.parse("insert node <new_element_e/> after doc('c4/d0')/root/new_element_b");
+//            qctx.compile();
+//            XQuery.query(qctx, System.out, null, true);
+//        }
+//
+//        try(QueryContext qctx = new QueryContext()) {
+//            qctx.parse("delete node doc('c4/d0')/root/new_element_b");
+//            qctx.compile();
+//            XQuery.query(qctx, System.out, null, true);
+//        }
+//
+//        try(QueryContext qctx = new QueryContext()) {
+//            qctx.parse("replace node doc('c4/d0')/root/new_element_a with <aaa/>");
+//            qctx.compile();
+//            XQuery.query(qctx, System.out, null, true);
+//        }
+//
+//        try(QueryContext qctx = new QueryContext()) {
+//            qctx.parse("rename node doc('c4/d0')//empty/@att1 as 'HELLO'");
+//            qctx.compile();
+//            XQuery.query(qctx, System.out, null, true);
+//        }
 
 //        try(Transaction tx = env.createReadTransaction()) {
 //            EntryIterator ei = tableaccessdb.iterate(tx);
@@ -556,26 +556,35 @@ public class LmdbDataManager {
 //        }
 
 
-//        try(Transaction tx = env.createReadTransaction()) {
-//            EntryIterator ei = tableaccessdb.iterate(tx);
-//            while (ei.hasNext()) {
-//                Entry e = ei.next();
-//
-//                int c = 0;
-//                byte[] v = e.getValue();
-//                for(int i = 0; i+16 < v.length; i+=16) {
-//                    System.err.println(c++ + ": " + Hex.encodeHexString(Arrays.copyOfRange(v,i,i+16)));
-//                }
-//
-//                //System.err.println("tableaccessdb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
-//            }
+        try(Transaction tx = env.createReadTransaction()) {
+            EntryIterator ei = tableaccessdb.iterate(tx);
+            while (ei.hasNext()) {
+                Entry e = ei.next();
+
+                int c = 0;
+                byte[] v = e.getValue();
+                for(int i = 0; i+16 <= v.length; i+=16) {
+                    System.err.println(c++ + ": " + Hex.encodeHexString(Arrays.copyOfRange(v,i,i+16)));
+                }
+
+                //System.err.println("tableaccessdb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
+            }
+        }
+
+//        try(QueryContext qctx = new QueryContext()) {
+//            qctx.parse("doc('c4/d2')//LINE");
+//            qctx.compile();
+//            XQuery.query(qctx, System.out, null, true);
 //        }
 
+        System.out.println("\n--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+
         try(QueryContext qctx = new QueryContext()) {
-            qctx.parse("doc('c4/d0')");
+            qctx.parse("doc('c4/d5')//LINE");
             qctx.compile();
             XQuery.query(qctx, System.out, null, true);
         }
+
 
 //        try(QueryContext qctx = new QueryContext()) {
 //            qctx.parse("doc('c4/d1')");
@@ -643,6 +652,15 @@ public class LmdbDataManager {
 //        System.out.println("result dump finish: " + new Date());
 //
 //
+//        FileOutputStream fos = new FileOutputStream(File.createTempFile("xxx.", ".yyy", null));
+//
+//        try(QueryContext qctx = new QueryContext()) {
+//            qctx.parse("doc('c4/d5')//LINE");
+//            qctx.compile();
+//            XQuery.query(qctx, fos, null, true);
+//        }
+//
+//        fos.close();
 
 
 //        PrintWriter p = new PrintWriter(new FileOutputStream(File.createTempFile("xxx.", ".yyy", null)));

@@ -67,6 +67,8 @@ public class LmdbData extends Data {
         } catch(final IOException ex) {
             Util.stack(ex);
         }
+        if(tx.isReadOnly()) return;
+        writeStruct();
     }
 
     @Override
@@ -90,7 +92,12 @@ public class LmdbData extends Data {
 
     @Override
     public void flush(boolean all) {
-
+        if(tx.isReadOnly()) return;
+        try {
+            table.flush(all);
+        } catch (IOException e) {
+            Util.stack(e);
+        }
     }
 
     @Override
@@ -112,7 +119,7 @@ public class LmdbData extends Data {
 
     @Override
     protected void updateText(int pre, byte[] value, int kind) {
-        put(pre, value, kind != ATTR);
+        (kind != ATTR ? txtdb : attdb).put(tx, lmdbkey(docid, (int) textRef(pre)), value);
     }
 
     @Override
@@ -123,10 +130,6 @@ public class LmdbData extends Data {
     @Override
     protected long textRef(byte[] value, boolean text) {
         return 0;
-    }
-
-    private void put(int pre, byte[] value, boolean text) {
-        (text ? txtdb : attdb).put(tx, lmdbkey(docid, (int)textRef(pre)), value);
     }
 
     private void readStruct() throws IOException {
