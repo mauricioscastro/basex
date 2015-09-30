@@ -224,6 +224,7 @@ public class QueryResources {
 
     private ANode resolveURI(String uri) throws IOException {
 
+        // TODO: basex-lmdb: use http://htmlunit.sourceforge.net/gettingLatestCode.html for http and https
         // TODO: basex-lmdb: review
         if (uri.startsWith("bxl://")) return resolveBasexLmdb(uri);
 
