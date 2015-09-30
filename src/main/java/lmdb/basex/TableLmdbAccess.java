@@ -472,6 +472,11 @@ public class TableLmdbAccess extends TableAccess {
         if(!bm.cursor(p)) return;
 
         final Buffer bf = bm.current();
+        if(bf.dirty) try {
+            write(bf);
+        } catch (IOException e) {
+            throw Util.notExpected(e);
+        }
         bf.pos = p;
         if(p >= size) {
             size = p + 1;
