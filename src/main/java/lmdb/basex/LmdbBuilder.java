@@ -1,6 +1,7 @@
 package lmdb.basex;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.basex.build.Builder;
 import org.basex.build.Parser;
@@ -8,38 +9,25 @@ import org.basex.core.MainOptions;
 import org.basex.core.StaticOptions;
 import org.basex.data.Data;
 import org.basex.data.DataClip;
-import org.basex.data.DiskData;
 import org.basex.index.name.Names;
 import org.basex.io.IO;
 import org.basex.io.IOFile;
 import org.basex.io.in.DataInput;
 import org.basex.io.out.DataOutput;
-import org.basex.io.out.TableOutput;
-import org.basex.io.random.TableAccess;
-import org.basex.io.random.TableDiskAccess;
-import org.basex.util.Util;
 import org.fusesource.lmdbjni.Database;
 import org.fusesource.lmdbjni.Env;
 import org.fusesource.lmdbjni.Transaction;
-
-import org.apache.commons.io.IOUtils;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
 
-
-import static lmdb.util.Byte.lmdbkey;
-import static org.basex.data.DataText.DATATBL;
-import static org.basex.data.DataText.DATATMP;
 import static java.nio.charset.StandardCharsets.UTF_8;
-
+import static lmdb.util.Byte.lmdbkey;
 import static org.basex.core.StaticOptions.DBPATH;
 
 public class LmdbBuilder extends Builder {
@@ -260,7 +248,7 @@ public class LmdbBuilder extends Builder {
                     boolean text = di.readBoolean();
                     (text ? txtdb : attdb).put(tx, key, value);
                     c++;
-                    if (c > 1024 * 10) {
+                    if (c > 10000) {
                         tx.commit();
                         c = 0;
                         tx = env.createWriteTransaction();

@@ -1,8 +1,6 @@
 package lmdb.basex;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
-import org.basex.core.BaseXException;
-import org.basex.core.Text;
 import org.basex.data.MetaData;
 import org.basex.io.IO;
 import org.basex.io.IOContent;
@@ -18,12 +16,9 @@ import org.fusesource.lmdbjni.Database;
 import org.fusesource.lmdbjni.Transaction;
 
 import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.channels.FileLock;
 import java.util.Arrays;
 
 import static lmdb.util.Byte.lmdbkey;
-import static org.basex.data.DataText.DATATBL;
 
 public class TableLmdbAccess extends TableAccess {
 
@@ -502,7 +497,7 @@ public class TableLmdbAccess extends TableAccess {
      * @throws IOException I/O exception
      */
     private void write(final Buffer bf) throws IOException {
-        db.put(tx, lmdbkey(docid, (int) bf.pos), bf.data);
+        db.put(tx, lmdbkey(docid, (int)bf.pos), bf.data);
         bf.dirty = false;
     }
 
