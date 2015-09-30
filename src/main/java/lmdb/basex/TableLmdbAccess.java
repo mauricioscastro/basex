@@ -31,8 +31,6 @@ public class TableLmdbAccess extends TableAccess {
     protected Database db;
     protected byte[] docid;
 
-    // TODO: basex-lmdb: use only one. flush often by put() to lmdb inside current tx
-    // TODO: basex-lmdb: use only one Buffer and check page struct dirty use only one flush !
     private final Buffers bm = new Buffers();
     private BitArray usedPages;
 
