@@ -143,6 +143,10 @@ public class LmdbDataManager {
     }
 
     public static List<String> listDocuments(String collection) throws IOException {
+        return listDocuments(collection, false);
+    }
+
+    public static List<String> listDocuments(String collection, boolean addCollectionName) throws IOException {
         ArrayList<String> docs = new ArrayList<String>();
         try(Transaction tx = env.createWriteTransaction()) {
             EntryIterator ei = coldb.seek(tx, bytes(collection));
@@ -151,7 +155,7 @@ public class LmdbDataManager {
                 String key = string(e.getKey());
                 if(key.endsWith("/r")) continue;
                 if(!key.startsWith(collection)) break;
-                docs.add(key.substring(key.indexOf('/')+1));
+                docs.add(addCollectionName ? key : key.substring(key.indexOf('/')+1));
             }
             tx.commit();
         }
@@ -281,6 +285,10 @@ public class LmdbDataManager {
 //        LmdbDataManager.createDocument("c4/d3", new FileInputStream("/home/mscastro/download/medline15n0766.xml"));
 //        LmdbDataManager.createDocument("c4/d4", new FileInputStream("/home/mscastro/download/standard.xml"));
 //        LmdbDataManager.createDocument("c4/d5", new FileInputStream("/tmp/test.xml"));
+
+//        LmdbDataManager.createDocument("c1/d1", new FileInputStream("/home/mscastro/download/shakespeare/tempest.xml"));
+//        LmdbDataManager.createDocument("c1/d2", new FileInputStream("/home/mscastro/download/shakespeare/coriolan.xml"));
+//        LmdbDataManager.createDocument("c1/d3", new FileInputStream("/home/mscastro/download/shakespeare/all_well.xml"));
 
 //        LmdbDataManager.createDocument("c2/d0", new ByteArrayInputStream(new byte[]{}));
 
@@ -492,7 +500,7 @@ public class LmdbDataManager {
 //        }
 
         try(QueryContext qctx = new QueryContext()) {
-            qctx.parse("doc('c4/d0')");
+            qctx.parse("collection('c1')/PLAY/TITLE");
             qctx.compile();
             XQuery.query(qctx, System.out, null, true);
         }

@@ -18,6 +18,7 @@ import org.basex.query.value.node.ANode;
 import org.basex.query.value.node.DBNode;
 import org.basex.query.value.node.FDoc;
 import org.basex.query.value.node.FElem;
+import org.basex.query.value.seq.Empty;
 import org.basex.util.InputInfo;
 import org.basex.util.QueryInput;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -58,7 +59,7 @@ public class QueryResources {
   private final ArrayList<String> collNames = new ArrayList<>(1);
   /** Opened databases. */
   private final ArrayList<Data> datas = new ArrayList<>(1);
-  private ArrayList<String> docs = new ArrayList<String>();
+  protected ArrayList<String> docs = new ArrayList<String>();
   protected ArrayList<Data> data = new ArrayList<Data>();
   /** Indicates if the first database in the context is globally opened. */
   private boolean globalData;
@@ -296,7 +297,7 @@ public class QueryResources {
   public Value collection(final QueryInput qi, final IO baseIO, final InputInfo info)
       throws QueryException {
 
-      return null; // TODO: basex-lmdb: review
+      return Empty.SEQ; // TODO: basex-lmdb: review
 
 //      List col = null;
 //      try {
