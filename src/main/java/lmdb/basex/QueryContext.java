@@ -15,7 +15,7 @@ public class QueryContext extends org.basex.query.QueryContext implements Closea
     }
 
     public QueryContext(final MainOptions opt) {
-        this(opt,null);
+        this(opt, null);
     }
 
     public QueryContext(Transaction tx) {

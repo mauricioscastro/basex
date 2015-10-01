@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>br.net.bsocial.db</groupId>
-  <version>Spring-2015</version>
+  <version>spring-2015</version>
   <artifactId>basex-lmdb</artifactId>
   <name>BaseX LMDB</name>
 

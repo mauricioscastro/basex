@@ -1,5 +1,6 @@
 package lmdb.basex;
 
+import lmdb.server.ThreadPool;
 import lmdb.util.Byte;
 import lmdb.util.XQuery;
 import org.apache.commons.codec.binary.Hex;
@@ -9,6 +10,7 @@ import org.basex.core.MainOptions;
 import org.basex.core.StaticOptions;
 import org.basex.data.Data;
 import org.basex.io.IOStream;
+import org.basex.util.Util;
 import org.fusesource.lmdbjni.Database;
 import org.fusesource.lmdbjni.Entry;
 import org.fusesource.lmdbjni.EntryIterator;
@@ -35,12 +37,11 @@ import static org.fusesource.lmdbjni.Constants.bytes;
 
 public class LmdbDataManager {
 // TODO: basex-lmdb: add collections + documents cleaner based on removal flag
-// TODO: basex-lmdb: make sure interrupted removeCollection operation is completed by
-// TODO: basex-lmdb: checking the markings on all its documents (removeAllDocuments) on startup
 
     private static final Logger logger = Logger.getLogger(LmdbDataManager.class);
 
     static Env env = null;
+    private static String home;
     private static Database coldb;
     private static Database structdb;
     private static Database tableaccessdb;
@@ -53,19 +54,27 @@ public class LmdbDataManager {
     private static Database ftindexxdb;
     private static Database ftindexydb;
     private static Database ftindexzdb;
+    private static Thread cleaner;
 
     private static final byte[] LAST_DOCUMENT_INDEX_KEY = new byte[]{0};
     private static final byte[] COLLECTION_LIST_KEY = new byte[]{1};
 
+    public static void config(String home) {
+        config(home, 102400000000000l);
+    }
+
     public static void config(String home, long size) {
         if(env != null) return;
+        LmdbDataManager.home = home;
         env = new Env();
         env.setMapSize(size);
         env.setMaxDbs(16);
         env.open(home, FIXEDMAP);
+        cleaner = new Thread(new Cleaner());
     }
 
     public static void start() {
+
         coldb = env.openDatabase("collections");
         structdb = env.openDatabase("structure");
         tableaccessdb = env.openDatabase("table_access");
@@ -78,10 +87,20 @@ public class LmdbDataManager {
         ftindexxdb = env.openDatabase("ftindexxdb");
         ftindexydb = env.openDatabase("ftindexydb");
         ftindexzdb = env.openDatabase("ftindexzdb");
+
+        try {
+            String[] lc = _listCollections();
+            if(lc != null) for(String c: _listCollections()) if(c.endsWith("/r")) removeAllDocuments(c.substring(0,c.indexOf('/')));
+        } catch (IOException e) {
+            Util.notExpected(e);
+        }
+
         logger.info("start");
+        cleaner.start();
     }
 
     public static void stop() {
+        cleaner.interrupt();
         coldb.close();
         structdb.close();
         tableaccessdb.close();
@@ -114,11 +133,16 @@ public class LmdbDataManager {
         }
     }
 
-    public static List<String> listCollections() throws IOException {
+    public static String[] _listCollections() throws IOException {
         byte[] cl = coldb.get(COLLECTION_LIST_KEY);
-        if (cl == null) return new ArrayList<String>();
+        if (cl == null) return null;
         String[] clist = string(cl,1,cl.length-2).split(", ");
         Arrays.sort(clist);
+        return clist;
+    }
+
+    public static List<String> listCollections() throws IOException {
+        String[] clist = _listCollections();
         ArrayList<String> collection = new ArrayList<String>(clist.length);
         for(String c: clist) if(!c.endsWith("/r")) collection.add(c);
         return collection;
@@ -172,6 +196,10 @@ public class LmdbDataManager {
         }
     }
 
+    public static String home() {
+        return home;
+    }
+
     static Data openDocument(String name, MainOptions options, Transaction tx) throws IOException {
         byte[] docid = coldb.get(tx,bytes(name));
         if(docid == null) throw new IOException("document " + name + " not found");
@@ -214,14 +242,6 @@ public class LmdbDataManager {
             tx.commit();
         }
     }
-
-//    public static void t() {
-//        coldb.put(key(10,0),bytes("a"));
-//        coldb.put(key(10,10),bytes("a"));
-//        coldb.put(key(20,100),bytes("a"));
-//        coldb.put(key(10,11),bytes("b"));
-//        coldb.put(key(20,101),bytes("b"));
-//    }
 
     public static final String CONTENT = "\n" +
             "<root xmlns:h=\"http://www.w3.org/TR/html4/\"\n" +
@@ -269,7 +289,10 @@ public class LmdbDataManager {
 
     public static void main(String[] arg) throws Exception {
 
-        LmdbDataManager.config("/home/mscastro/dev/basex-lmdb/db", 102400000000000l);
+        String home = "/home/mscastro/dev/basex-lmdb/db";
+        MainOptions opt = new MainOptions();
+        opt.set(MainOptions.XMLPATH,home+"/xml");
+        LmdbDataManager.config(home);
         LmdbDataManager.start();
 
 //        LmdbDataManager.createCollection("c1");
@@ -294,7 +317,7 @@ public class LmdbDataManager {
 
 //        System.out.println(LmdbDataManager.listDocuments("c4"));
 
-        //LmdbDataManager.removeCollection("c4");
+//        LmdbDataManager.removeCollection("c1");
 
 //        LmdbDataManager.removeDocument("c4/d1");
 
@@ -499,11 +522,11 @@ public class LmdbDataManager {
 //            XQuery.query(qctx, System.out, null, true);
 //        }
 
-        try(QueryContext qctx = new QueryContext()) {
-            qctx.parse("collection('c1')/PLAY/TITLE");
-            qctx.compile();
-            XQuery.query(qctx, System.out, null, true);
-        }
+//        try(QueryContext qctx = new QueryContext(opt)) {
+//            qctx.parse("doc('file://etc/books.xml')");
+//            qctx.compile();
+//            XQuery.query(qctx, System.out, null, true);
+//        }
 
 //        try(Transaction tx = env.createReadTransaction()) {
 //            EntryIterator ei = tableaccessdb.iterate(tx);
@@ -724,6 +747,54 @@ public class LmdbDataManager {
 
 //        p.close();
 
+        Thread.sleep(1000 * 5 * 10);
+
         LmdbDataManager.stop();
+    }
+
+    private static class Cleaner implements Runnable {
+
+        private int ccount = 0;
+        private Database[] dblist = {
+                tableaccessdb, textdatadb, attributevaldb, txtindexldb,
+                txtindexrdb, attindexldb, attindexrdb,
+                ftindexxdb, ftindexydb, ftindexzdb
+        };
+
+        @Override
+        public void run() {
+            logger.info("cleaner start");
+            while(true) {
+                Transaction tx = env.createWriteTransaction();
+                try {
+                    EntryIterator coldbei = coldb.iterate(tx);
+                    while (coldbei.hasNext()) {
+                        Entry e = coldbei.next();
+                        if (!string(e.getKey()).endsWith("/r")) continue;
+                        byte[] docid = e.getValue();
+                        structdb.delete(tx,docid);
+                        for(Database db: dblist) {
+                            EntryIterator dbei = db.seek(tx, docid);
+                            while (dbei.hasNext()) {
+                                System.err.print(".");
+                                db.delete(tx, dbei.next().getKey());
+                                if(ccount++ > 1000) {
+                                    tx.commit();
+                                    tx = env.createWriteTransaction();
+                                    ccount = 0;
+                                }
+                            }
+                        }
+                    }
+                    Thread.sleep(1000 * 60 * 5);
+                } catch (InterruptedException ie) {
+                    break;
+                } finally {
+                    if(ccount > 0) tx.commit();
+                    else tx.close();
+                }
+            }
+            logger.info("cleaner stop");
+        }
     }
 }
