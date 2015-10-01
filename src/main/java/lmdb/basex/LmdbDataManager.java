@@ -86,6 +86,7 @@ public class LmdbDataManager {
         }
 
         logger.info("start");
+
         cleaner.start();
     }
 
@@ -745,11 +746,6 @@ public class LmdbDataManager {
     private static class Cleaner implements Runnable {
 
         private int ccount = 0;
-        private Database[] dblist = {
-                tableaccessdb, textdatadb, attributevaldb, txtindexldb,
-                txtindexrdb, attindexldb, attindexrdb,
-                ftindexxdb, ftindexydb, ftindexzdb
-        };
 
         @Override
         public void run() {
@@ -763,7 +759,11 @@ public class LmdbDataManager {
                         if (!string(e.getKey()).endsWith("/r")) continue;
                         byte[] docid = e.getValue();
                         structdb.delete(tx,docid);
-                        for(Database db: dblist) {
+                        for(Database db: new Database[] {
+                                tableaccessdb, textdatadb, attributevaldb,
+                                txtindexldb, txtindexrdb, attindexldb, attindexrdb,
+                                ftindexxdb, ftindexydb, ftindexzdb
+                        }) {
                             EntryIterator dbei = db.seek(tx, docid);
                             while (dbei.hasNext()) {
                                 System.err.print(".");
