@@ -1,9 +1,6 @@
 package lmdb.basex;
 
-import lmdb.server.ThreadPool;
 import lmdb.util.Byte;
-import lmdb.util.XQuery;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.log4j.Logger;
 import org.basex.build.xml.XMLParser;
 import org.basex.core.MainOptions;
@@ -17,17 +14,10 @@ import org.fusesource.lmdbjni.EntryIterator;
 import org.fusesource.lmdbjni.Env;
 import org.fusesource.lmdbjni.Transaction;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 
