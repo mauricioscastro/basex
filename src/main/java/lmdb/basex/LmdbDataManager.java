@@ -15,7 +15,6 @@ import org.fusesource.lmdbjni.EntryIterator;
 import org.fusesource.lmdbjni.Env;
 import org.fusesource.lmdbjni.Transaction;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -62,7 +61,7 @@ public class LmdbDataManager {
         env.setMapSize(size);
         env.setMaxDbs(16);
         env.open(home, FIXEDMAP);
-        cleaner = new Thread(new Cleaner(1));
+        cleaner = new Thread(new Cleaner());
     }
 
     public static void start() {
