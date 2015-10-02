@@ -15,6 +15,7 @@ import org.fusesource.lmdbjni.EntryIterator;
 import org.fusesource.lmdbjni.Env;
 import org.fusesource.lmdbjni.Transaction;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -61,7 +62,7 @@ public class LmdbDataManager {
         env.setMapSize(size);
         env.setMaxDbs(16);
         env.open(home, FIXEDMAP);
-        cleaner = new Thread(new Cleaner());
+        cleaner = new Thread(new Cleaner(1));
     }
 
     public static void start() {
@@ -261,13 +262,11 @@ public class LmdbDataManager {
                                 txtindexldb, txtindexrdb, attindexldb, attindexrdb,
                                 ftindexxdb, ftindexydb, ftindexzdb
                         }) {
-                            System.err.println(Hex.encodeHexString(dr.ref) + ":");
                             tx = env.createWriteTransaction();
                             EntryIterator dbei = db.seek(tx, dr.ref);
                             while (dbei.hasNext()) {
                                 byte[] k = dbei.next().getKey();
-                                if(!Arrays.equals(dr.ref,Arrays.copyOf(k,4))) break;
-                                System.err.println(Hex.encodeHexString(k));
+                                if(Byte.getInt(dr.ref) != Byte.getInt(k)) break;
                                 db.delete(tx, k);
                                 if (ccount++ > 10000) {
                                     tx.commit();
