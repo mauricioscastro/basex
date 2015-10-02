@@ -1,6 +1,7 @@
 package lmdb.basex;
 
 import lmdb.util.Byte;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.log4j.Logger;
 import org.basex.build.xml.XMLParser;
 import org.basex.core.MainOptions;
@@ -26,7 +27,7 @@ import static org.fusesource.lmdbjni.Constants.FIXEDMAP;
 import static org.fusesource.lmdbjni.Constants.bytes;
 
 public class LmdbDataManager {
-// TODO: basex-lmdb: add collections + documents cleaner based on removal flag
+// TODO: basex-lmdb: change removal flag and make it use one byte like EOT 0x03 instead of the literal string "/r"
 
     private static final Logger logger = Logger.getLogger(LmdbDataManager.class);
 
@@ -234,6 +235,89 @@ public class LmdbDataManager {
         }
     }
 
+    private static class Cleaner implements Runnable {
+
+        private int runEvery; //minutes
+
+        public Cleaner(int minutes) {
+            runEvery = minutes;
+        }
+
+        public Cleaner() {
+            this(10);
+        }
+
+        @Override
+        public void run() {
+            logger.info("cleaner start");
+            while(true) {
+                int ccount = 0;
+                Transaction tx = null;
+                try {
+                    for (DocRef dr : getRemovedDocsRef()) {
+                        structdb.delete(dr.ref);
+                        for (Database db : new Database[]{
+                                tableaccessdb, textdatadb, attributevaldb,
+                                txtindexldb, txtindexrdb, attindexldb, attindexrdb,
+                                ftindexxdb, ftindexydb, ftindexzdb
+                        }) {
+                            System.err.println(Hex.encodeHexString(dr.ref) + ":");
+                            tx = env.createWriteTransaction();
+                            EntryIterator dbei = db.seek(tx, dr.ref);
+                            while (dbei.hasNext()) {
+                                byte[] k = dbei.next().getKey();
+                                if(!Arrays.equals(dr.ref,Arrays.copyOf(k,4))) break;
+                                System.err.println(Hex.encodeHexString(k));
+                                db.delete(tx, k);
+                                if (ccount++ > 10000) {
+                                    tx.commit();
+                                    tx = env.createWriteTransaction();
+                                    ccount = 0;
+                                }
+                            }
+                            if (ccount > 0) tx.commit();
+                            else tx.close();
+                        }
+                        coldb.delete(dr.key);
+                    }
+                    Thread.sleep(1000 * 60 * runEvery);
+                } catch (InterruptedException ie) {
+                    break;
+                } finally {
+                    if (tx != null) {
+                        if (ccount > 0) tx.commit();
+                        else tx.close();
+                    }
+                }
+            }
+            logger.info("cleaner stop");
+        }
+
+
+        private List<DocRef> getRemovedDocsRef() {
+            List<DocRef> docs = new ArrayList<DocRef>();
+            try(Transaction tx = env.createReadTransaction()) {
+                EntryIterator coldbei = coldb.iterate(tx);
+                for (int i = 0; i < 1000 && coldbei.hasNext(); i++) {
+                    Entry e = coldbei.next();
+                    if (!string(e.getKey()).endsWith("/r")) continue;
+                    docs.add(new DocRef(e.getKey(),e.getValue()));
+                }
+            }
+            return docs;
+        }
+
+        private class DocRef {
+            public byte[] key;
+            public byte[] ref;
+            public DocRef(byte[] k, byte[] v) {
+                key = k;
+                ref = v;
+            }
+        }
+    }
+
+
     public static final String CONTENT = "\n" +
             "<root xmlns:h=\"http://www.w3.org/TR/html4/\"\n" +
             "xmlns:f=\"http://www.w3schools.com/furniture\">\n" +
@@ -282,7 +366,7 @@ public class LmdbDataManager {
 
         String home = "/home/mscastro/dev/basex-lmdb/db";
         MainOptions opt = new MainOptions();
-        opt.set(MainOptions.XMLPATH,home+"/xml");
+        opt.set(MainOptions.XMLPATH, home + "/xml");
         LmdbDataManager.config(home);
         LmdbDataManager.start();
 
@@ -310,16 +394,24 @@ public class LmdbDataManager {
 
 //        LmdbDataManager.removeCollection("c1");
 
-//        LmdbDataManager.removeDocument("c4/d1");
+//        LmdbDataManager.removeDocument("c1/d2");
 
 //        System.out.println(LmdbDataManager.listDocuments("c4"));
 
-//        System.out.println(LmdbDataManager.listCollections());
+        System.out.println(LmdbDataManager.listCollections());
 
 // -----------------------------------------------------------------------------------------------------------------------
 
 //        LmdbDataManager.t();
 
+
+        try(Transaction tx = env.createReadTransaction()) {
+            EntryIterator ei = coldb.iterate(tx);
+            while (ei.hasNext()) {
+                Entry e = ei.next();
+                System.err.println("coldb: " + string(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
+            }
+        }
 
 
         //System.err.println(Hex.encodeHexString(key(10, 11)));
@@ -738,53 +830,10 @@ public class LmdbDataManager {
 
 //        p.close();
 
-        Thread.sleep(1000 * 5 * 10);
+        Thread.sleep(1000 * 60 * 10);
 
         LmdbDataManager.stop();
     }
 
-    private static class Cleaner implements Runnable {
 
-        private int ccount = 0;
-
-        @Override
-        public void run() {
-            logger.info("cleaner start");
-            while(true) {
-                Transaction tx = env.createWriteTransaction();
-                try {
-                    EntryIterator coldbei = coldb.iterate(tx);
-                    while (coldbei.hasNext()) {
-                        Entry e = coldbei.next();
-                        if (!string(e.getKey()).endsWith("/r")) continue;
-                        byte[] docid = e.getValue();
-                        structdb.delete(tx,docid);
-                        for(Database db: new Database[] {
-                                tableaccessdb, textdatadb, attributevaldb,
-                                txtindexldb, txtindexrdb, attindexldb, attindexrdb,
-                                ftindexxdb, ftindexydb, ftindexzdb
-                        }) {
-                            EntryIterator dbei = db.seek(tx, docid);
-                            while (dbei.hasNext()) {
-                                System.err.print(".");
-                                db.delete(tx, dbei.next().getKey());
-                                if(ccount++ > 1000) {
-                                    tx.commit();
-                                    tx = env.createWriteTransaction();
-                                    ccount = 0;
-                                }
-                            }
-                        }
-                    }
-                    Thread.sleep(1000 * 60 * 5);
-                } catch (InterruptedException ie) {
-                    break;
-                } finally {
-                    if(ccount > 0) tx.commit();
-                    else tx.close();
-                }
-            }
-            logger.info("cleaner stop");
-        }
-    }
 }
