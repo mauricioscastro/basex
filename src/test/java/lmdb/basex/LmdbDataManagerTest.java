@@ -32,61 +32,62 @@ public class LmdbDataManagerTest {
     private static String TEST_COLLECTION = "etc";
     private static String XML_DIR = HOME + "/xml/etc/";
 
-//    private static void clean() throws IOException {
-//        FileUtils.deleteQuietly(new File(LmdbDataManager.home() + "/data.mdb"));
-//        FileUtils.deleteQuietly(new File(LmdbDataManager.home() + "/lock.mdb"));
-//    }
-//
-//    @BeforeClass
-//    public static void oneTimeSetUp() throws Exception {
-//        clean();
-//        LmdbDataManager.config(HOME);
-//        LmdbDataManager.start();
-//    }
-//
-//    @AfterClass
-//    public static void oneTimeTearDown() throws IOException {
-//        LmdbDataManager.stop();
-//    }
-//
-//    @Before
-//    public void setUp() throws IOException {
-//        LmdbDataManager.removeCollection(TEST_COLLECTION);
-//    }
-//
-//    @After
-//    public void tearDown() throws IOException {
-//    }
-//
-//    @Test
-//    public void createCollectionTest() throws IOException {
-//        LmdbDataManager.createCollection(TEST_COLLECTION);
-//        assertTrue(LmdbDataManager.listCollections().contains(TEST_COLLECTION));
-//    }
-//
-//    @Test
-//    public void removeCollectionTest() throws IOException {
-//        createCollectionTest();
-//        assertTrue(LmdbDataManager.listCollections().contains(TEST_COLLECTION));
-//    }
-//
-//    @Test
-//    public void createDocumentTest() throws IOException {
-//        LmdbDataManager.createCollection(TEST_COLLECTION);
-//        LmdbDataManager.createDocument(TEST_COLLECTION + "/auction", new FileInputStream(XML_DIR + "auction.xml"));
-//        LmdbDataManager.createDocument(TEST_COLLECTION + "/books", new FileInputStream(XML_DIR + "books.xml"));
-//        List d = LmdbDataManager.listDocuments(TEST_COLLECTION);
-//        assertTrue(d.contains("auction") && d.contains("books"));
-//    }
-//
-//    @Test
-//    public void removeDocumentTest() throws IOException, QueryException {
-//            LmdbDataManager.createCollection(TEST_COLLECTION);
-//            LmdbDataManager.createDocument(TEST_COLLECTION + "/books", new FileInputStream(XML_DIR + "books.xml"));
-//            XQuery.getString("doc('" + TEST_COLLECTION + "/books" + "')");
-//            LmdbDataManager.removeDocument(TEST_COLLECTION + "/books");
-//            assertFalse(LmdbDataManager.listDocuments(TEST_COLLECTION).contains("books"));
-//    }
+    private static void clean() throws IOException {
+        FileUtils.deleteQuietly(new File(LmdbDataManager.home() + "/data.mdb"));
+        FileUtils.deleteQuietly(new File(LmdbDataManager.home() + "/lock.mdb"));
+    }
+
+    @BeforeClass
+    public static void oneTimeSetUp() throws Exception {
+        clean();
+        LmdbDataManager.config(HOME);
+        LmdbDataManager.start();
+    }
+
+    @AfterClass
+    public static void oneTimeTearDown() throws IOException {
+        LmdbDataManager.stop();
+        clean();
+    }
+
+    @Before
+    public void setUp() throws IOException {
+        LmdbDataManager.removeCollection(TEST_COLLECTION);
+    }
+
+    @After
+    public void tearDown() throws IOException {
+    }
+
+    @Test
+    public void createCollectionTest() throws IOException {
+        LmdbDataManager.createCollection(TEST_COLLECTION);
+        assertTrue(LmdbDataManager.listCollections().contains(TEST_COLLECTION));
+    }
+
+    @Test
+    public void removeCollectionTest() throws IOException {
+        createCollectionTest();
+        assertTrue(LmdbDataManager.listCollections().contains(TEST_COLLECTION));
+    }
+
+    @Test
+    public void createDocumentTest() throws IOException {
+        LmdbDataManager.createCollection(TEST_COLLECTION);
+        LmdbDataManager.createDocument(TEST_COLLECTION + "/auction", new FileInputStream(XML_DIR + "auction.xml"));
+        LmdbDataManager.createDocument(TEST_COLLECTION + "/books", new FileInputStream(XML_DIR + "books.xml"));
+        List d = LmdbDataManager.listDocuments(TEST_COLLECTION);
+        assertTrue(d.contains("auction") && d.contains("books"));
+    }
+
+    @Test
+    public void removeDocumentTest() throws IOException, QueryException {
+            LmdbDataManager.createCollection(TEST_COLLECTION);
+            LmdbDataManager.createDocument(TEST_COLLECTION + "/books", new FileInputStream(XML_DIR + "books.xml"));
+            XQuery.getString("doc('" + TEST_COLLECTION + "/books" + "')");
+            LmdbDataManager.removeDocument(TEST_COLLECTION + "/books");
+            assertFalse(LmdbDataManager.listDocuments(TEST_COLLECTION).contains("books"));
+    }
 
 //    @Test
 //    public void indexUsageTest() throws IOException, QueryException {

@@ -1,5 +1,7 @@
 package lmdb.basex;
 
+import lmdb.util.*;
+import lmdb.util.Byte;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
@@ -45,8 +47,8 @@ public class LmdbBuilder extends Builder {
     private byte[] docid;
     private DataOutputStream tempBuffer;
     private File tmpFile;
-    private long txtref = 0;
-    private long attref = 0;
+    private long txtref = 1;
+    private long attref = 1;
 
     private LmdbBuilder(final String name, final byte[] docid, final Env env,
                         final Database txtdb, final Database attdb, final Database structdb,
@@ -231,35 +233,38 @@ public class LmdbBuilder extends Builder {
 
     private void writeTextData() throws IOException {
 
-            tempBuffer.close();
+        tempBuffer.close();
+        Transaction tx = env.createWriteTransaction();
+        DataInputStream di = new DataInputStream(new FileInputStream(tmpFile));
 
-            Transaction tx = env.createWriteTransaction();
-
-            DataInputStream di = new DataInputStream(new FileInputStream(tmpFile));
-
-            int c = 0;
-            try {
-                while(true) try {
-                    int len = di.readInt();
-                    byte[] key = new byte[8];
-                    di.readFully(key);
-                    byte[] value = new byte[len];
-                    di.readFully(value);
-                    boolean text = di.readBoolean();
-                    (text ? txtdb : attdb).put(tx, key, value);
-                    c++;
-                    if (c > 10000) {
-                        tx.commit();
-                        c = 0;
-                        tx = env.createWriteTransaction();
-                    }
-                } catch (EOFException eofe) {
-                    break;
+        int c = 0;
+        try {
+            boolean text = true;
+            while(true) try {
+                int len = di.readInt();
+                byte[] key = new byte[8];
+                di.readFully(key);
+                byte[] value = new byte[len];
+                di.readFully(value);
+                text = di.readBoolean();
+                (text ? txtdb : attdb).put(tx, key, value);
+                c++;
+                if (c > 10000) {
+                    tx.commit();
+                    c = 0;
+                    tx = env.createWriteTransaction();
                 }
-                if (c > 0) tx.commit();
-            } finally {
-                tx.close();
+            } catch (EOFException eofe) {
+                break;
             }
+            tx.commit();
+        } finally {
+            tx.close();
+        }
+
+        txtdb.put(LmdbData.LAST_REF_KEY, lmdb.util.Byte.getBytes((int)txtref));
+        attdb.put(LmdbData.LAST_REF_KEY, lmdb.util.Byte.getBytes((int)attref));
+
     }
 
     private void writeStruct() {

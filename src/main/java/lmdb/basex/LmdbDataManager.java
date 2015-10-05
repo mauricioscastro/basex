@@ -3,6 +3,7 @@ package lmdb.basex;
 import lmdb.BasexLmdbEnv;
 import lmdb.util.Byte;
 import lmdb.util.XQuery;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.log4j.Logger;
 import org.basex.build.xml.XMLParser;
 import org.basex.core.MainOptions;
@@ -164,8 +165,7 @@ public class LmdbDataManager {
 
     public static List<String> listDocuments(String collection, boolean addCollectionName) throws IOException {
         ArrayList<String> docs = new ArrayList<String>();
-        try(Transaction tx = env.createWriteTransaction()) {
-            EntryIterator ei = coldb.seek(tx, bytes(collection));
+        try(Transaction tx = env.createWriteTransaction(); EntryIterator ei = coldb.seek(tx, bytes(collection))) {
             while (ei.hasNext()) {
                 Entry e = ei.next();
                 String key = string(e.getKey());
@@ -224,8 +224,7 @@ public class LmdbDataManager {
     }
 
     private static synchronized void removeAllDocuments(String collection) {
-        try(Transaction tx = env.createWriteTransaction()) {
-            EntryIterator ei = coldb.seek(tx, bytes(collection));
+        try(Transaction tx = env.createWriteTransaction(); EntryIterator ei = coldb.seek(tx, bytes(collection))) {
             while (ei.hasNext()) {
                 Entry e = ei.next();
                 if (!string(e.getKey()).startsWith(collection)) break;
@@ -262,15 +261,16 @@ public class LmdbDataManager {
                                 ftindexxdb, ftindexydb, ftindexzdb
                         }) {
                             tx = env.createWriteTransaction();
-                            EntryIterator dbei = db.seek(tx, dr.ref);
-                            while (dbei.hasNext()) {
-                                byte[] k = dbei.next().getKey();
-                                if(Byte.getInt(dr.ref) != Byte.getInt(k)) break;
-                                db.delete(tx, k);
-                                if (ccount++ > 10000) {
-                                    tx.commit();
-                                    tx = env.createWriteTransaction();
-                                    ccount = 0;
+                            try(EntryIterator dbei = db.seek(tx, dr.ref)) {
+                                while (dbei.hasNext()) {
+                                    byte[] k = dbei.next().getKey();
+                                    if (Byte.getInt(dr.ref) != Byte.getInt(k)) break;
+                                    db.delete(tx, k);
+                                    if (ccount++ > 10000) {
+                                        tx.commit();
+                                        tx = env.createWriteTransaction();
+                                        ccount = 0;
+                                    }
                                 }
                             }
                             if (ccount > 0) tx.commit();
@@ -294,8 +294,7 @@ public class LmdbDataManager {
 
         private List<DocRef> getRemovedDocsRef() {
             List<DocRef> docs = new ArrayList<DocRef>();
-            try(Transaction tx = env.createReadTransaction()) {
-                EntryIterator coldbei = coldb.iterate(tx);
+            try(Transaction tx = env.createReadTransaction(); EntryIterator coldbei = coldb.iterate(tx)) {
                 for (int i = 0; i < 1000 && coldbei.hasNext(); i++) {
                     Entry e = coldbei.next();
                     if (!string(e.getKey()).endsWith("/r")) continue;
@@ -555,11 +554,32 @@ public class LmdbDataManager {
 //            }
 //        }
 //
-//        try(QueryContext qctx = new QueryContext()) {
-//            qctx.parse("insert node <new_element_a/> into doc('c4/d0')/root");
-//            qctx.compile();
-//            XQuery.query(qctx, System.out, null, true);
+
+//        try(Transaction tx = env.createReadTransaction(); EntryIterator ei = textdatadb.iterate(tx)) {
+//            while (ei.hasNext()) {
+//                Entry e = ei.next();
+//                System.err.println("textdatadb: " + Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
+//            }
 //        }
+//
+//        try(Transaction tx = env.createReadTransaction(); EntryIterator ei = attributevaldb.iterate(tx)) {
+//            while (ei.hasNext()) {
+//                Entry e = ei.next();
+//                System.err.println("attributevaldb: " + Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
+//            }
+//        }
+
+        try(QueryContext qctx = new QueryContext()) {
+            qctx.parse("insert node <new_element_a name='a'/> into doc('c4/d0')/root");
+            qctx.compile();
+            XQuery.query(qctx, System.out, null, true);
+        }
+
+        try(QueryContext qctx = new QueryContext()) {
+            qctx.parse("insert node <new_element_b name='b'>b</new_element_b> into doc('c4/d0')/root");
+            qctx.compile();
+            XQuery.query(qctx, System.out, null, true);
+        }
 //
 //        try(QueryContext qctx = new QueryContext()) {
 //            qctx.parse("insert node <new_element_b/> as first into doc('c4/d0')/root");
@@ -623,25 +643,37 @@ public class LmdbDataManager {
 //            XQuery.query(qctx, System.out, null, true);
 //        }
 //
-//        try(Transaction tx = env.createReadTransaction()) {
-//            EntryIterator ei = tableaccessdb.iterate(tx);
-//            while (ei.hasNext()) {
-//                Entry e = ei.next();
-//                System.err.println("tableaccessdb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
-//            }
-//        }
+
+
+        try(QueryContext qctx = new QueryContext()) {
+            qctx.parse("doc('c4/d0')");
+            qctx.compile();
+            XQuery.query(qctx, System.out, null, true);
+        }
 
 //
-//        try(Transaction tx = env.createReadTransaction()) {
-//            EntryIterator ei = textdatadb.iterate(tx);
+//        try(Transaction tx = env.createReadTransaction(); EntryIterator ei = tableaccessdb.iterate(tx)) {
+//            while (ei.hasNext()) {
+//                Entry e = ei.next();
+//
+//                int c = 0;
+//                byte[] v = e.getValue();
+//                for(int i = 0; i+16 <= v.length; i+=16) {
+//                    System.err.println(c++ + ": " + Hex.encodeHexString(Arrays.copyOfRange(v,i,i+16)));
+//                }
+//
+//                //System.err.println("tableaccessdb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
+//            }
+//        }
+//
+//        try(Transaction tx = env.createReadTransaction(); EntryIterator ei = textdatadb.iterate(tx)) {
 //            while (ei.hasNext()) {
 //                Entry e = ei.next();
 //                System.err.println("textdatadb: " + Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
 //            }
 //        }
 //
-//        try(Transaction tx = env.createReadTransaction()) {
-//            EntryIterator ei = attributevaldb.iterate(tx);
+//        try(Transaction tx = env.createReadTransaction(); EntryIterator ei = attributevaldb.iterate(tx)) {
 //            while (ei.hasNext()) {
 //                Entry e = ei.next();
 //                System.err.println("attributevaldb: " + Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));

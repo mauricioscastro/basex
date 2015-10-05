@@ -1,6 +1,5 @@
 package lmdb;
 
-
 import org.fusesource.lmdbjni.Env;
 import org.fusesource.lmdbjni.LMDBException;
 

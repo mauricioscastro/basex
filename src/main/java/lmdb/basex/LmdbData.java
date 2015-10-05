@@ -1,5 +1,7 @@
 package lmdb.basex;
 
+import lmdb.util.*;
+import lmdb.util.Byte;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.basex.core.MainOptions;
 import org.basex.data.Data;
@@ -13,6 +15,7 @@ import org.basex.io.out.DataOutput;
 import org.basex.util.Token;
 import org.basex.util.Util;
 import org.fusesource.lmdbjni.Database;
+import org.fusesource.lmdbjni.EntryIterator;
 import org.fusesource.lmdbjni.Transaction;
 
 import java.io.ByteArrayInputStream;
@@ -21,16 +24,16 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 import static lmdb.util.Byte.lmdbkey;
+import static org.fusesource.lmdbjni.Constants.bytes;
 
 
 public class LmdbData extends Data {
 
+    public static final byte[] LAST_REF_KEY = new byte[] {0,0,0,0};
     protected Transaction tx;
-
     protected Database txtdb;
     protected Database attdb;
     protected Database structdb;
-
     protected byte[] docid;
 
     protected LmdbData(final String name, final MainOptions options) {
@@ -102,7 +105,7 @@ public class LmdbData extends Data {
 
     @Override
     public byte[] text(int pre, boolean text) {
-        return (text ? txtdb : attdb).get(tx, lmdbkey(docid, (int)textRef(pre)));
+        return (text ? txtdb : attdb).get(tx, lmdbkey(docid, (int) textRef(pre)));
     }
 
     @Override
@@ -124,12 +127,16 @@ public class LmdbData extends Data {
 
     @Override
     protected void delete(int pre, boolean text) {
-        (text ? txtdb : attdb).delete(tx, lmdbkey(docid, (int)textRef(pre)));
+        (text ? txtdb : attdb).delete(tx, lmdbkey(docid, (int) textRef(pre)));
     }
 
     @Override
-    protected long textRef(byte[] value, boolean text) {
-        return 0;
+    protected synchronized long textRef(byte[] value, boolean text) {
+        Database db = text ? txtdb : attdb;
+        int newrref = Byte.getInt(db.get(tx, LmdbData.LAST_REF_KEY))+1;
+        db.put(tx, LmdbData.LAST_REF_KEY, Byte.getBytes(newrref));
+        db.put(tx, lmdbkey(docid,newrref),value);
+        return newrref;
     }
 
     private void readStruct() throws IOException {
