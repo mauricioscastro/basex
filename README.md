@@ -57,6 +57,8 @@ Any xquery will work after http://localhost:8080/
 
 >```curl -d 'replace value of node doc("etc/factbook")//LAKE/@name with "Casper Sea"' -X POST http://localhost:8080```
 
+>```curl -d "insert node <lake name='Lago da Paz'/> into doc('etc/factbook')/mondial" -X POST http://localhost:8080```
+
 
 ###todo:
 - need to port indexing to LMDB
