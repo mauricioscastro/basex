@@ -37,7 +37,7 @@ Any xquery will work after http://localhost:8080/
 
 &nbsp;
 
->##### create a document named lakes inside etc collection as the result of a xquery:
+>##### create a document named lakes inside etc collection as the result of an xquery:
 >```curl -X PUT 'http://localhost:8080/etc/lakes/&lt;lakes>\{doc("etc/factbook")//lake\}&lt;/lakes>'```
 
 &nbsp;
