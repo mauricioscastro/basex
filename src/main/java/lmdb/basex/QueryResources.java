@@ -41,6 +41,8 @@ public class QueryResources extends org.basex.query.QueryResources {
         this.tx = tx;
     }
 
+
+    // TODO: basex-lmdb: accept document wildcard in collection for lmdb range search as in 'col/doc*'
     @Override
     public Value collection(final QueryInput qi, final IO baseIO, final InputInfo info) throws QueryException {
       List col = null;

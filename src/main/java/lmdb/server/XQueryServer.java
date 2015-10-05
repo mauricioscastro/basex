@@ -51,7 +51,6 @@ public class XQueryServer {
 
     private static final Logger logger = Logger.getLogger(XQueryServer.class);
     private static final Server server = new Server(new QueuedThreadPool());
-    public static QueuedThreadPool threadPool = (QueuedThreadPool)server.getThreadPool();
     private static String config;
     private static XQueryServer xqserver = null;
 
@@ -83,18 +82,13 @@ public class XQueryServer {
         });
 
         configLogging();
+
         logger.info("start");
         logger.debug("home=" + home);
 
-        LmdbDataManager.config(System.getProperty("org.basex.path",home+"/db"), 10000000000000l);
-
-        threadPool.setMaxThreads(1000);
-        threadPool.setMinThreads(250);
-
+        LmdbDataManager.config(System.getProperty("org.basex.path", home + "/db"), Long.parseLong(getConfig("//dbsize/text()")));
         JdbcDataManager.config(config);
         httpServerConfig();
-
-
     }
 
     private void httpServerConfig() {
@@ -162,7 +156,7 @@ public class XQueryServer {
         JdbcDataManager.stop();
         LmdbDataManager.stop();
         server.stop();
-        threadPool.stop();
+//        threadPool.stop();
         logger.info("stop");
     }
 

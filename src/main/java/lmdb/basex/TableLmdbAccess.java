@@ -72,10 +72,8 @@ public class TableLmdbAccess extends TableAccess {
 
     @Override
     public synchronized void flush(final boolean all) throws IOException {
-        if(tx.isReadOnly()) { System.err.print(".");  return; }
         for(final Buffer b : bm.all()) if(b.dirty) write(b);
         if(!dirty || !all) return;
-
         try(ByteArrayOutputStream bos = new ByteArrayOutputStream(1024*32); final DataOutput out = new DataOutput(bos)) {
             final int sz = size;
             out.writeNum(sz);

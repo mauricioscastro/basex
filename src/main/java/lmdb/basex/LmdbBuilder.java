@@ -127,7 +127,7 @@ public class LmdbBuilder extends Builder {
             try {
                 for(; spos < ssize; ++spos) {
                     ta.write4(in.readNum(), 8, in.readNum());
-                    ta.flush(true);
+                    ta.flush(false);
                     if(++p > 10000) {
                         tx.commit();
                         tx = env.createWriteTransaction();

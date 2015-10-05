@@ -1,4 +1,5 @@
-<basexk>
+<basexlmdb>
+  <dbsize>102400000000000</dbsize>
   <http>
     <port>8080</port>
     <sslport>8043</sslport>
@@ -38,9 +39,6 @@
     <logger name="org.springframework">
       <level value="debug"/>
     </logger>
-    <logger name="com.opensymphony">
-      <level value="debug"/>
-    </logger>
     <logger name="org.apache">
       <level value="debug"/>
     </logger>
@@ -57,5 +55,5 @@
       <level value="debug"/>
     </logger>
   </log4j:configuration>
-</basexk>
+</basexlmdb>
 

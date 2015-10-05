@@ -48,7 +48,11 @@ public class XQuery {
     }
 
     public static void query(String query, String context, OutputStream result, Map<String,Object> var, String method) throws QueryException {
-        query(getContext(query, context, var), result, method, null);
+        try (QueryContext ctx = getContext(query, context, var)) {
+            query(ctx, result, method, null);
+        } catch(IOException ioe) {
+            throw new QueryException(ioe);
+        }
     }
 
     public static void query(QueryContext ctx, OutputStream result, String method, String indent) throws QueryException {
@@ -110,12 +114,11 @@ public class XQuery {
         return getString(query, context, var, null);
     }
 
-    public static InputStream getStream(final String query, final String context, final Map<String, Object> var, final String method) throws QueryException {
+    public static InputStream getStream(final QueryContext ctx, final String method) throws QueryException {
         try {
             return new InputStream() {
                 private ByteArrayOutputStream result = new ByteArrayOutputStream();
                 private Serializer s = Serializer.get(result, getSerializerOptions(method));
-                private QueryContext ctx = getContext(query, context, var);
                 private Iter iter = ctx.iter();
                 private Item i = null;
                 private byte[] b = null;
@@ -152,19 +155,27 @@ public class XQuery {
     }
 
     public static InputStream getStream(final String query, final String context, final Map<String,Object> var) throws QueryException {
-        return getStream(query, context, var, null);
+        try (QueryContext ctx = getContext(query, context, var)) {
+            return getStream(ctx, null);
+        } catch(IOException ioe) {
+            throw new QueryException(ioe);
+        }
     }
 
     public static InputStream getStream(final String query, final Map<String,Object> var) throws QueryException {
-        return getStream(query, null, var, null);
+        return getStream(getContext(query, null, var), null);
     }
 
     public static InputStream getStream(final String query, final String context) throws QueryException {
-        return getStream(query, context, null, null);
+        return getStream(getContext(query, context, null), null);
     }
 
     public static InputStream getStream(final String query) throws QueryException {
-        return getStream(query, null, null, null);
+        return getStream(getContext(query, null, null), null);
+    }
+
+    public static InputStream getStream(final QueryContext ctx) throws QueryException {
+        return getStream(ctx, null);
     }
 
     private static SerializerOptions getSerializerOptions(String method, boolean indent) {

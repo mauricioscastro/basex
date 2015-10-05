@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>br.net.bsocial.db</groupId>
-  <version>spring-2015</version>
+  <version>Spring-2015</version>
   <artifactId>basex-lmdb</artifactId>
   <name>BaseX LMDB</name>
 
@@ -238,10 +238,8 @@
             <manifest>
               <addClasspath>true</addClasspath>
               <classpathPrefix>lib</classpathPrefix>
-              <mainClass>lmdb.basex.LmdbDataManager</mainClass>
-              <packageName>lmdb.basex</packageName>
-              <!--<mainClass>lmdb.server.XQueryServer</mainClass>-->
-              <!--<packageName>lmdb.server</packageName>-->
+              <mainClass>lmdb.server.XQueryServer</mainClass>
+              <packageName>lmdb.server</packageName>
             </manifest>
             <manifestEntries></manifestEntries>
           </archive>

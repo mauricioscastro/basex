@@ -55,6 +55,6 @@ public class QueryContext extends org.basex.query.QueryContext implements Closea
             }
             return;
         }
-        res.tx = updating ? LmdbDataManager.env.createWriteTransaction() :  LmdbDataManager.env.createReadTransaction();
+        if(LmdbDataManager.env != null) res.tx = updating ? LmdbDataManager.env.createWriteTransaction() :  LmdbDataManager.env.createReadTransaction();
     }
 }

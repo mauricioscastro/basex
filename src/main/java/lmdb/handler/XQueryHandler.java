@@ -1,9 +1,11 @@
 package lmdb.handler;
 
+import lmdb.basex.LmdbDataManager;
 import lmdb.basex.QueryContext;
 import lmdb.util.XQuery;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
+import org.basex.core.MainOptions;
 import org.basex.query.QueryException;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
@@ -12,6 +14,9 @@ import org.eclipse.jetty.util.MultiMap;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -20,8 +25,10 @@ import java.io.OutputStream;
 public class XQueryHandler extends AbstractHandler {
 
     private static final Logger logger = Logger.getLogger(XQueryHandler.class);
+    private MainOptions options = new MainOptions();
 
     public XQueryHandler() {
+        options.set(MainOptions.XMLPATH, LmdbDataManager.home() + "/xml");
         if(logger.isDebugEnabled()) logger.debug("XQueryHandler init");
     }
 
@@ -35,10 +42,10 @@ public class XQueryHandler extends AbstractHandler {
                 String path = req.getPathInfo().substring(1).trim();
                 if (path.indexOf('/') > -1) {
                     logger.info("remove document " + path);
-//                    DiskDataManager.removeDocument(path);
+                    LmdbDataManager.removeDocument(path);
                 } else {
                     logger.info("remove collection " + path);
-//                    DiskDataManager.removeCollection(path);
+                    LmdbDataManager.removeCollection(path);
                 }
             } catch (Exception e) {
                 logger.warn(e.getMessage());
@@ -52,7 +59,6 @@ public class XQueryHandler extends AbstractHandler {
         //
         if (basereq.getMethod().equals("PUT")) {
             resp.setContentType("text/plain");
-            InputStream is = null;
             try {
                 String path = req.getPathInfo().substring(1).trim();
                 if (path.indexOf('/') > -1) {
@@ -60,16 +66,25 @@ public class XQueryHandler extends AbstractHandler {
                     if (p.length > 2) {
                         StringBuilder sb = new StringBuilder(p[2]);
                         for (int i = 3; i < p.length; i++) sb.append('/').append(p[i]);
-                        logger.info("create document " + p[0] + "/" + p[1] + " as result of the xquery: " + sb.toString());
-                        is = XQuery.getStream(sb.toString());
-//                        DiskDataManager.createDocument(p[0] + "/" + p[1], is);
+                        String xquery = sb.toString();
+                        logger.info("create document " + p[0] + "/" + p[1] + " as result of the xquery: " + xquery);
+                        File tmp = File.createTempFile("xqh.",".xml");
+                        tmp.deleteOnExit();
+                        FileOutputStream tmpos = new FileOutputStream(tmp);
+                        try {
+                            XQuery.query(xquery, tmpos);
+                            tmpos.close();
+                            LmdbDataManager.createDocument(p[0] + "/" + p[1], new FileInputStream(tmp));
+                        } finally {
+                            tmp.delete();
+                        }
                     } else {
                         logger.info("create document " + path);
-//                        DiskDataManager.createDocument(path, req.getInputStream());
+                        LmdbDataManager.createDocument(path, req.getInputStream());
                     }
                 } else {
                     logger.info("create collection " + path);
-//                    DiskDataManager.createCollection(path);
+                    LmdbDataManager.createCollection(path);
                 }
                 resp.setStatus(HttpServletResponse.SC_OK);
             } catch (QueryException qe) {
@@ -77,11 +92,6 @@ public class XQueryHandler extends AbstractHandler {
                 if (logger.isDebugEnabled()) logger.debug("", qe);
                 resp.setStatus(500);
                 resp.getWriter().print(qe.getMessage() + ": line: " + qe.info().line() + " column: " + qe.info().column());
-            } finally {
-                try {
-                    if(is != null) is.close();
-                } catch (Exception i) {
-                }
             }
         }
         //
@@ -102,6 +112,7 @@ public class XQueryHandler extends AbstractHandler {
             OutputStream os = resp.getOutputStream();
             try {
                 ctx = XQuery.getContext(req.getPathInfo().substring(1).trim(), param);
+                ctx.options = options;
                 if (ctx.updating) throw new HttpException(405, "xquery is updating. use post instead.");
                 XQuery.query(ctx, os, contentType, indentContent);
                 resp.setStatus(HttpServletResponse.SC_OK);
@@ -139,6 +150,7 @@ public class XQueryHandler extends AbstractHandler {
             QueryContext ctx = null;
             try {
                 ctx = XQuery.getContext(IOUtils.toString(req.getInputStream()));
+                ctx.options = options;
                 if (!ctx.updating) throw new HttpException(405, "xquery is not updating. use get instead.");
                 XQuery.query(ctx, resp.getOutputStream(), "text/plain", null);
                 resp.setStatus(HttpServletResponse.SC_OK);

@@ -1,7 +1,8 @@
 package lmdb.basex;
 
+import lmdb.BasexLmdbEnv;
 import lmdb.util.Byte;
-import org.apache.commons.codec.binary.Hex;
+import lmdb.util.XQuery;
 import org.apache.log4j.Logger;
 import org.basex.build.xml.XMLParser;
 import org.basex.core.MainOptions;
@@ -15,6 +16,7 @@ import org.fusesource.lmdbjni.EntryIterator;
 import org.fusesource.lmdbjni.Env;
 import org.fusesource.lmdbjni.Transaction;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -57,10 +59,7 @@ public class LmdbDataManager {
     public static void config(String home, long size) {
         if(env != null) return;
         LmdbDataManager.home = home;
-        env = new Env();
-        env.setMapSize(size);
-        env.setMaxDbs(16);
-        env.open(home, FIXEDMAP);
+        env = BasexLmdbEnv.getEnv(home, size, FIXEDMAP);
         cleaner = new Thread(new Cleaner());
     }
 
@@ -135,6 +134,7 @@ public class LmdbDataManager {
 
     public static List<String> listCollections() throws IOException {
         String[] clist = _listCollections();
+        if(clist == null) return new ArrayList<String>();
         ArrayList<String> collection = new ArrayList<String>(clist.length);
         for(String c: clist) if(!c.endsWith("/r")) collection.add(c);
         return collection;
@@ -374,8 +374,8 @@ public class LmdbDataManager {
 //        LmdbDataManager.removeCollection("c1");
 //        LmdbDataManager.createCollection("c1");
 //        LmdbDataManager.removeCollection("c1");
-//        LmdbDataManager.createCollection("c4");
-//        LmdbDataManager.createDocument("c4/d0", new ByteArrayInputStream(CONTENT.getBytes()));
+        LmdbDataManager.createCollection("c4");
+        LmdbDataManager.createDocument("c4/d0", new ByteArrayInputStream(CONTENT.getBytes()));
 //        LmdbDataManager.createDocument("c4/d1", new FileInputStream("/home/mscastro/dev/basex-lmdb/db/xml/etc/factbook.xml"));
 //        LmdbDataManager.createDocument("c4/d2", new FileInputStream("/home/mscastro/download/shakespeare.xml"));
 //        LmdbDataManager.createDocument("c4/d3", new FileInputStream("/home/mscastro/download/medline15n0766.xml"));
@@ -402,14 +402,14 @@ public class LmdbDataManager {
 
 //        LmdbDataManager.t();
 
-
-        try(Transaction tx = env.createReadTransaction()) {
-            EntryIterator ei = coldb.iterate(tx);
-            while (ei.hasNext()) {
-                Entry e = ei.next();
-                System.err.println("coldb: " + string(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
-            }
-        }
+//
+//        try(Transaction tx = env.createReadTransaction()) {
+//            EntryIterator ei = coldb.iterate(tx);
+//            while (ei.hasNext()) {
+//                Entry e = ei.next();
+//                System.err.println("coldb: " + string(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
+//            }
+//        }
 
 
         //System.err.println(Hex.encodeHexString(key(10, 11)));
@@ -470,7 +470,7 @@ public class LmdbDataManager {
 //        XQuery.query("/root/empty",CONTENT,System.out);
 
 //        try(QueryContext qctx = new QueryContext()) {
-//            qctx.parse("doc('c4/d1')//city");
+//            qctx.parse("collection('c1')/PLAY/TITLE");
 //            qctx.compile();
 //            XQuery.query(qctx, System.out, null, "true");
 //        }
@@ -828,7 +828,7 @@ public class LmdbDataManager {
 
 //        p.close();
 
-        Thread.sleep(1000 * 60 * 10);
+//        Thread.sleep(1000 * 60 * 10);
 
         LmdbDataManager.stop();
     }
