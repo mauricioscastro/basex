@@ -2,7 +2,6 @@ package lmdb.basex;
 
 import lmdb.util.Byte;
 import lmdb.util.XQuery;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.log4j.Logger;
 import org.basex.build.xml.XMLParser;
 import org.basex.core.MainOptions;
@@ -16,14 +15,12 @@ import org.fusesource.lmdbjni.EntryIterator;
 import org.fusesource.lmdbjni.Env;
 import org.fusesource.lmdbjni.Transaction;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static lmdb.Constants.string;
 import static org.fusesource.lmdbjni.Constants.FIXEDMAP;
