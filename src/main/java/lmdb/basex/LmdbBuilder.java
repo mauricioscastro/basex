@@ -1,7 +1,5 @@
 package lmdb.basex;
 
-import lmdb.util.*;
-import lmdb.util.Byte;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;

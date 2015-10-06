@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static lmdb.Constants.string;
 import static org.fusesource.lmdbjni.Constants.FIXEDMAP;
@@ -49,6 +50,7 @@ public class LmdbDataManager {
     private static Database ftindexydb;
     private static Database ftindexzdb;
     private static Thread cleaner;
+
 
     private static final byte[] LAST_DOCUMENT_INDEX_KEY = new byte[]{0};
     private static final byte[] COLLECTION_LIST_KEY = new byte[]{1};
@@ -249,10 +251,10 @@ public class LmdbDataManager {
         @Override
         public void run() {
             logger.info("cleaner start");
-            while(true) {
-                int ccount = 0;
-                Transaction tx = null;
-                try {
+            int ccount = 0;
+            Transaction tx = null;
+            EntryIterator dbei = null;
+            while(true) try {
                     for (DocRef dr : getRemovedDocsRef()) {
                         structdb.delete(dr.ref);
                         for (Database db : new Database[]{
@@ -261,7 +263,8 @@ public class LmdbDataManager {
                                 ftindexxdb, ftindexydb, ftindexzdb
                         }) {
                             tx = env.createWriteTransaction();
-                            try(EntryIterator dbei = db.seek(tx, dr.ref)) {
+                            try {
+                                dbei = db.seek(tx, dr.ref);
                                 while (dbei.hasNext()) {
                                     byte[] k = dbei.next().getKey();
                                     if (Byte.getInt(dr.ref) != Byte.getInt(k)) break;
@@ -272,22 +275,24 @@ public class LmdbDataManager {
                                         ccount = 0;
                                     }
                                 }
+                            } finally {
+                                if(dbei != null) dbei.close();
                             }
                             if (ccount > 0) tx.commit();
                             else tx.close();
                         }
                         coldb.delete(dr.key);
                     }
-                    Thread.sleep(1000 * 60 * runEvery);
-                } catch (InterruptedException ie) {
+                    Thread.sleep(runEvery);
+                } catch(InterruptedException ie) {
                     break;
                 } finally {
                     if (tx != null) {
                         if (ccount > 0) tx.commit();
                         else tx.close();
                     }
+                    if(dbei != null) dbei.close();
                 }
-            }
             logger.info("cleaner stop");
         }
 
@@ -295,7 +300,7 @@ public class LmdbDataManager {
         private List<DocRef> getRemovedDocsRef() {
             List<DocRef> docs = new ArrayList<DocRef>();
             try(Transaction tx = env.createReadTransaction(); EntryIterator coldbei = coldb.iterate(tx)) {
-                for (int i = 0; i < 1000 && coldbei.hasNext(); i++) {
+                for (int i = 0; i < 100 && coldbei.hasNext(); i++) {
                     Entry e = coldbei.next();
                     if (!string(e.getKey()).endsWith("/r")) continue;
                     docs.add(new DocRef(e.getKey(),e.getValue()));
@@ -373,8 +378,8 @@ public class LmdbDataManager {
 //        LmdbDataManager.removeCollection("c1");
 //        LmdbDataManager.createCollection("c1");
 //        LmdbDataManager.removeCollection("c1");
-        LmdbDataManager.createCollection("c4");
-        LmdbDataManager.createDocument("c4/d0", new ByteArrayInputStream(CONTENT.getBytes()));
+//        LmdbDataManager.createCollection("c4");
+//        LmdbDataManager.createDocument("c4/d0", new ByteArrayInputStream(CONTENT.getBytes()));
 //        LmdbDataManager.createDocument("c4/d1", new FileInputStream("/home/mscastro/dev/basex-lmdb/db/xml/etc/factbook.xml"));
 //        LmdbDataManager.createDocument("c4/d2", new FileInputStream("/home/mscastro/download/shakespeare.xml"));
 //        LmdbDataManager.createDocument("c4/d3", new FileInputStream("/home/mscastro/download/medline15n0766.xml"));
@@ -395,7 +400,7 @@ public class LmdbDataManager {
 
 //        System.out.println(LmdbDataManager.listDocuments("c4"));
 
-        System.out.println(LmdbDataManager.listCollections());
+//        System.out.println(LmdbDataManager.listCollections());
 
 // -----------------------------------------------------------------------------------------------------------------------
 

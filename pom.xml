@@ -302,6 +302,9 @@
               <target>
                 <delete quiet="true" file="${basedir}/${project.artifactId}.jar"/>
                 <delete quiet="true" dir="${basedir}/lib"/>
+                <delete quiet="true">
+                  <fileset dir="${basedir}/db" includes="*.mdb"/>
+                </delete>
               </target>
             </configuration>
             <goals>

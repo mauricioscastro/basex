@@ -1006,7 +1006,6 @@ public abstract class Data {
   }
 
 
-  // TODO: basex-lmdb: review. make protected and keep last id in lmdb entry at ? as the struct !!! synchronize creation and update local meta.lastid
   /**
    * Generates a new id.
    * @return id

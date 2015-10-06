@@ -1,6 +1,5 @@
 package lmdb.basex;
 
-import lmdb.util.*;
 import lmdb.util.Byte;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.basex.core.MainOptions;
@@ -15,26 +14,30 @@ import org.basex.io.out.DataOutput;
 import org.basex.util.Token;
 import org.basex.util.Util;
 import org.fusesource.lmdbjni.Database;
-import org.fusesource.lmdbjni.EntryIterator;
 import org.fusesource.lmdbjni.Transaction;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static lmdb.util.Byte.lmdbkey;
-import static org.fusesource.lmdbjni.Constants.bytes;
 
 
 public class LmdbData extends Data {
 
     public static final byte[] LAST_REF_KEY = new byte[] {0,0,0,0};
+
     protected Transaction tx;
-    protected Database txtdb;
-    protected Database attdb;
-    protected Database structdb;
+    protected static Database txtdb;
+    protected static Database attdb;
+    protected static Database structdb;
     protected byte[] docid;
+
+    private volatile int lastTxtRef;
+    private volatile int lastAttRef;
 
     protected LmdbData(final String name, final MainOptions options) {
         super(new MetaData(name, options, null));
@@ -52,6 +55,7 @@ public class LmdbData extends Data {
         this.structdb = structdb;
 
         readStruct();
+        initLastRefs();
 
         this.table = new TableLmdbAccess(meta, tx, tableAccess, docid);
 
@@ -72,6 +76,7 @@ public class LmdbData extends Data {
         }
         if(tx.isReadOnly()) return;
         writeStruct();
+        writeLastRefs();
     }
 
     @Override
@@ -101,6 +106,8 @@ public class LmdbData extends Data {
         } catch (IOException e) {
             Util.stack(e);
         }
+        writeStruct();
+        writeLastRefs();
     }
 
     @Override
@@ -131,12 +138,9 @@ public class LmdbData extends Data {
     }
 
     @Override
-    protected synchronized long textRef(byte[] value, boolean text) {
-        Database db = text ? txtdb : attdb;
-        int newrref = Byte.getInt(db.get(tx, LmdbData.LAST_REF_KEY))+1;
-        db.put(tx, LmdbData.LAST_REF_KEY, Byte.getBytes(newrref));
-        db.put(tx, lmdbkey(docid,newrref),value);
-        return newrref;
+    protected long textRef(byte[] value, boolean text) {
+        (text ? txtdb : attdb).put(tx, lmdbkey(docid, (text ? ++lastTxtRef : ++lastAttRef)), value);
+        return (text ? lastTxtRef : lastAttRef);
     }
 
     private void readStruct() throws IOException {
@@ -200,5 +204,15 @@ public class LmdbData extends Data {
         } catch (IOException ioe) {
             throw new RuntimeException(ioe);
         }
+    }
+
+    private synchronized void initLastRefs() {
+        lastTxtRef = Byte.getInt(txtdb.get(tx, LmdbData.LAST_REF_KEY));
+        lastAttRef = Byte.getInt(attdb.get(tx, LmdbData.LAST_REF_KEY));
+    }
+
+    private void writeLastRefs() {
+        txtdb.put(tx, LmdbData.LAST_REF_KEY, lmdb.util.Byte.getBytes(lastTxtRef));
+        attdb.put(tx, LmdbData.LAST_REF_KEY, lmdb.util.Byte.getBytes(lastAttRef));
     }
 }
