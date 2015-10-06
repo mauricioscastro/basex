@@ -31,9 +31,9 @@ public class LmdbData extends Data {
     public static final byte[] LAST_REF_KEY = new byte[] {0,0,0,0};
 
     protected Transaction tx;
-    protected static Database txtdb;
-    protected static Database attdb;
-    protected static Database structdb;
+    protected Database txtdb;
+    protected Database attdb;
+    protected Database structdb;
     protected byte[] docid;
 
     private volatile int lastTxtRef;

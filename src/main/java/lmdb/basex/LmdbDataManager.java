@@ -1,6 +1,5 @@
 package lmdb.basex;
 
-import lmdb.BasexLmdbEnv;
 import lmdb.util.Byte;
 import lmdb.util.XQuery;
 import org.apache.commons.codec.binary.Hex;
@@ -31,7 +30,6 @@ import static org.fusesource.lmdbjni.Constants.FIXEDMAP;
 import static org.fusesource.lmdbjni.Constants.bytes;
 
 public class LmdbDataManager {
-// TODO: basex-lmdb: change removal flag and make it use one byte like EOT 0x03 instead of the literal string "/r"
 
     private static final Logger logger = Logger.getLogger(LmdbDataManager.class);
 
@@ -63,7 +61,10 @@ public class LmdbDataManager {
     public static void config(String home, long size) {
         if(env != null) return;
         LmdbDataManager.home = home;
-        env = BasexLmdbEnv.getEnv(home, size, FIXEDMAP);
+        env = new Env();
+        env.setMapSize(size);
+        env.setMaxDbs(16);
+        env.open(home, FIXEDMAP);
         cleaner = new Thread(new Cleaner());
     }
 
@@ -95,6 +96,8 @@ public class LmdbDataManager {
     }
 
     public static void stop() {
+        logger.info("sync");
+        env.sync(true);
         cleaner.interrupt();
         while(!cleanerStopped) try { Thread.sleep(1000); } catch(InterruptedException ie) {}
         coldb.close();
@@ -186,8 +189,7 @@ public class LmdbDataManager {
         try(Transaction tx = env.createWriteTransaction()) {
             byte[] docid = coldb.get(tx, bytes(name));
             if(docid == null) return;
-            coldb.delete(tx, bytes(name));
-            coldb.put(tx, bytes(name + "/r"), docid);
+            if(coldb.delete(tx, bytes(name))) coldb.put(tx, bytes(name + "/r"), docid);
             tx.commit();
         }
     }
@@ -240,76 +242,41 @@ public class LmdbDataManager {
 
     private static class Cleaner implements Runnable {
 
-        private int runEvery; //minutes
-
-        public Cleaner(int minutes) {
-            runEvery = minutes;
-        }
-
-        public Cleaner() {
-            this(10);
-        }
+        private Database[] dblist =  new Database[]{
+                tableaccessdb, textdatadb, attributevaldb, txtindexldb, txtindexrdb,
+                attindexldb, attindexrdb, ftindexxdb, ftindexydb, ftindexzdb
+        };
 
         @Override
         public void run() {
             logger.info("cleaner start");
-            int ccount = 0;
-            Transaction tx = null;
-            EntryIterator dbei = null;
             while(true) try {
-                    for (DocRef dr : getRemovedDocsRef()) {
-                        structdb.delete(dr.ref);
-                        for (Database db : new Database[]{
-                                tableaccessdb, textdatadb, attributevaldb,
-                                txtindexldb, txtindexrdb, attindexldb, attindexrdb,
-                                ftindexxdb, ftindexydb, ftindexzdb
-                        }) {
-                            tx = env.createWriteTransaction();
-                            try {
-                                dbei = db.seek(tx, dr.ref);
-                                while (dbei.hasNext()) {
-                                    byte[] k = dbei.next().getKey();
-                                    if (Byte.getInt(dr.ref) != Byte.getInt(k)) break;
-                                    db.delete(tx, k);
-                                    if (ccount++ > 10000) {
-                                        tx.commit();
-                                        tx = env.createWriteTransaction();
-                                        ccount = 0;
-                                    }
-                                }
-                            } finally {
-                                if(dbei != null) dbei.close();
-                            }
-                            if (ccount > 0) tx.commit();
-                            else tx.close();
-                        }
-                        coldb.delete(dr.key);
+                DocRef dr = getNextRemovedDoc();
+                if(dr != null) {
+                    structdb.delete(dr.ref);
+                    for(Database db : dblist) try (Transaction tx = env.createWriteTransaction(); EntryIterator dbei = db.seek(tx,dr.ref)) {
+                        while (dbei.hasNext() && Byte.getInt(dr.ref) == Byte.getInt(dbei.next().getKey())) db.delete(tx, dr.ref);
+                        tx.commit();
                     }
-                    Thread.sleep(runEvery);
-                } catch(InterruptedException ie) {
-                    break;
-                } finally {
-                    if (tx != null) {
-                        if (ccount > 0) tx.commit();
-                        else tx.close();
-                    }
-                    if(dbei != null) dbei.close();
+                    coldb.delete(dr.key);
+                } else {
+                    Thread.sleep(1000 * 60 * 1);
                 }
+            } catch(InterruptedException ie) {
+                break;
+            }
             logger.info("cleaner stop");
             cleanerStopped = true;
         }
 
-
-        private List<DocRef> getRemovedDocsRef() {
-            List<DocRef> docs = new ArrayList<DocRef>();
+        private DocRef getNextRemovedDoc() {
             try(Transaction tx = env.createReadTransaction(); EntryIterator coldbei = coldb.iterate(tx)) {
-                for (int i = 0; i < 100 && coldbei.hasNext(); i++) {
+                while(coldbei.hasNext()) {
                     Entry e = coldbei.next();
-                    if (!string(e.getKey()).endsWith("/r")) continue;
-                    docs.add(new DocRef(e.getKey(),e.getValue()));
+                    if(string(e.getKey()).endsWith("/r")) return new DocRef(e.getKey(),e.getValue());
                 }
             }
-            return docs;
+            return null;
         }
 
         private class DocRef {
@@ -321,7 +288,6 @@ public class LmdbDataManager {
             }
         }
     }
-
 
     public static final String CONTENT = "\n" +
             "<root xmlns:h=\"http://www.w3.org/TR/html4/\"\n" +
@@ -868,7 +834,7 @@ public class LmdbDataManager {
 
 //        p.close();
 
-//        Thread.sleep(1000 * 60 * 10);
+        Thread.sleep(1000);
 
         LmdbDataManager.stop();
     }
