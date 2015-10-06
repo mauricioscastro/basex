@@ -50,6 +50,7 @@ public class LmdbDataManager {
     private static Database ftindexydb;
     private static Database ftindexzdb;
     private static Thread cleaner;
+    private static volatile boolean cleanerStopped = false;
 
 
     private static final byte[] LAST_DOCUMENT_INDEX_KEY = new byte[]{0};
@@ -95,6 +96,7 @@ public class LmdbDataManager {
 
     public static void stop() {
         cleaner.interrupt();
+        while(!cleanerStopped) try { Thread.sleep(1000); } catch(InterruptedException ie) {}
         coldb.close();
         structdb.close();
         tableaccessdb.close();
@@ -294,6 +296,7 @@ public class LmdbDataManager {
                     if(dbei != null) dbei.close();
                 }
             logger.info("cleaner stop");
+            cleanerStopped = true;
         }
 
 

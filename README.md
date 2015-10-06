@@ -60,8 +60,10 @@ Any xquery will work after http://localhost:8080/
 >```curl -d "insert node <lake name='Lago da Paz'/> into doc('etc/factbook')/mondial" -X POST http://localhost:8080```
 
 
-###todo:
+###todo
 - need to port indexing to LMDB
+- review module loading
+- review Java loading
 - need to port tests and improve LmdbDataManager tests
 - more tests
 - improve the return error codes in REST XQueryHandler 
