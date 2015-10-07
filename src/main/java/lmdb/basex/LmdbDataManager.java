@@ -62,7 +62,7 @@ public class LmdbDataManager {
         env.setMapSize(size);
         env.setMaxDbs(16);
         env.open(home, FIXEDMAP);
-        cleaner = new Thread(new Cleaner());
+//        cleaner = new Thread(new Cleaner());
     }
 
     public static void start() {
@@ -89,14 +89,13 @@ public class LmdbDataManager {
 
         logger.info("start");
 
-        cleaner.start();
+//        cleaner.start();
     }
 
     public static void stop() {
-        logger.info("sync");
+//        cleaner.interrupt();
+//        while(!cleanerStopped) try { Thread.sleep(500); } catch(InterruptedException ie) {}
         env.sync(true);
-        cleaner.interrupt();
-        while(!cleanerStopped) try { Thread.sleep(1000); } catch(InterruptedException ie) {}
         coldb.close();
         structdb.close();
         tableaccessdb.close();
@@ -239,6 +238,8 @@ public class LmdbDataManager {
 
     private static class Cleaner implements Runnable {
 
+        private int sleepInminutes = 5;
+
         private Database[] dblist =  new Database[]{
                 tableaccessdb, textdatadb, attributevaldb, txtindexldb, txtindexrdb,
                 attindexldb, attindexrdb, ftindexxdb, ftindexydb, ftindexzdb
@@ -247,17 +248,21 @@ public class LmdbDataManager {
         @Override
         public void run() {
             logger.info("cleaner start");
-            while(true) try {
+            while(!cleanerStopped) try {
                 DocRef dr = getNextRemovedDoc();
                 if(dr != null) {
                     structdb.delete(dr.ref);
-                    for(Database db : dblist) try (Transaction tx = env.createWriteTransaction(); EntryIterator dbei = db.seek(tx,dr.ref)) {
-                        while (dbei.hasNext() && Byte.getInt(dr.ref) == Byte.getInt(dbei.next().getKey())) db.delete(tx, dr.ref);
-                        tx.commit();
+                    try (Transaction tx = env.createWriteTransaction()) {
+                        for (Database db : dblist) {
+                            try (EntryIterator dbei = db.seek(tx,dr.ref)) {
+                                while (dbei.hasNext() && Byte.getInt(dr.ref) == Byte.getInt(dbei.next().getKey())) db.delete(tx, dr.ref);
+                                tx.commit();
+                            }
+                        }
+                        coldb.delete(dr.key);
                     }
-                    coldb.delete(dr.key);
                 } else {
-                    Thread.sleep(1000 * 60 * 1);
+                    Thread.sleep(1000 * 10); //60 * sleepInminutes);
                 }
             } catch(InterruptedException ie) {
                 break;
