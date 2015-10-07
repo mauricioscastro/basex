@@ -2,6 +2,7 @@ package lmdb.basex;
 
 import lmdb.util.Byte;
 import lmdb.util.XQuery;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.log4j.Logger;
 import org.basex.build.xml.XMLParser;
 import org.basex.core.MainOptions;
@@ -15,6 +16,7 @@ import org.fusesource.lmdbjni.EntryIterator;
 import org.fusesource.lmdbjni.Env;
 import org.fusesource.lmdbjni.Transaction;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -44,9 +46,9 @@ public class LmdbDataManager {
     private static Database ftindexxdb;
     private static Database ftindexydb;
     private static Database ftindexzdb;
-    private static Thread cleaner;
-    private static volatile boolean cleanerStopped = false;
 
+    private static volatile boolean cleanerRunning = true;
+    private static volatile boolean cleanerStopped = false;
 
     private static final byte[] LAST_DOCUMENT_INDEX_KEY = new byte[]{0};
     private static final byte[] COLLECTION_LIST_KEY = new byte[]{1};
@@ -62,7 +64,6 @@ public class LmdbDataManager {
         env.setMapSize(size);
         env.setMaxDbs(16);
         env.open(home, FIXEDMAP);
-//        cleaner = new Thread(new Cleaner());
     }
 
     public static void start() {
@@ -90,11 +91,12 @@ public class LmdbDataManager {
         logger.info("start");
 
 //        cleaner.start();
+        new Thread(new Cleaner()).start();
     }
 
     public static void stop() {
-//        cleaner.interrupt();
-//        while(!cleanerStopped) try { Thread.sleep(500); } catch(InterruptedException ie) {}
+        cleanerRunning = false;
+        while(!cleanerStopped) try { Thread.sleep(500); } catch(InterruptedException ie) {}
         env.sync(true);
         coldb.close();
         structdb.close();
@@ -219,7 +221,7 @@ public class LmdbDataManager {
                 Byte.setInt(Byte.getInt(docid)+1,docid);
             }
             coldb.put(tx, LAST_DOCUMENT_INDEX_KEY, docid);
-            coldb.put(tx,bytes(name),docid);
+            coldb.put(tx, bytes(name), docid);
             tx.commit();
             return docid;
         }
@@ -238,7 +240,8 @@ public class LmdbDataManager {
 
     private static class Cleaner implements Runnable {
 
-        private int sleepInminutes = 5;
+        private int mincycle = 1; // minutes
+        private int secscounter = 0;
 
         private Database[] dblist =  new Database[]{
                 tableaccessdb, textdatadb, attributevaldb, txtindexldb, txtindexrdb,
@@ -248,22 +251,30 @@ public class LmdbDataManager {
         @Override
         public void run() {
             logger.info("cleaner start");
-            while(!cleanerStopped) try {
+            while(cleanerRunning) try {
+                Thread.sleep(1000);
+                if(secscounter++ < 60 * mincycle) continue;
                 DocRef dr = getNextRemovedDoc();
                 if(dr != null) {
+                    logger.debug("DocRef=" + string(dr.key) + " " + Hex.encodeHexString(dr.ref));
                     structdb.delete(dr.ref);
-                    try (Transaction tx = env.createWriteTransaction()) {
-                        for (Database db : dblist) {
-                            try (EntryIterator dbei = db.seek(tx,dr.ref)) {
-                                while (dbei.hasNext() && Byte.getInt(dr.ref) == Byte.getInt(dbei.next().getKey())) db.delete(tx, dr.ref);
-                                tx.commit();
+                    for (Database db : dblist) {
+                        logger.debug("---");
+                        try (Transaction tx = env.createReadTransaction(); EntryIterator dbei = db.iterate(tx)) {
+                            while (dbei.hasNext()) {
+                                byte[] key = dbei.next().getKey();
+                                //System.out.println("Byte.getInt(dr.ref)=" + Byte.getInt(dr.ref) + " Byte.getInt(key)=" + Byte.getInt(key));
+                                if (Byte.getInt(dr.ref) != Byte.getInt(key)) continue;
+                                System.out.println("key=" + Hex.encodeHexString(key) + " ref=" + Hex.encodeHexString(dr.ref));
+                                logger.debug("key=" + Hex.encodeHexString(key) + " ref=" + Hex.encodeHexString(dr.ref));
+                                db.delete(key);
                             }
+                            //tx.commit();
                         }
-                        coldb.delete(dr.key);
                     }
-                } else {
-                    Thread.sleep(1000 * 10); //60 * sleepInminutes);
+                    coldb.delete(dr.key);
                 }
+                secscounter = 0;
             } catch(InterruptedException ie) {
                 break;
             }
@@ -343,7 +354,7 @@ public class LmdbDataManager {
         LmdbDataManager.config(home);
         LmdbDataManager.start();
 
-//        LmdbDataManager.createCollection("c1");
+        LmdbDataManager.createCollection("c1");
 //        LmdbDataManager.createCollection("c2");
 //        LmdbDataManager.createCollection("c3");
 //        LmdbDataManager.removeCollection("c1");
@@ -357,9 +368,9 @@ public class LmdbDataManager {
 //        LmdbDataManager.createDocument("c4/d4", new FileInputStream("/home/mscastro/download/standard.xml"));
 //        LmdbDataManager.createDocument("c4/d5", new FileInputStream("/tmp/test.xml"));
 
-//        LmdbDataManager.createDocument("c1/d1", new FileInputStream("/home/mscastro/download/shakespeare/tempest.xml"));
-//        LmdbDataManager.createDocument("c1/d2", new FileInputStream("/home/mscastro/download/shakespeare/coriolan.xml"));
-//        LmdbDataManager.createDocument("c1/d3", new FileInputStream("/home/mscastro/download/shakespeare/all_well.xml"));
+        LmdbDataManager.createDocument("c1/d1", new FileInputStream("/home/mscastro/download/shakespeare/tempest.xml"));
+        LmdbDataManager.createDocument("c1/d2", new FileInputStream("/home/mscastro/download/shakespeare/coriolan.xml"));
+        LmdbDataManager.createDocument("c1/d3", new FileInputStream("/home/mscastro/download/shakespeare/all_well.xml"));
 
 //        LmdbDataManager.createDocument("c2/d0", new ByteArrayInputStream(new byte[]{}));
 
@@ -417,13 +428,46 @@ public class LmdbDataManager {
 //            }
 //        }
 
-//        try(Transaction tx = env.createReadTransaction()) {
-//            EntryIterator ei = textdatadb.iterate(tx);
-//            while (ei.hasNext()) {
-//                Entry e = ei.next();
-//                System.err.println("textdatadb: " + Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
-//            }
-//        }
+
+
+        try(Transaction tx = env.createReadTransaction()) {
+            EntryIterator ei = textdatadb.iterate(tx);
+            while (ei.hasNext()) {
+                Entry e = ei.next();
+                System.err.println("textdatadb: " + Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
+            }
+        }
+
+
+        try(Transaction tx = env.createReadTransaction()) {
+            EntryIterator ei = coldb.iterate(tx);
+            while (ei.hasNext()) {
+                Entry e = ei.next();
+                System.err.println("coldb: " + string(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
+            }
+        }
+
+        LmdbDataManager.removeDocument("c1/d2");
+
+        Thread.sleep(1000*60*2);
+
+        try(Transaction tx = env.createReadTransaction()) {
+            EntryIterator ei = textdatadb.iterate(tx);
+            while (ei.hasNext()) {
+                Entry e = ei.next();
+                System.err.println("textdatadb: " + Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
+            }
+        }
+
+        try(Transaction tx = env.createReadTransaction()) {
+            EntryIterator ei = coldb.iterate(tx);
+            while (ei.hasNext()) {
+                Entry e = ei.next();
+                System.err.println("coldb: " + string(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
+            }
+        }
+
+
 //
 //        try(Transaction tx = env.createReadTransaction()) {
 //            EntryIterator ei = attributevaldb.iterate(tx);
@@ -545,17 +589,17 @@ public class LmdbDataManager {
 //            }
 //        }
 
-        try(QueryContext qctx = new QueryContext()) {
-            qctx.parse("insert node <new_element_a name='a'/> into doc('c4/d0')/root");
-            qctx.compile();
-            XQuery.query(qctx, System.out, null, true);
-        }
-
-        try(QueryContext qctx = new QueryContext()) {
-            qctx.parse("insert node <new_element_b name='b'>b</new_element_b> into doc('c4/d0')/root");
-            qctx.compile();
-            XQuery.query(qctx, System.out, null, true);
-        }
+//        try(QueryContext qctx = new QueryContext()) {
+//            qctx.parse("insert node <new_element_a name='a'/> into doc('c4/d0')/root");
+//            qctx.compile();
+//            XQuery.query(qctx, System.out, null, true);
+//        }
+//
+//        try(QueryContext qctx = new QueryContext()) {
+//            qctx.parse("insert node <new_element_b name='b'>b</new_element_b> into doc('c4/d0')/root");
+//            qctx.compile();
+//            XQuery.query(qctx, System.out, null, true);
+//        }
 //
 //        try(QueryContext qctx = new QueryContext()) {
 //            qctx.parse("insert node <new_element_b/> as first into doc('c4/d0')/root");
@@ -621,11 +665,11 @@ public class LmdbDataManager {
 //
 
 
-        try(QueryContext qctx = new QueryContext()) {
-            qctx.parse("doc('c4/d0')");
-            qctx.compile();
-            XQuery.query(qctx, System.out, null, true);
-        }
+//        try(QueryContext qctx = new QueryContext()) {
+//            qctx.parse("doc('c4/d0')");
+//            qctx.compile();
+//            XQuery.query(qctx, System.out, null, true);
+//        }
 
 //
 //        try(Transaction tx = env.createReadTransaction(); EntryIterator ei = tableaccessdb.iterate(tx)) {
@@ -836,7 +880,7 @@ public class LmdbDataManager {
 
 //        p.close();
 
-        Thread.sleep(1000);
+//        Thread.sleep(1000);
 
         LmdbDataManager.stop();
     }
