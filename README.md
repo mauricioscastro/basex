@@ -62,10 +62,7 @@ Any xquery will work after http://localhost:8080/
 
 ###todo
 - need to port indexing to LMDB
-- review module loading
-- review Java loading
 - need to port tests and improve LmdbDataManager tests
-- more tests
 - improve the return error codes in REST XQueryHandler 
 - needs more documentation on ~~how to run~~, ~~create collections~~, ~~documents~~, ~~updates~~, etc
 - document the URI's used in fn:doc(): bxl://, file://, jdbc:// and related configurations where it fits

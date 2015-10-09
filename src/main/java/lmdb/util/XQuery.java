@@ -21,7 +21,7 @@ import java.io.OutputStream;
 import java.util.Map;
 
 @SuppressWarnings("unchecked")
-public class XQuery {
+public class XQuery {   // TODO: retire
 
     protected XQuery() {
     }

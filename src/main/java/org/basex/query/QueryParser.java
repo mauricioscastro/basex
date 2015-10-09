@@ -1266,7 +1266,7 @@ public class QueryParser extends InputParser {
    */
   public void module(final byte[] path, final byte[] uri) throws QueryException {
     // get absolute path
-    final IO io = sc.resolve(string(path), string(uri));
+    final IO io = sc.resolve(qc.options.get(MainOptions.MODPATH) + "/" + string(path), string(uri));
     final byte[] p = token(io.path());
 
     // check if module has already been parsed

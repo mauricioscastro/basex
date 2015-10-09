@@ -18,6 +18,7 @@ import org.fusesource.lmdbjni.Transaction;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Map;
 
@@ -43,6 +44,11 @@ public class LmdbQueryContext extends QueryContext implements Closeable {
 
     public LmdbQueryContext(final String query, final Map<String,Object> var, final MainOptions opt) throws QueryException {
         this(query, null, var, opt, null);
+    }
+
+
+    public LmdbQueryContext(final String query, final String context, final Map<String,Object> var) throws QueryException {
+        this(query, context, var, new MainOptions(), null);
     }
 
     public LmdbQueryContext(final String query, final String context, final Map<String,Object> var, final MainOptions opt, Transaction tx) throws QueryException {
@@ -82,6 +88,7 @@ public class LmdbQueryContext extends QueryContext implements Closeable {
         if(tx == null) return;
         if(!tx.isReadOnly()) tx.commit();
         else tx.close();
+        tx = null;
     }
 
 
@@ -124,6 +131,52 @@ public class LmdbQueryContext extends QueryContext implements Closeable {
             ctx.run(bos,false);
             return bos.toString();
         } catch(IOException ioe) {
+            throw new QueryException(ioe);
+        }
+    }
+
+    public InputStream queryStream(final String query, final String context, final Map<String,Object> var, final String method) throws QueryException {
+        final ByteArrayOutputStream result = new ByteArrayOutputStream();
+        final LmdbQueryContext ctx = new LmdbQueryContext(query, context, var);
+        try {
+            return new InputStream() {
+                private Serializer s = Serializer.get(result, getSerializerOptions(method));
+                private Iter iter = ctx.iter();
+                private Item i = null;
+                private byte[] b = null;
+                private int off = -1;
+                public void close() throws IOException {
+                    s.close();
+                    ctx.close();
+                }
+                public int read() throws IOException {
+                    if((b == null || off >= b.length) && !next()) return -1;
+                    return (int)b[off++];
+                }
+                private boolean next() throws IOException {
+                    try {
+                        if((i = iter.next()) == null) return false;
+                        result.reset();
+                        if(i.type == NodeType.ATT || i.type == NodeType.NSP || i.type.instanceOf(SeqType.ANY_ARRAY)) {
+                            result.flush();
+                            result.write(i.toString().getBytes());
+                        } else {
+                            s.serialize(i);
+                        }
+                        b = result.toByteArray();
+                        off = 0;
+                        return true;
+                    } catch(QueryException qe) {
+                        throw new IOException(qe);
+                    }
+                }
+            };
+        } catch(IOException ioe) {
+            try {
+                ctx.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             throw new QueryException(ioe);
         }
     }

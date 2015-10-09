@@ -139,7 +139,7 @@ public class XQueryServer {
 
         //hlist.addHandler(new ClientCertificateAuthenticationHandler());
         hlist.addHandler(resourceHandler);
-        hlist.addHandler(new XQueryHandler());
+        hlist.addHandler(new XQueryHandler(home));
         server.setHandler(hlist);
     }
 

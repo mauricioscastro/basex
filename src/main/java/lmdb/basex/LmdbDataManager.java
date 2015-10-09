@@ -372,6 +372,7 @@ public class LmdbDataManager {
         String home = "/home/mscastro/dev/basex-lmdb/db";
         MainOptions opt = new MainOptions();
         opt.set(MainOptions.XMLPATH, home + "/xml");
+        opt.set(MainOptions.MODPATH, home + "/module");
         LmdbDataManager.config(home);
         LmdbDataManager.start();
 
@@ -381,8 +382,8 @@ public class LmdbDataManager {
 //        LmdbDataManager.removeCollection("c1");
 //        LmdbDataManager.createCollection("c1");
 //        LmdbDataManager.removeCollection("c1");
-        LmdbDataManager.createCollection("c4");
-        LmdbDataManager.createDocument("c4/d0", new ByteArrayInputStream(CONTENT.getBytes()));
+//        LmdbDataManager.createCollection("c4");
+//        LmdbDataManager.createDocument("c4/d0", new ByteArrayInputStream(CONTENT.getBytes()));
 //        LmdbDataManager.createDocument("c4/d1", new FileInputStream("/home/mscastro/dev/basex-lmdb/db/xml/etc/factbook.xml"));
 //        LmdbDataManager.createDocument("c4/d2", new FileInputStream("/home/mscastro/download/shakespeare.xml"));
 //        LmdbDataManager.createDocument("c4/d3", new FileInputStream("/home/mscastro/download/medline15n0766.xml"));
@@ -410,15 +411,17 @@ public class LmdbDataManager {
 //        LmdbDataManager.t();
 
 
-
-
-        try(LmdbQueryContext ctx = new LmdbQueryContext("insert node <new_element_a name='a'/> into doc('c4/d0')/root")) {
+        try(LmdbQueryContext ctx = new LmdbQueryContext("declare namespace math = 'java:java.lang.Math'; math:cos(xs:double(0)), math:PI()", opt)) {
             ctx.run(System.out);
         }
 
-        try(LmdbQueryContext ctx = new LmdbQueryContext("doc('c4/d0')")) {
-            ctx.run(System.out);
-        }
+//        try(LmdbQueryContext ctx = new LmdbQueryContext("insert node <new_element_a name='a'/> into doc('c4/d0')/root")) {
+//            ctx.run(System.out);
+//        }
+//
+//        try(LmdbQueryContext ctx = new LmdbQueryContext("doc('c4/d0')")) {
+//            ctx.run(System.out);
+//        }
 
 //
 //        try(Transaction tx = env.createReadTransaction()) {
