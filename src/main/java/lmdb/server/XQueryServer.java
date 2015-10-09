@@ -1,9 +1,9 @@
 package lmdb.server;
 
 import lmdb.basex.LmdbDataManager;
+import lmdb.basex.LmdbQueryContext;
 import lmdb.db.JdbcDataManager;
 import lmdb.handler.XQueryHandler;
-import lmdb.util.XQuery;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
@@ -223,7 +223,7 @@ public class XQueryServer {
 
     private String getConfig(String query) {
         try {
-            return XQuery.getString(query, config);
+            return LmdbQueryContext.queryString(query, config);
         } catch (QueryException e) {
             logger.warn(e.getMessage());
             if (logger.isDebugEnabled()) logger.debug("", e);

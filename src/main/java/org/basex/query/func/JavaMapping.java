@@ -216,7 +216,7 @@ public abstract class JavaMapping extends Arr {
 //    if(req != null) perm = Perm.get(req.value().name().toLowerCase(Locale.ENGLISH));
 //    if(!qc.context.user().has(perm)) return null;
 
-    // Add module locks to QueryContext.
+    // Add module locks to LmdbQueryContext.
     final Lock lock = meth.getAnnotation(Lock.class);
     if(lock != null) {
       for(final String read : lock.read()) qc.readLocks.add(DBLocking.MODULE_PREFIX + read);

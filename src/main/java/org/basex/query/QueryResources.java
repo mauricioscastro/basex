@@ -60,7 +60,7 @@ public class QueryResources {
   /** Opened databases. */
   private final ArrayList<Data> datas = new ArrayList<>(1);
   protected ArrayList<String> docs = new ArrayList<String>();
-  protected ArrayList<Data> data = new ArrayList<Data>();
+
   /** Indicates if the first database in the context is globally opened. */
   private boolean globalData;
 
@@ -127,7 +127,6 @@ public class QueryResources {
    * Closes all opened data references that have not been added by the global context.
    */
   protected void close() {
-    for(Data d: data) d.close();
 //    for(final Data data : datas) Close.close(data, qc.context);
 //    datas.clear();
     // close dynamically loaded JAR files

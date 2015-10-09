@@ -19,7 +19,7 @@ java -jar basex-lmdb.jar
 from project basedir
 
 ##simple usage
-In a browser or with curl, issue a HTTP GET request to http://localhost:8080/doc('file:///books.xml')
+In a browser or with curl, issue a HTTP GET request to http://localhost:8080/doc('file://etc/books.xml')
 
 Any xquery will work after http://localhost:8080/
 

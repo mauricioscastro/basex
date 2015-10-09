@@ -8,8 +8,8 @@ import org.basex.core.MainOptions;
 import org.basex.data.Data;
 import org.basex.io.IO;
 import org.basex.io.IOStream;
-import org.basex.query.QueryContext;
 import org.basex.query.QueryException;
+import org.basex.query.QueryResources;
 import org.basex.query.value.Value;
 import org.basex.query.value.item.QNm;
 import org.basex.query.value.node.ANode;
@@ -18,7 +18,6 @@ import org.basex.query.value.node.FElem;
 import org.basex.query.value.seq.Empty;
 import org.basex.util.InputInfo;
 import org.basex.util.QueryInput;
-import org.fusesource.lmdbjni.Transaction;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.jdbc.support.rowset.SqlRowSetMetaData;
@@ -30,39 +29,31 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
-public class QueryResources extends org.basex.query.QueryResources {
+public class LmdbQueryResources extends QueryResources {
 
-    Transaction tx = null;
+    ArrayList<Data> data = new ArrayList<Data>();
 
-    QueryResources(final QueryContext qc, Transaction tx) {
+    LmdbQueryResources(final LmdbQueryContext qc) {
         super(qc);
-        this.tx = tx;
     }
 
-
-    // TODO: basex-lmdb: accept document wildcard in collection for lmdb range search as in 'col/doc*'
+    // TODO: basex-lmdb: accept document wildcard in collection for lmdb range search like 'col/doc*'
     @Override
     public Value collection(final QueryInput qi, final IO baseIO, final InputInfo info) throws QueryException {
-      List col = null;
-      try {
-          String docURI = qi.original.trim();
-          if(docURI.startsWith("bxl://")) docURI = docURI.substring(6);
-          col = LmdbDataManager.listDocuments(docURI, true);
-      } catch (IOException e) {
-          throw new QueryException(e);
-      }
-      docs.addAll(col);
-      return docs.isEmpty() ? Empty.SEQ : new LazyDBNodeSeq(col, qc.options, tx);
-    }
-
-    @Override
-    protected void close() {
-        super.close();
-        if(tx == null) return;
-        if(!tx.isReadOnly()) tx.commit();
-        tx.close();
+        List col = null;
+        String docURI = qi.original.trim();
+        if(docURI.startsWith("bxl://")) {
+            try {
+                col = LmdbDataManager.listDocuments(docURI.substring(6), true);
+                docs.addAll(col);
+            } catch (IOException e) {
+                throw new QueryException(e);
+            }
+        }
+      return docs.isEmpty() ? Empty.SEQ : new LazyDBNodeSeq(col, qc.options, ((LmdbQueryContext)qc).tx());
     }
 
     @Override
@@ -72,7 +63,7 @@ public class QueryResources extends org.basex.query.QueryResources {
         // TODO: basex-lmdb: review
         if (uri.startsWith("bxl://")) {
             String docURI = uri.substring(6);
-            Data d = LmdbDataManager.openDocument(docURI, qc.options, tx);
+            Data d = LmdbDataManager.openDocument(docURI, qc.options, ((LmdbQueryContext)qc).tx());
             if(d == null) throw new IOException("error opening document " + uri);
             data.add(d);
             return new DBNode(d);
@@ -123,5 +114,9 @@ public class QueryResources extends org.basex.query.QueryResources {
 
     }
 
-
+    @Override
+    protected void close() {
+        for(Data d: data) d.close();
+        super.close();
+    }
 }

@@ -1,6 +1,5 @@
 package lmdb.basex;
 
-import lmdb.util.XQuery;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
@@ -41,7 +40,7 @@ public class LmdbDataManagerTest {
     public static void oneTimeSetUp() throws Exception {
         clean();
         LmdbDataManager.config(HOME);
-        LmdbDataManager.start();
+        LmdbDataManager.start(false);
     }
 
     @AfterClass
@@ -84,7 +83,7 @@ public class LmdbDataManagerTest {
     public void removeDocumentTest() throws IOException, QueryException {
             LmdbDataManager.createCollection(TEST_COLLECTION);
             LmdbDataManager.createDocument(TEST_COLLECTION + "/books", new FileInputStream(XML_DIR + "books.xml"));
-            XQuery.getString("doc('" + TEST_COLLECTION + "/books" + "')");
+            LmdbQueryContext.queryString("doc('" + TEST_COLLECTION + "/books" + "')");
             LmdbDataManager.removeDocument(TEST_COLLECTION + "/books");
             assertFalse(LmdbDataManager.listDocuments(TEST_COLLECTION).contains("books"));
     }

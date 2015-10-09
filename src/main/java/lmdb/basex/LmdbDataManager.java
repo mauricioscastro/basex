@@ -1,8 +1,6 @@
 package lmdb.basex;
 
 import lmdb.util.Byte;
-import lmdb.util.XQuery;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.log4j.Logger;
 import org.basex.build.xml.XMLParser;
 import org.basex.core.MainOptions;
@@ -16,7 +14,7 @@ import org.fusesource.lmdbjni.EntryIterator;
 import org.fusesource.lmdbjni.Env;
 import org.fusesource.lmdbjni.Transaction;
 
-import java.io.FileInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -66,7 +64,7 @@ public class LmdbDataManager {
         env.open(home, FIXEDMAP);
     }
 
-    public static void start() {
+    public static void start(boolean runCleaner) {
 
         coldb = env.openDatabase("collections");
         structdb = env.openDatabase("structure");
@@ -90,8 +88,15 @@ public class LmdbDataManager {
 
         logger.info("start");
 
-//        cleaner.start();
-        new Thread(new Cleaner()).start();
+        if(runCleaner) {
+            new Thread(new Cleaner()).start();
+        } else {
+            cleanerStopped = true;
+        }
+    }
+
+    public static void start() {
+        start(true);
     }
 
     public static void stop() {
@@ -170,7 +175,7 @@ public class LmdbDataManager {
 
     public static List<String> listDocuments(String collection, boolean addCollectionName) throws IOException {
         ArrayList<String> docs = new ArrayList<String>();
-        try(Transaction tx = env.createWriteTransaction(); EntryIterator ei = coldb.seek(tx, bytes(collection))) {
+        try(Transaction tx = env.createReadTransaction(); EntryIterator ei = coldb.seek(tx, bytes(collection))) {
             while (ei.hasNext()) {
                 Entry e = ei.next();
                 String key = string(e.getKey());
@@ -178,15 +183,14 @@ public class LmdbDataManager {
                 if(!key.startsWith(collection)) break;
                 docs.add(addCollectionName ? key : key.substring(key.indexOf('/')+1));
             }
-            tx.commit();
         }
         return docs;
     }
 
     public static void removeDocument(final String name) throws IOException {
+        byte[] docid = coldb.get(bytes(name));
+        if(docid == null) return;
         try(Transaction tx = env.createWriteTransaction()) {
-            byte[] docid = coldb.get(tx, bytes(name));
-            if(docid == null) return;
             if(coldb.delete(tx, bytes(name))) coldb.put(tx, bytes(name + "/r"), docid);
             tx.commit();
         }
@@ -228,19 +232,22 @@ public class LmdbDataManager {
     }
 
     private static synchronized void removeAllDocuments(String collection) {
-        try(Transaction tx = env.createWriteTransaction(); EntryIterator ei = coldb.seek(tx, bytes(collection))) {
-            while (ei.hasNext()) {
-                Entry e = ei.next();
-                if (!string(e.getKey()).startsWith(collection)) break;
-                if(coldb.delete(tx, e.getKey())) coldb.put(tx, bytes(string(e.getKey())+"/r"), e.getValue());
+        try(Transaction tx = env.createReadTransaction(); EntryIterator ei = coldb.seek(tx, bytes(collection))) {
+            try(Transaction wtx = env.createWriteTransaction()) {
+                while (ei.hasNext()) {
+                    Entry e = ei.next();
+                    if (!string(e.getKey()).startsWith(collection)) break;
+                    if (coldb.delete(wtx, e.getKey())) coldb.put(wtx, bytes(string(e.getKey()) + "/r"), e.getValue());
+                }
+                wtx.commit();
             }
-            tx.commit();
         }
     }
 
     private static class Cleaner implements Runnable {
 
-        private int mincycle = 1; // minutes
+        private int writeBatchSize = 10000;
+        private int mincycle = 10; // minutes
         private int secscounter = 0;
 
         private Database[] dblist =  new Database[]{
@@ -255,24 +262,38 @@ public class LmdbDataManager {
                 Thread.sleep(1000);
                 if(secscounter++ < 60 * mincycle) continue;
                 DocRef dr = getNextRemovedDoc();
-                if(dr != null) {
-                    logger.debug("DocRef=" + string(dr.key) + " " + Hex.encodeHexString(dr.ref));
+                while(dr != null) {
+                    boolean retry = false;
+                    String docName = string(dr.key);
+                    logger.info("cleaner: removing document " + docName.substring(0, docName.length() - 2));
                     structdb.delete(dr.ref);
                     for (Database db : dblist) {
-                        logger.debug("---");
-                        try (Transaction tx = env.createReadTransaction(); EntryIterator dbei = db.iterate(tx)) {
-                            while (dbei.hasNext()) {
-                                byte[] key = dbei.next().getKey();
-                                //System.out.println("Byte.getInt(dr.ref)=" + Byte.getInt(dr.ref) + " Byte.getInt(key)=" + Byte.getInt(key));
-                                if (Byte.getInt(dr.ref) != Byte.getInt(key)) continue;
-                                System.out.println("key=" + Hex.encodeHexString(key) + " ref=" + Hex.encodeHexString(dr.ref));
-                                logger.debug("key=" + Hex.encodeHexString(key) + " ref=" + Hex.encodeHexString(dr.ref));
-                                db.delete(key);
+                        try (Transaction tx = env.createReadTransaction(); EntryIterator dbei = db.seek(tx, dr.ref)) {
+                            int c = 0;
+                            Transaction wtx = env.createWriteTransaction();
+                            try {
+                                while (dbei.hasNext()) {
+                                    byte[] key = dbei.next().getKey();
+                                    if (Byte.getInt(dr.ref) != Byte.getInt(key)) break;
+                                    db.delete(wtx, key);
+                                    if (++c > writeBatchSize) {
+                                        wtx.commit();
+                                        wtx = env.createWriteTransaction();
+                                        c = 0;
+                                    }
+                                }
+                            } catch (Exception e) {
+                                retry = true;
+                            } finally {
+                                if(c > 0) wtx.commit();
+                                else wtx.close();
                             }
-                            //tx.commit();
+                        } catch (Exception e) {
+                            retry = true;
                         }
                     }
-                    coldb.delete(dr.key);
+                    if(!retry) coldb.delete(dr.key);
+                    dr = getNextRemovedDoc();
                 }
                 secscounter = 0;
             } catch(InterruptedException ie) {
@@ -354,23 +375,23 @@ public class LmdbDataManager {
         LmdbDataManager.config(home);
         LmdbDataManager.start();
 
-        LmdbDataManager.createCollection("c1");
+//        LmdbDataManager.createCollection("c1");
 //        LmdbDataManager.createCollection("c2");
 //        LmdbDataManager.createCollection("c3");
 //        LmdbDataManager.removeCollection("c1");
 //        LmdbDataManager.createCollection("c1");
 //        LmdbDataManager.removeCollection("c1");
-//        LmdbDataManager.createCollection("c4");
-//        LmdbDataManager.createDocument("c4/d0", new ByteArrayInputStream(CONTENT.getBytes()));
+        LmdbDataManager.createCollection("c4");
+        LmdbDataManager.createDocument("c4/d0", new ByteArrayInputStream(CONTENT.getBytes()));
 //        LmdbDataManager.createDocument("c4/d1", new FileInputStream("/home/mscastro/dev/basex-lmdb/db/xml/etc/factbook.xml"));
 //        LmdbDataManager.createDocument("c4/d2", new FileInputStream("/home/mscastro/download/shakespeare.xml"));
 //        LmdbDataManager.createDocument("c4/d3", new FileInputStream("/home/mscastro/download/medline15n0766.xml"));
 //        LmdbDataManager.createDocument("c4/d4", new FileInputStream("/home/mscastro/download/standard.xml"));
 //        LmdbDataManager.createDocument("c4/d5", new FileInputStream("/tmp/test.xml"));
 
-        LmdbDataManager.createDocument("c1/d1", new FileInputStream("/home/mscastro/download/shakespeare/tempest.xml"));
-        LmdbDataManager.createDocument("c1/d2", new FileInputStream("/home/mscastro/download/shakespeare/coriolan.xml"));
-        LmdbDataManager.createDocument("c1/d3", new FileInputStream("/home/mscastro/download/shakespeare/all_well.xml"));
+//        LmdbDataManager.createDocument("c1/d1", new FileInputStream("/home/mscastro/download/shakespeare/tempest.xml"));
+//        LmdbDataManager.createDocument("c1/d2", new FileInputStream("/home/mscastro/download/shakespeare/coriolan.xml"));
+//        LmdbDataManager.createDocument("c1/d3", new FileInputStream("/home/mscastro/download/shakespeare/all_well.xml"));
 
 //        LmdbDataManager.createDocument("c2/d0", new ByteArrayInputStream(new byte[]{}));
 
@@ -387,6 +408,17 @@ public class LmdbDataManager {
 // -----------------------------------------------------------------------------------------------------------------------
 
 //        LmdbDataManager.t();
+
+
+
+
+        try(LmdbQueryContext ctx = new LmdbQueryContext("insert node <new_element_a name='a'/> into doc('c4/d0')/root")) {
+            ctx.run(System.out);
+        }
+
+        try(LmdbQueryContext ctx = new LmdbQueryContext("doc('c4/d0')")) {
+            ctx.run(System.out);
+        }
 
 //
 //        try(Transaction tx = env.createReadTransaction()) {
@@ -430,42 +462,42 @@ public class LmdbDataManager {
 
 
 
-        try(Transaction tx = env.createReadTransaction()) {
-            EntryIterator ei = textdatadb.iterate(tx);
-            while (ei.hasNext()) {
-                Entry e = ei.next();
-                System.err.println("textdatadb: " + Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
-            }
-        }
-
-
-        try(Transaction tx = env.createReadTransaction()) {
-            EntryIterator ei = coldb.iterate(tx);
-            while (ei.hasNext()) {
-                Entry e = ei.next();
-                System.err.println("coldb: " + string(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
-            }
-        }
-
-        LmdbDataManager.removeDocument("c1/d2");
-
-        Thread.sleep(1000*60*2);
-
-        try(Transaction tx = env.createReadTransaction()) {
-            EntryIterator ei = textdatadb.iterate(tx);
-            while (ei.hasNext()) {
-                Entry e = ei.next();
-                System.err.println("textdatadb: " + Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
-            }
-        }
-
-        try(Transaction tx = env.createReadTransaction()) {
-            EntryIterator ei = coldb.iterate(tx);
-            while (ei.hasNext()) {
-                Entry e = ei.next();
-                System.err.println("coldb: " + string(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
-            }
-        }
+//        try(Transaction tx = env.createReadTransaction()) {
+//            EntryIterator ei = textdatadb.iterate(tx);
+//            while (ei.hasNext()) {
+//                Entry e = ei.next();
+//                System.err.println("textdatadb: " + Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
+//            }
+//        }
+//
+//
+//        try(Transaction tx = env.createReadTransaction()) {
+//            EntryIterator ei = coldb.iterate(tx);
+//            while (ei.hasNext()) {
+//                Entry e = ei.next();
+//                System.err.println("coldb: " + string(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
+//            }
+//        }
+//
+//        LmdbDataManager.removeDocument("c1/d2");
+//
+//        Thread.sleep(1000*60*2);
+//
+//        try(Transaction tx = env.createReadTransaction()) {
+//            EntryIterator ei = textdatadb.iterate(tx);
+//            while (ei.hasNext()) {
+//                Entry e = ei.next();
+//                System.err.println("textdatadb: " + Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
+//            }
+//        }
+//
+//        try(Transaction tx = env.createReadTransaction()) {
+//            EntryIterator ei = coldb.iterate(tx);
+//            while (ei.hasNext()) {
+//                Entry e = ei.next();
+//                System.err.println("coldb: " + string(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
+//            }
+//        }
 
 
 //
@@ -488,7 +520,7 @@ public class LmdbDataManager {
 
 //        XQuery.query("/root/empty",CONTENT,System.out);
 
-//        try(QueryContext qctx = new QueryContext()) {
+//        try(LmdbQueryContext qctx = new LmdbQueryContext()) {
 //            qctx.parse("collection('c1')/PLAY/TITLE");
 //            qctx.compile();
 //            XQuery.query(qctx, System.out, null, "true");
@@ -496,13 +528,13 @@ public class LmdbDataManager {
 //
 //        System.out.println("\n");
 //
-//        try(QueryContext qctx = new QueryContext()) {
+//        try(LmdbQueryContext qctx = new LmdbQueryContext()) {
 //            qctx.parse("doc('c4/d0')//empty");
 //            qctx.compile();
 //            XQuery.query(qctx, System.out, null, "true");
 //        }
 
-//        try(Transaction tx = env.createReadTransaction(); QueryContext qctx = new QueryContext(tx)) {
+//        try(Transaction tx = env.createReadTransaction(); LmdbQueryContext qctx = new LmdbQueryContext(tx)) {
 //            Data data = openDocument("c4/d3", new MainOptions(),tx);
 //            qctx.context(new DBNode(data));
 //            qctx.parse("/site/regions/africa");
@@ -512,13 +544,13 @@ public class LmdbDataManager {
 //        }
 
 
-//        try(QueryContext qctx = new QueryContext()) {
+//        try(LmdbQueryContext qctx = new LmdbQueryContext()) {
 //            qctx.parse("doc('c4/d2')//TITLE[not(contains(./text(),'SCENE')) and not(contains(./text(),'ACT')) and not(contains(./text(),'Dramatis Personae'))]");
 //            qctx.compile();
 //            XQuery.query(qctx, System.out, null, "true");
 //        }
 
-//        try(QueryContext qctx = new QueryContext()) {
+//        try(LmdbQueryContext qctx = new LmdbQueryContext()) {
 //            qctx.parse("replace value of node doc('c4/d0')//not_empty with 'HELLO'");
 //            qctx.compile();
 //            XQuery.query(qctx, System.out, null, true);
@@ -552,7 +584,7 @@ public class LmdbDataManager {
 //        }
 //
 //
-//        try(QueryContext qctx = new QueryContext()) {
+//        try(LmdbQueryContext qctx = new LmdbQueryContext()) {
 //            qctx.parse("doc('c4/d0')");
 //            qctx.compile();
 //            XQuery.query(qctx, System.out, null, true);
@@ -588,62 +620,70 @@ public class LmdbDataManager {
 //                System.err.println("attributevaldb: " + Hex.encodeHexString(e.getKey()) + ":" + string(e.getValue()));
 //            }
 //        }
-
-//        try(QueryContext qctx = new QueryContext()) {
+//
+//        try(LmdbQueryContext qctx = new LmdbQueryContext()) {
 //            qctx.parse("insert node <new_element_a name='a'/> into doc('c4/d0')/root");
 //            qctx.compile();
 //            XQuery.query(qctx, System.out, null, true);
 //        }
 //
-//        try(QueryContext qctx = new QueryContext()) {
+//
+//        try(LmdbQueryContext qctx = new LmdbQueryContext()) {
+//            qctx.parse("doc('c4/d0')");
+//            qctx.compile();
+//            XQuery.query(qctx, System.out, null, true);
+//        }
+
+//
+//        try(LmdbQueryContext qctx = new LmdbQueryContext()) {
 //            qctx.parse("insert node <new_element_b name='b'>b</new_element_b> into doc('c4/d0')/root");
 //            qctx.compile();
 //            XQuery.query(qctx, System.out, null, true);
 //        }
 //
-//        try(QueryContext qctx = new QueryContext()) {
+//        try(LmdbQueryContext qctx = new LmdbQueryContext()) {
 //            qctx.parse("insert node <new_element_b/> as first into doc('c4/d0')/root");
 //            qctx.compile();
 //            XQuery.query(qctx, System.out, null, true);
 //        }
 //
-//        try(QueryContext qctx = new QueryContext()) {
+//        try(LmdbQueryContext qctx = new LmdbQueryContext()) {
 //            qctx.parse("insert node <new_element_c/> as last into doc('c4/d0')/root");
 //            qctx.compile();
 //            XQuery.query(qctx, System.out, null, true);
 //        }
 //
-//        try(QueryContext qctx = new QueryContext()) {
+//        try(LmdbQueryContext qctx = new LmdbQueryContext()) {
 //            qctx.parse("insert node <new_element_d/> before doc('c4/d0')/root/new_element_c");
 //            qctx.compile();
 //            XQuery.query(qctx, System.out, null, true);
 //        }
 //
-//        try(QueryContext qctx = new QueryContext()) {
+//        try(LmdbQueryContext qctx = new LmdbQueryContext()) {
 //            qctx.parse("insert node <new_element_e/> after doc('c4/d0')/root/new_element_b");
 //            qctx.compile();
 //            XQuery.query(qctx, System.out, null, true);
 //        }
 //
-//        try(QueryContext qctx = new QueryContext()) {
+//        try(LmdbQueryContext qctx = new LmdbQueryContext()) {
 //            qctx.parse("delete node doc('c4/d0')/root/new_element_b");
 //            qctx.compile();
 //            XQuery.query(qctx, System.out, null, true);
 //        }
 //
-//        try(QueryContext qctx = new QueryContext()) {
+//        try(LmdbQueryContext qctx = new LmdbQueryContext()) {
 //            qctx.parse("replace node doc('c4/d0')/root/new_element_a with <aaa/>");
 //            qctx.compile();
 //            XQuery.query(qctx, System.out, null, true);
 //        }
 //
-//        try(QueryContext qctx = new QueryContext()) {
+//        try(LmdbQueryContext qctx = new LmdbQueryContext()) {
 //            qctx.parse("rename node doc('c4/d0')//empty/@att1 as 'HELLO'");
 //            qctx.compile();
 //            XQuery.query(qctx, System.out, null, true);
 //        }
 
-//        try(QueryContext qctx = new QueryContext(opt)) {
+//        try(LmdbQueryContext qctx = new LmdbQueryContext(opt)) {
 //            qctx.parse("doc('file://etc/books.xml')");
 //            qctx.compile();
 //            XQuery.query(qctx, System.out, null, true);
@@ -657,7 +697,7 @@ public class LmdbDataManager {
 //            }
 //        }
 
-//        try(QueryContext qctx = new QueryContext()) {
+//        try(LmdbQueryContext qctx = new LmdbQueryContext()) {
 //            qctx.parse("delete node doc('c4/d0')/root/empty");
 //            qctx.compile();
 //            XQuery.query(qctx, System.out, null, true);
@@ -665,7 +705,7 @@ public class LmdbDataManager {
 //
 
 
-//        try(QueryContext qctx = new QueryContext()) {
+//        try(LmdbQueryContext qctx = new LmdbQueryContext()) {
 //            qctx.parse("doc('c4/d0')");
 //            qctx.compile();
 //            XQuery.query(qctx, System.out, null, true);
@@ -745,7 +785,7 @@ public class LmdbDataManager {
 //
 //        System.out.println("\n--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
 //
-//        try(QueryContext qctx = new QueryContext()) {
+//        try(LmdbQueryContext qctx = new LmdbQueryContext()) {
 //            qctx.parse("doc('c4/d5')//LINE");
 //            qctx.compile();
 //            XQuery.query(qctx, System.out, null, true);
@@ -753,14 +793,14 @@ public class LmdbDataManager {
 
 
 
-//        try(QueryContext qctx = new QueryContext()) {
+//        try(LmdbQueryContext qctx = new LmdbQueryContext()) {
 //            qctx.parse("doc('c4/d2')//LINE");
 //            qctx.compile();
 //            XQuery.query(qctx, System.out, null, true);
 //        }
 
 
-//        try(QueryContext qctx = new QueryContext()) {
+//        try(LmdbQueryContext qctx = new LmdbQueryContext()) {
 //            qctx.parse("doc('c4/d1')");
 //            qctx.compile();
 //            XQuery.query(qctx, System.out, null, "true");
@@ -768,7 +808,7 @@ public class LmdbDataManager {
 
 //        System.out.println("         ctx start: " + new Date());
 //
-//        try(QueryContext qctx = new QueryContext()) {
+//        try(LmdbQueryContext qctx = new LmdbQueryContext()) {
 //            qctx.parse("count(doc('c4/d3')//node())");
 //            qctx.compile();
 //            XQuery.query(qctx, System.out, null, true);
@@ -786,7 +826,7 @@ public class LmdbDataManager {
 //        System.out.println("result dump finish: " + new Date());
 
 
-//        try(QueryContext qctx = new QueryContext()) {
+//        try(LmdbQueryContext qctx = new LmdbQueryContext()) {
 //            qctx.parse("count(doc('c4/d3')//node())");
 //            qctx.compile();
 //            XQuery.query(qctx, System.out, null, "true");
@@ -795,7 +835,7 @@ public class LmdbDataManager {
 //
 //        System.out.println("         ctx start: " + new Date());
 //
-//        try(QueryContext qctx = new QueryContext()) {
+//        try(LmdbQueryContext qctx = new LmdbQueryContext()) {
 //            qctx.parse("doc('c4/d3')//Abstract");
 //            qctx.compile();
 ////            XQuery.query(qctx, System.out, null, "true");
@@ -832,7 +872,7 @@ public class LmdbDataManager {
 //
 //        FileOutputStream fos = new FileOutputStream(File.createTempFile("xxx.", ".yyy", null));
 //
-//        try(QueryContext qctx = new QueryContext()) {
+//        try(LmdbQueryContext qctx = new LmdbQueryContext()) {
 //            qctx.parse("doc('c4/d5')//LINE");
 //            qctx.compile();
 //            XQuery.query(qctx, fos, null, true);

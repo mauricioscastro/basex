@@ -1,18 +1,18 @@
 package lmdb.util;
 
+import lmdb.basex.LmdbQueryContext;
 import org.basex.build.json.JsonSerialOptions;
 import org.basex.io.IOContent;
 import org.basex.io.serial.SerialMethod;
 import org.basex.io.serial.Serializer;
 import org.basex.io.serial.SerializerOptions;
+import org.basex.query.QueryContext;
 import org.basex.query.QueryException;
 import org.basex.query.iter.Iter;
 import org.basex.query.value.item.Item;
 import org.basex.query.value.node.DBNode;
 import org.basex.query.value.type.NodeType;
 import org.basex.query.value.type.SeqType;
-
-import lmdb.basex.QueryContext;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -26,40 +26,41 @@ public class XQuery {
     protected XQuery() {
     }
 
-    public static QueryContext getContext(String query, String context, Map<String,Object> var) throws QueryException {
+    public static LmdbQueryContext getContext(String query, String context, Map<String,Object> var) throws QueryException {
+        QueryContext ctx = new QueryContext();
         try {
-            QueryContext ctx = new QueryContext();
             ctx.parse(query);
             if(context != null) ctx.context(new DBNode(new IOContent(context)));
             if(var != null && var.size() > 0) for(String k: var.keySet()) ctx.bind(k, var.get(k));
             ctx.compile();
-            return ctx;
+            return null;
         } catch(IOException ioe) {
+            try { ctx.close(); } catch (IOException i) {}
             throw new QueryException(ioe);
         }
     }
 
-    public static QueryContext getContext(String query, Map<String,Object> var) throws QueryException {
+    public static LmdbQueryContext getContext(String query, Map<String,Object> var) throws QueryException {
         return getContext(query, null, var);
     }
 
-    public static QueryContext getContext(String query) throws QueryException {
+    public static LmdbQueryContext getContext(String query) throws QueryException {
         return getContext(query, null, null);
     }
 
     public static void query(String query, String context, OutputStream result, Map<String,Object> var, String method) throws QueryException {
-        try (QueryContext ctx = getContext(query, context, var)) {
+        try (LmdbQueryContext ctx = getContext(query, context, var)) {
             query(ctx, result, method, null);
         } catch(IOException ioe) {
             throw new QueryException(ioe);
         }
     }
 
-    public static void query(QueryContext ctx, OutputStream result, String method, String indent) throws QueryException {
+    public static void query(LmdbQueryContext ctx, OutputStream result, String method, String indent) throws QueryException {
         query(ctx, result, method, Boolean.parseBoolean(indent));
     }
 
-    public static void query(QueryContext ctx, OutputStream result, String method, boolean indent) throws QueryException {
+    public static void query(LmdbQueryContext ctx, OutputStream result, String method, boolean indent) throws QueryException {
         try(Serializer s = Serializer.get(result, getSerializerOptions(method, indent))) {
             Iter iter = ctx.iter();
             Item i = null;
@@ -76,7 +77,7 @@ public class XQuery {
         }
     }
 
-    public static void query(QueryContext ctx, OutputStream result) throws QueryException {
+    public static void query(LmdbQueryContext ctx, OutputStream result) throws QueryException {
         query(ctx, result, null, null);
     }
 
@@ -114,7 +115,7 @@ public class XQuery {
         return getString(query, context, var, null);
     }
 
-    public static InputStream getStream(final QueryContext ctx, final String method) throws QueryException {
+    public static InputStream getStream(final LmdbQueryContext ctx, final String method) throws QueryException {
         try {
             return new InputStream() {
                 private ByteArrayOutputStream result = new ByteArrayOutputStream();
@@ -151,11 +152,13 @@ public class XQuery {
             };
         } catch(IOException ioe) {
             throw new QueryException(ioe);
+        } finally {
+            try { ctx.close(); } catch (IOException e) {}
         }
     }
 
     public static InputStream getStream(final String query, final String context, final Map<String,Object> var) throws QueryException {
-        try (QueryContext ctx = getContext(query, context, var)) {
+        try (LmdbQueryContext ctx = getContext(query, context, var)) {
             return getStream(ctx, null);
         } catch(IOException ioe) {
             throw new QueryException(ioe);
@@ -174,7 +177,7 @@ public class XQuery {
         return getStream(getContext(query, null, null), null);
     }
 
-    public static InputStream getStream(final QueryContext ctx) throws QueryException {
+    public static InputStream getStream(final LmdbQueryContext ctx) throws QueryException {
         return getStream(ctx, null);
     }
 

@@ -335,7 +335,7 @@ public abstract class StandardFunc extends Arr {
    * @param p permission
    * @throws QueryException query exception
    */
-//  private void checkPerm(final QueryContext qc, final Perm p) throws QueryException {
+//  private void checkPerm(final LmdbQueryContext qc, final Perm p) throws QueryException {
 //    if(!qc.context.user().has(p)) throw BASX_PERM_X.get(info, p);
 //  }
 
