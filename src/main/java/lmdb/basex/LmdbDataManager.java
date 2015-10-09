@@ -14,7 +14,6 @@ import org.fusesource.lmdbjni.EntryIterator;
 import org.fusesource.lmdbjni.Env;
 import org.fusesource.lmdbjni.Transaction;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -135,7 +134,7 @@ public class LmdbDataManager {
         }
     }
 
-    public static String[] _listCollections() throws IOException {
+    private static String[] _listCollections() throws IOException {
         byte[] cl = coldb.get(COLLECTION_LIST_KEY);
         if (cl == null) return null;
         String[] clist = string(cl,1,cl.length-2).split(", ");
@@ -165,7 +164,7 @@ public class LmdbDataManager {
     public static void createDocument(final String name, InputStream content) throws IOException {
         byte[] docid = getNextDocumentId(name);
         MainOptions opt = new MainOptions();
-        LmdbBuilder.build(name, docid, env, textdatadb, attributevaldb, structdb, tableaccessdb,
+        LmdbBuilder.build(name, docid, env, coldb, textdatadb, attributevaldb, structdb, tableaccessdb,
                           new XMLParser(new IOStream(content),opt), opt, new StaticOptions(false));
     }
 
@@ -225,7 +224,6 @@ public class LmdbDataManager {
                 Byte.setInt(Byte.getInt(docid)+1,docid);
             }
             coldb.put(tx, LAST_DOCUMENT_INDEX_KEY, docid);
-            coldb.put(tx, bytes(name), docid);
             tx.commit();
             return docid;
         }
@@ -410,8 +408,7 @@ public class LmdbDataManager {
 
 //        LmdbDataManager.t();
 
-
-        try(LmdbQueryContext ctx = new LmdbQueryContext("declare namespace math = 'java:java.lang.Math'; math:cos(xs:double(0)), math:PI()", opt)) {
+        try(LmdbQueryContext ctx = new LmdbQueryContext("doc('file://etc/books.xml')", opt)) {
             ctx.run(System.out);
         }
 

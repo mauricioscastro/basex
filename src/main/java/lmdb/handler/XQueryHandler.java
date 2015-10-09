@@ -28,8 +28,8 @@ public class XQueryHandler extends AbstractHandler {
 
     public XQueryHandler(String home) {
         if(logger.isDebugEnabled()) logger.debug("XQueryHandler init");
-        options.set(MainOptions.XMLPATH, home + "/xml");
-        options.set(MainOptions.MODPATH, home + "/module");
+        options.set(MainOptions.XMLPATH, home + "/db/xml");
+        options.set(MainOptions.MODPATH, home + "/db/module");
     }
 
     public void handle(String target, Request basereq, HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
@@ -72,7 +72,7 @@ public class XQueryHandler extends AbstractHandler {
                         File tmp = new File(System.getProperty("java.io.tmpdir", "/tmp"), p[0] + "." + p[1] + ".xml");
                         tmp.deleteOnExit();
                         FileOutputStream tmpos = new FileOutputStream(tmp);
-                        try(LmdbQueryContext ctx = new LmdbQueryContext(xquery)) {
+                        try(LmdbQueryContext ctx = new LmdbQueryContext(xquery,options)) {
                             if (ctx.updating) throw new HttpException(405, "xquery is updating. use post instead.");
                             ctx.run(tmpos);
                             LmdbDataManager.createDocument(p[0] + "/" + p[1], new FileInputStream(tmp));

@@ -29,6 +29,7 @@ import java.io.IOException;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static lmdb.util.Byte.lmdbkey;
 import static org.basex.core.StaticOptions.DBPATH;
+import static org.fusesource.lmdbjni.Constants.bytes;
 
 public class LmdbBuilder extends Builder {
 
@@ -38,6 +39,7 @@ public class LmdbBuilder extends Builder {
     private boolean closed;
 
     private Env env;
+    private Database coldb;
     private Database txtdb;
     private Database attdb;
     private Database structdb;
@@ -48,7 +50,7 @@ public class LmdbBuilder extends Builder {
     private long txtref = 1;
     private long attref = 1;
 
-    private LmdbBuilder(final String name, final byte[] docid, final Env env,
+    private LmdbBuilder(final String name, final byte[] docid, final Env env, final Database coldb,
                         final Database txtdb, final Database attdb, final Database structdb,
                         final Database tableAccess, final Parser parser,
                         final MainOptions opts, final StaticOptions sopts) throws IOException {
@@ -60,6 +62,7 @@ public class LmdbBuilder extends Builder {
 
         this.docid = docid;
         this.env = env;
+        this.coldb = coldb;
         this.txtdb = txtdb;
         this.attdb = attdb;
         this.structdb = structdb;
@@ -71,11 +74,11 @@ public class LmdbBuilder extends Builder {
     }
 
 
-    public static LmdbData build(final String name, final byte[] docid, final Env env,
+    public static LmdbData build(final String name, final byte[] docid, final Env env, final Database coldb,
                              final Database txtdb, final Database attdb, final Database structdb,
                              final Database tableAccess, final Parser parser,
                              final MainOptions opts, final StaticOptions sopts) throws IOException {
-        return new LmdbBuilder(name, docid, env, txtdb, attdb, structdb, tableAccess, parser, opts, sopts).build();
+        return new LmdbBuilder(name, docid, env, coldb, txtdb, attdb, structdb, tableAccess, parser, opts, sopts).build();
     }
 
     @Override
@@ -148,6 +151,8 @@ public class LmdbBuilder extends Builder {
         FileUtils.deleteQuietly(new File(tblTmpName));
         FileUtils.deleteQuietly(new File(tblBaseName));
         FileUtils.deleteQuietly(tmpFile);
+
+        coldb.put(bytes(meta.name), docid);
 
         // just create it. do not use right away
         return null;
