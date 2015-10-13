@@ -25,6 +25,8 @@ import static lmdb.Constants.string;
 import static org.fusesource.lmdbjni.Constants.FIXEDMAP;
 import static org.fusesource.lmdbjni.Constants.bytes;
 
+// TODO: basex-lmdb: cleaner: add zombie entries check+removal in all tables fora each get first and last and check against coldb
+
 public class LmdbDataManager {
 
     private static final Logger logger = Logger.getLogger(LmdbDataManager.class);
