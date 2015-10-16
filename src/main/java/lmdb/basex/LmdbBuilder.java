@@ -9,13 +9,12 @@ import org.basex.core.MainOptions;
 import org.basex.core.StaticOptions;
 import org.basex.data.Data;
 import org.basex.data.DataClip;
+import org.basex.index.IdPreMap;
 import org.basex.index.name.Names;
 import org.basex.io.IO;
 import org.basex.io.IOFile;
 import org.basex.io.in.DataInput;
 import org.basex.io.out.DataOutput;
-import org.fusesource.lmdbjni.Database;
-import org.fusesource.lmdbjni.Env;
 import org.fusesource.lmdbjni.Transaction;
 
 import java.io.DataInputStream;
@@ -27,6 +26,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static lmdb.basex.LmdbDataManager.attributevaldb;
+import static lmdb.basex.LmdbDataManager.coldb;
+import static lmdb.basex.LmdbDataManager.env;
+import static lmdb.basex.LmdbDataManager.structdb;
+import static lmdb.basex.LmdbDataManager.tableaccessdb;
+import static lmdb.basex.LmdbDataManager.textdatadb;
 import static lmdb.util.Byte.lmdbkey;
 import static org.basex.core.StaticOptions.DBPATH;
 import static org.fusesource.lmdbjni.Constants.bytes;
@@ -38,47 +43,36 @@ public class LmdbBuilder extends Builder {
     private StaticOptions sopts;
     private boolean closed;
 
-    private Env env;
-    private Database coldb;
-    private Database txtdb;
-    private Database attdb;
-    private Database structdb;
-    private Database tableAccess;
     private byte[] docid;
     private DataOutputStream tempBuffer;
     private File tmpFile;
     private long txtref = 1;
     private long attref = 1;
 
-    private LmdbBuilder(final String name, final byte[] docid, final Env env, final Database coldb,
-                        final Database txtdb, final Database attdb, final Database structdb,
-                        final Database tableAccess, final Parser parser,
+    private LmdbBuilder(final String name, final byte[] docid, final Parser parser,
                         final MainOptions opts, final StaticOptions sopts) throws IOException {
 
         super(name, parser);
+
         this.sopts = sopts;
         sopts.set(DBPATH, System.getProperty("java.io.tmpdir", "/tmp"));
-        meta = new MetaData(name, opts, sopts);
+
+        meta = new LmdbMetaData(name, opts, sopts);
+        meta.updindex = true;
+        meta.textindex = true;
+        meta.attrindex = true;
 
         this.docid = docid;
-        this.env = env;
-        this.coldb = coldb;
-        this.txtdb = txtdb;
-        this.attdb = attdb;
-        this.structdb = structdb;
-        this.tableAccess = tableAccess;
 
-        this.tmpFile = new File(System.getProperty("java.io.tmpdir", "/tmp"), meta.name.replace('/', '.') + ".txt");
+        this.tmpFile = new File(System.getProperty("java.io.tmpdir", "/tmp"),  "blx." + meta.name.replace('/', '.') + ".txt");
         this.tmpFile.deleteOnExit();
         this.tempBuffer = new DataOutputStream(new FileOutputStream(tmpFile));
     }
 
 
-    public static LmdbData build(final String name, final byte[] docid, final Env env, final Database coldb,
-                             final Database txtdb, final Database attdb, final Database structdb,
-                             final Database tableAccess, final Parser parser,
+    public static LmdbData build(final String name, final byte[] docid, final Parser parser,
                              final MainOptions opts, final StaticOptions sopts) throws IOException {
-        return new LmdbBuilder(name, docid, env, coldb, txtdb, attdb, structdb, tableAccess, parser, opts, sopts).build();
+        return new LmdbBuilder(name, docid, parser, opts, sopts).build();
     }
 
     @Override
@@ -92,13 +86,13 @@ public class LmdbBuilder extends Builder {
         int bs = (int) Math.min(meta.filesize, max);
         bs = Math.max(IO.BLOCKSIZE, bs - bs % IO.BLOCKSIZE);
 
-        String tblBaseName = sopts.get(DBPATH)+"/"+meta.name.replace('/','.')+".tbl";
-        String tblTmpName =  sopts.get(DBPATH)+"/"+meta.name.replace('/','.')+".tmp";
+        String tblBaseName = sopts.get(DBPATH)+"/" + "blx." + meta.name.replace('/','.') + ".tbl";
+        String tblTmpName =  sopts.get(DBPATH)+"/" + "blx." + meta.name.replace('/','.') + ".tmp";
 
         elemNames = new Names(meta);
         attrNames = new Names(meta);
         try {
-            tout = new DataOutput(new LmdbTableOutput((MetaData)meta, tblBaseName, tableAccess, docid));
+            tout = new DataOutput(new LmdbTableOutput((LmdbMetaData)meta, tblBaseName, docid));
             sout = new DataOutput(new IOFile(tblTmpName), bs);
             parse();
         } catch(final IOException ex) {
@@ -113,7 +107,7 @@ public class LmdbBuilder extends Builder {
         for(int i = 0; ; i++) {
             byte[] b = new byte[IO.BLOCKSIZE];
             if(IOUtils.read(tbl,b) == 0) break;
-            tableAccess.put(tx,lmdbkey(docid,i),b);
+            tableaccessdb.put(tx,lmdbkey(docid,i),b);
             if(++p > 10000) {
                 tx.commit();
                 tx = env.createWriteTransaction();
@@ -126,7 +120,7 @@ public class LmdbBuilder extends Builder {
         try(final DataInput in = new DataInput(new IOFile(tblTmpName))) {
             p = 0;
             tx = env.createWriteTransaction();
-            final TableLmdbAccess ta = new TableLmdbAccess(meta, tx, tableAccess, docid);
+            final TableLmdbAccess ta = new TableLmdbAccess(meta, tx, docid);
             try {
                 for(; spos < ssize; ++spos) {
                     ta.write4(in.readNum(), 8, in.readNum());
@@ -250,7 +244,7 @@ public class LmdbBuilder extends Builder {
                 byte[] value = new byte[len];
                 di.readFully(value);
                 text = di.readBoolean();
-                (text ? txtdb : attdb).put(tx, key, value);
+                (text ? textdatadb : attributevaldb).put(tx, key, value);
                 c++;
                 if (c > 10000) {
                     tx.commit();
@@ -265,8 +259,8 @@ public class LmdbBuilder extends Builder {
             tx.close();
         }
 
-        txtdb.put(LmdbData.LAST_REF_KEY, lmdb.util.Byte.getBytes((int)txtref));
-        attdb.put(LmdbData.LAST_REF_KEY, lmdb.util.Byte.getBytes((int)attref));
+        textdatadb.put(LmdbData.LAST_REF_KEY, lmdb.util.Byte.getBytes((int) txtref));
+        attributevaldb.put(LmdbData.LAST_REF_KEY, lmdb.util.Byte.getBytes((int) attref));
 
     }
 
@@ -298,6 +292,11 @@ public class LmdbBuilder extends Builder {
 
             b.reset();
             attrNames.write(new DataOutput(b));
+            dos.writeInt(b.size());
+            dos.write(b.toByteArray());
+
+            b.reset();
+            new IdPreMap(meta.lastid).write(new DataOutput(b));
             dos.writeInt(b.size());
             dos.write(b.toByteArray());
 

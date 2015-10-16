@@ -13,7 +13,7 @@ import org.basex.util.options.*;
  * @author BaseX Team 2005-15, BSD License
  * @author Christian Gruen
  */
-public final class StaticOptions extends Options {
+public class StaticOptions extends Options {
   /** Indicates if the user's home directory has been chosen as home directory. */
   private static final boolean USERHOME = Prop.HOME.equals(Prop.USERHOME);
 

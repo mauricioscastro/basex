@@ -88,14 +88,13 @@ public class LmdbDataManagerTest {
             assertFalse(LmdbDataManager.listDocuments(TEST_COLLECTION).contains("books"));
     }
 
-//    @Test
-//    public void indexUsageTest() throws IOException, QueryException {
-//        LmdbDataManager.createCollection(TEST_COLLECTION);
-//        LmdbDataManager.createDocument(TEST_COLLECTION + "/factbook", new FileInputStream(XML_DIR + "factbook.xml"));
-//        String result = XQuery.getString("doc('" + TEST_COLLECTION + "/factbook')//lake[@id='f0_39401']");
-//        //System.out.println(result);
-//        LmdbDataManager.removeDocument(TEST_COLLECTION + "/factbook");
-//        LmdbDataManager.removeCollection(TEST_COLLECTION);
-//        assertFalse(result.isEmpty());
-//    }
+    @Test
+    public void indexUsageTest() throws IOException, QueryException {
+        LmdbDataManager.createCollection(TEST_COLLECTION);
+        LmdbDataManager.createDocument(TEST_COLLECTION + "/factbook", new FileInputStream(XML_DIR + "factbook.xml"));
+        String result = LmdbQueryContext.queryString("doc('" + TEST_COLLECTION + "/factbook')//lake[@id='f0_39401']");
+        LmdbDataManager.removeDocument(TEST_COLLECTION + "/factbook");
+        LmdbDataManager.removeCollection(TEST_COLLECTION);
+        assertFalse(result.isEmpty());
+    }
 }

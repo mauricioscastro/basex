@@ -12,18 +12,17 @@ import org.basex.io.random.TableAccess;
 import org.basex.util.Array;
 import org.basex.util.BitArray;
 import org.basex.util.Util;
-import org.fusesource.lmdbjni.Database;
 import org.fusesource.lmdbjni.Transaction;
 
 import java.io.IOException;
 import java.util.Arrays;
 
+import static lmdb.basex.LmdbDataManager.tableaccessdb;
 import static lmdb.util.Byte.lmdbkey;
 
 public class TableLmdbAccess extends TableAccess {
 
     protected Transaction tx;
-    protected Database db;
     protected byte[] docid;
 
     private final Buffers bm = new Buffers();
@@ -38,15 +37,14 @@ public class TableLmdbAccess extends TableAccess {
     private int firstPre = -1;
     private int nextPre = -1;
 
-    public TableLmdbAccess(final MetaData md, final Transaction tx, Database db, byte[] docid) throws IOException {
+    public TableLmdbAccess(final MetaData md, final Transaction tx, byte[] docid) throws IOException {
         super(md);
 
         this.tx = tx;
-        this.db = db;
         this.docid = docid;
 
         // read meta and index data
-        try(final DataInput in = new DataInput(new IOContent(db.get(tx,getStructKey())))) {
+        try(final DataInput in = new DataInput(new IOContent(tableaccessdb.get(tx,getStructKey())))) {
             final int s = in.readNum();
             size = s;
 
@@ -85,7 +83,7 @@ public class TableLmdbAccess extends TableAccess {
             out.writeNum(sz);
             for(int s = 0; s < sz; s++) out.writeNum(pages[s]);
             out.writeLongs(usedPages.toArray());
-            db.put(tx, getStructKey(), bos.toByteArray());
+            tableaccessdb.put(tx, getStructKey(), bos.toByteArray());
         }
         dirty = false;
     }
@@ -480,7 +478,7 @@ public class TableLmdbAccess extends TableAccess {
         if(p >= size) {
             size = p + 1;
         } else {
-            bf.data = db.get(tx, lmdbkey(docid, (int)bf.pos));
+            bf.data = tableaccessdb.get(tx, lmdbkey(docid, (int)bf.pos));
         }
     }
 
@@ -501,7 +499,7 @@ public class TableLmdbAccess extends TableAccess {
      * @throws IOException I/O exception
      */
     private void write(final Buffer bf) throws IOException {
-        db.put(tx, lmdbkey(docid, (int)bf.pos), bf.data);
+        tableaccessdb.put(tx, lmdbkey(docid, (int)bf.pos), bf.data);
         bf.dirty = false;
     }
 

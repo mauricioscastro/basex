@@ -1,11 +1,13 @@
 package lmdb.basex;
 
 import lmdb.util.Byte;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.log4j.Logger;
 import org.basex.build.xml.XMLParser;
 import org.basex.core.MainOptions;
 import org.basex.core.StaticOptions;
 import org.basex.data.Data;
+import org.basex.index.IndexType;
 import org.basex.io.IOStream;
 import org.basex.util.Util;
 import org.fusesource.lmdbjni.Database;
@@ -14,6 +16,7 @@ import org.fusesource.lmdbjni.EntryIterator;
 import org.fusesource.lmdbjni.Env;
 import org.fusesource.lmdbjni.Transaction;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -25,26 +28,27 @@ import static lmdb.Constants.string;
 import static org.fusesource.lmdbjni.Constants.FIXEDMAP;
 import static org.fusesource.lmdbjni.Constants.bytes;
 
-// TODO: basex-lmdb: cleaner: add zombie entries check+removal in all tables fora each get first and last and check against coldb
+// TODO: basex-lmdb: cleaner: add zombie entries check+removal in all tables for each get first and last and check all in the interval against coldb
 
 public class LmdbDataManager {
 
     private static final Logger logger = Logger.getLogger(LmdbDataManager.class);
 
-    static Env env = null;
     private static String home;
-    private static Database coldb;
-    private static Database structdb;
-    private static Database tableaccessdb;
-    private static Database textdatadb;
-    private static Database attributevaldb;
-    private static Database txtindexldb;
-    private static Database txtindexrdb;
-    private static Database attindexldb;
-    private static Database attindexrdb;
-    private static Database ftindexxdb;
-    private static Database ftindexydb;
-    private static Database ftindexzdb;
+
+    static Env env = null;
+    static Database coldb;
+    static Database structdb;
+    static Database tableaccessdb;
+    static Database textdatadb;
+    static Database attributevaldb;
+    static Database txtindexldb;
+    static Database txtindexrdb;
+    static Database attindexldb;
+    static Database attindexrdb;
+    static Database ftindexxdb;
+    static Database ftindexydb;
+    static Database ftindexzdb;
 
     private static volatile boolean cleanerRunning = true;
     private static volatile boolean cleanerStopped = false;
@@ -166,8 +170,12 @@ public class LmdbDataManager {
     public static void createDocument(final String name, InputStream content) throws IOException {
         byte[] docid = getNextDocumentId(name);
         MainOptions opt = new MainOptions();
-        LmdbBuilder.build(name, docid, env, coldb, textdatadb, attributevaldb, structdb, tableaccessdb,
-                          new XMLParser(new IOStream(content),opt), opt, new StaticOptions(false));
+        LmdbBuilder.build(name, docid, new XMLParser(new IOStream(content), opt), opt, new StaticOptions(false));
+        try(Transaction tx = env.createReadTransaction(); LmdbData data = (LmdbData)openDocument(name, opt, tx, false)) {
+            data.createIndex(IndexType.TEXT, opt);
+            data.createIndex(IndexType.ATTRIBUTE, opt);
+//        data.createIndex(IndexType.FULLTEXT, opt);
+        }
     }
 
     public static List<String> listDocuments(String collection) throws IOException {
@@ -202,9 +210,14 @@ public class LmdbDataManager {
     }
 
     static Data openDocument(String name, MainOptions options, Transaction tx) throws IOException {
+        return openDocument(name, options, tx, true);
+    }
+
+
+    private static Data openDocument(String name, MainOptions options, Transaction tx, boolean openIndex) throws IOException {
         byte[] docid = coldb.get(tx,bytes(name));
         if(docid == null) throw new IOException("document " + name + " not found");
-        return new LmdbData(name, docid, textdatadb, attributevaldb, structdb, tableaccessdb, tx, options);
+        return new LmdbData(name, docid, tx, options, new LmdbStaticOptions(), openIndex);
     }
 
     private static synchronized byte[] getNextDocumentId(final String name) throws IOException {
@@ -410,17 +423,51 @@ public class LmdbDataManager {
 
 //        LmdbDataManager.t();
 
-        try(LmdbQueryContext ctx = new LmdbQueryContext("doc('file://etc/books.xml')", opt)) {
-            ctx.run(System.out);
-        }
+//        try(LmdbQueryContext ctx = new LmdbQueryContext("doc('file://etc/books.xml')", opt)) {
+//            ctx.run(System.out);
+//        }
 
 //        try(LmdbQueryContext ctx = new LmdbQueryContext("insert node <new_element_a name='a'/> into doc('c4/d0')/root")) {
 //            ctx.run(System.out);
 //        }
 //
-//        try(LmdbQueryContext ctx = new LmdbQueryContext("doc('c4/d0')")) {
-//            ctx.run(System.out);
+
+
+//        try(Transaction tx = env.createReadTransaction()) {
+//            EntryIterator ei = txtindexldb.iterate(tx);
+//            while (ei.hasNext()) {
+//                Entry e = ei.next();
+//                System.err.println("txtindexldb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
+//            }
 //        }
+//
+//        try(Transaction tx = env.createReadTransaction()) {
+//            EntryIterator ei = txtindexrdb.iterate(tx);
+//            while (ei.hasNext()) {
+//                Entry e = ei.next();
+//                System.err.println("txtindexrdb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
+//            }
+//        }
+//
+//        try(Transaction tx = env.createReadTransaction()) {
+//            EntryIterator ei = attindexldb.iterate(tx);
+//            while (ei.hasNext()) {
+//                Entry e = ei.next();
+//                System.err.println("attindexldb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
+//            }
+//        }
+//
+//        try(Transaction tx = env.createReadTransaction()) {
+//            EntryIterator ei = attindexrdb.iterate(tx);
+//            while (ei.hasNext()) {
+//                Entry e = ei.next();
+//                System.err.println("attindexrdb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
+//            }
+//        }
+
+        try(LmdbQueryContext ctx = new LmdbQueryContext("doc('c4/d1')//lake[@id='f0_39401']")) {
+            ctx.run(System.out);
+        }
 
 //
 //        try(Transaction tx = env.createReadTransaction()) {

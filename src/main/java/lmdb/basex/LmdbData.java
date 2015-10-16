@@ -3,9 +3,12 @@ package lmdb.basex;
 import lmdb.util.Byte;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.basex.core.MainOptions;
+import org.basex.core.StaticOptions;
 import org.basex.data.Data;
 import org.basex.data.Namespaces;
+import org.basex.index.IdPreMap;
 import org.basex.index.IndexType;
+import org.basex.index.ft.FTBuilder;
 import org.basex.index.name.Names;
 import org.basex.index.path.PathSummary;
 import org.basex.io.IOContent;
@@ -13,53 +16,51 @@ import org.basex.io.in.DataInput;
 import org.basex.io.out.DataOutput;
 import org.basex.util.Token;
 import org.basex.util.Util;
-import org.fusesource.lmdbjni.Database;
 import org.fusesource.lmdbjni.Transaction;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
+import static lmdb.basex.LmdbDataManager.attributevaldb;
+import static lmdb.basex.LmdbDataManager.structdb;
+import static lmdb.basex.LmdbDataManager.textdatadb;
 import static lmdb.util.Byte.lmdbkey;
 
-
-public class LmdbData extends Data {
+public class LmdbData extends Data implements AutoCloseable {
 
     public static final byte[] LAST_REF_KEY = new byte[] {0,0,0,0};
 
     protected Transaction tx;
-    protected Database txtdb;
-    protected Database attdb;
-    protected Database structdb;
-    protected byte[] docid;
+
+    byte[] docid;
 
     private volatile int lastTxtRef;
     private volatile int lastAttRef;
 
     protected LmdbData(final String name, final MainOptions options) {
-        super(new MetaData(name, options, null));
+        super(new LmdbMetaData(name, options, null));
     }
 
-    public LmdbData(final String name, final byte[] docid, final Database txtdb, final Database attdb,
-                    final Database structdb, final Database tableAccess, final Transaction tx, final MainOptions options) throws IOException {
+    public LmdbData(final String name, final byte[] docid, final Transaction tx, final MainOptions options,
+                    final StaticOptions sopts, final boolean openIndex) throws IOException {
 
-        super(new MetaData(name, options, null));
+        super(new LmdbMetaData(name, options, sopts));
 
         this.docid = docid;
         this.tx = tx;
-        this.txtdb = txtdb;
-        this.attdb = attdb;
-        this.structdb = structdb;
 
         readStruct();
         initLastRefs();
 
-        this.table = new TableLmdbAccess(meta, tx, tableAccess, docid);
+        this.table = new TableLmdbAccess(meta, tx, docid);
 
-//        if(meta.updindex) idmap = new IdPreMap(meta.lastid); // TODO: check DiskData on old basex-kaha
+        if(openIndex) {
+            textIndex = new UpdatableLmdbValues(this, true, docid, tx);
+            attrIndex = new UpdatableLmdbValues(this, false, docid, tx);
+        }
     }
 
     @Override
@@ -81,12 +82,26 @@ public class LmdbData extends Data {
 
     @Override
     public void createIndex(IndexType type, MainOptions options) throws IOException {
-
+        dropIndex(type);
+        meta.dirty = true;
+        switch(type) {
+            case TEXT:
+                new LmdbValuesBuilder(docid, this, options, true).build();
+                break;
+            case ATTRIBUTE:
+                new LmdbValuesBuilder(docid, this, options, false).build();
+                break;
+            case FULLTEXT:
+                new FTBuilder(this, options).build();
+                break;
+            default:
+                throw new IOException("unknown index type while crating index");
+        }
     }
 
     @Override
     public void dropIndex(IndexType type) throws IOException {
-
+        // TODO: basex-lmdb: launch background threads for this?
     }
 
     @Override
@@ -112,7 +127,7 @@ public class LmdbData extends Data {
 
     @Override
     public byte[] text(int pre, boolean text) {
-        return (text ? txtdb : attdb).get(tx, lmdbkey(docid, (int) textRef(pre)));
+        return (text ? textdatadb : attributevaldb).get(tx, lmdbkey(docid, (int) textRef(pre)));
     }
 
     @Override
@@ -129,17 +144,17 @@ public class LmdbData extends Data {
 
     @Override
     protected void updateText(int pre, byte[] value, int kind) {
-        (kind != ATTR ? txtdb : attdb).put(tx, lmdbkey(docid, (int) textRef(pre)), value);
+        (kind != ATTR ? textdatadb : attributevaldb).put(tx, lmdbkey(docid, (int) textRef(pre)), value);
     }
 
     @Override
     protected void delete(int pre, boolean text) {
-        (text ? txtdb : attdb).delete(tx, lmdbkey(docid, (int) textRef(pre)));
+        (text ? textdatadb : attributevaldb).delete(tx, lmdbkey(docid, (int) textRef(pre)));
     }
 
     @Override
     protected long textRef(byte[] value, boolean text) {
-        (text ? txtdb : attdb).put(tx, lmdbkey(docid, (text ? ++lastTxtRef : ++lastAttRef)), value);
+        (text ? textdatadb : attributevaldb).put(tx, lmdbkey(docid, (text ? ++lastTxtRef : ++lastAttRef)), value);
         return (text ? lastTxtRef : lastAttRef);
     }
 
@@ -166,6 +181,14 @@ public class LmdbData extends Data {
         byte[] attrstruct = new byte[structin.readInt()];
         structin.readFully(attrstruct);
         attrNames = new Names(new DataInput(new IOContent(attrstruct)),meta);
+
+        try {
+            byte[] idpmap = new byte[structin.readInt()];
+            structin.readFully(idpmap);
+            idmap = new IdPreMap(new DataInput(new IOContent(idpmap)));
+        } catch(EOFException eofe) {
+            idmap = new IdPreMap(meta.lastid);
+        }
     }
 
     private void writeStruct() {
@@ -199,6 +222,11 @@ public class LmdbData extends Data {
             dos.writeInt(b.size());
             dos.write(b.toByteArray());
 
+            b.reset();
+            idmap.write(new DataOutput(b));
+            dos.writeInt(b.size());
+            dos.write(b.toByteArray());
+
             structdb.put(tx, docid, bos.toByteArray());
 
         } catch (IOException ioe) {
@@ -207,12 +235,12 @@ public class LmdbData extends Data {
     }
 
     private synchronized void initLastRefs() {
-        lastTxtRef = Byte.getInt(txtdb.get(tx, LmdbData.LAST_REF_KEY));
-        lastAttRef = Byte.getInt(attdb.get(tx, LmdbData.LAST_REF_KEY));
+        lastTxtRef = Byte.getInt(textdatadb.get(tx, LmdbData.LAST_REF_KEY));
+        lastAttRef = Byte.getInt(attributevaldb.get(tx, LmdbData.LAST_REF_KEY));
     }
 
     private void writeLastRefs() {
-        txtdb.put(tx, LmdbData.LAST_REF_KEY, lmdb.util.Byte.getBytes(lastTxtRef));
-        attdb.put(tx, LmdbData.LAST_REF_KEY, lmdb.util.Byte.getBytes(lastAttRef));
+        textdatadb.put(tx, LmdbData.LAST_REF_KEY, lmdb.util.Byte.getBytes(lastTxtRef));
+        attributevaldb.put(tx, LmdbData.LAST_REF_KEY, lmdb.util.Byte.getBytes(lastAttRef));
     }
 }

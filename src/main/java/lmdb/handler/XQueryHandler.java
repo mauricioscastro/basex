@@ -69,7 +69,7 @@ public class XQueryHandler extends AbstractHandler {
                         for (int i = 3; i < p.length; i++) sb.append('/').append(p[i]);
                         String xquery = sb.toString();
                         logger.info("create document " + p[0] + "/" + p[1] + " as result of the xquery: " + xquery);
-                        File tmp = new File(System.getProperty("java.io.tmpdir", "/tmp"), p[0] + "." + p[1] + ".xml");
+                        File tmp = new File(System.getProperty("java.io.tmpdir", "/tmp"), "blx." + p[0] + "." + p[1] + ".xml");
                         tmp.deleteOnExit();
                         FileOutputStream tmpos = new FileOutputStream(tmp);
                         try(LmdbQueryContext ctx = new LmdbQueryContext(xquery,options)) {

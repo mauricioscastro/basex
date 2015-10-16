@@ -37,9 +37,9 @@ import static org.basex.util.Token.diff;
  * @author BaseX Team 2005-15, BSD License
  * @author Christian Gruen
  */
-public final class DiskValuesBuilder extends ValuesBuilder {
+public class DiskValuesBuilder extends ValuesBuilder {
   /** Temporary value tree. */
-  private IndexTree index = new IndexTree();
+  protected IndexTree index = new IndexTree();
 
   /**
    * Constructor.
@@ -71,6 +71,7 @@ public final class DiskValuesBuilder extends ValuesBuilder {
     }
 
     finishIndex();
+
     return data.meta.updindex ? new UpdatableDiskValues(data, text) : new DiskValues(data, text);
   }
 
@@ -89,7 +90,7 @@ public final class DiskValuesBuilder extends ValuesBuilder {
    * Merges cached index files.
    * @throws IOException I/O exception
    */
-  private void merge() throws IOException {
+  protected void merge() throws IOException {
     final String f = text ? DATATXT : DATAATV;
     int sz = 0;
     try(final DataOutput outL = new DataOutput(data.meta.dbfile(f + 'l'));
@@ -152,7 +153,7 @@ public final class DiskValuesBuilder extends ValuesBuilder {
    * @param partial partial flag
    * @throws IOException I/O exception
    */
-  private void writeIndex(final boolean partial) throws IOException {
+  protected void writeIndex(final boolean partial) throws IOException {
     // write id arrays and references
     final String name = (text ? DATATXT : DATAATV) + (partial ? splits : "");
     try(final DataOutput outL = new DataOutput(data.meta.dbfile(name + 'l'));

@@ -2,6 +2,8 @@ package lmdb.basex;
 
 import org.basex.core.MainOptions;
 import org.basex.core.StaticOptions;
+import org.basex.data.MetaData;
+import org.basex.io.IOFile;
 import org.basex.io.in.DataInput;
 import org.basex.util.Token;
 import org.basex.util.ft.Language;
@@ -40,9 +42,9 @@ import static org.basex.data.DataText.DBUPTODATE;
 import static org.basex.util.Strings.toInt;
 import static org.basex.util.Strings.toLong;
 
-public class MetaData extends org.basex.data.MetaData {
+public class LmdbMetaData extends MetaData {
 
-    MetaData(final String name, final MainOptions options, final StaticOptions sopts) {
+    LmdbMetaData(final String name, final MainOptions options, final StaticOptions sopts) {
         super(name, options, sopts);
     }
 
@@ -89,5 +91,10 @@ public class MetaData extends org.basex.data.MetaData {
                 else if(k.equals(DBPTHIDX) && !toBool(v)) uptodate = false;
             }
         }
+    }
+
+    @Override
+    public IOFile dbfile(final String filename) {
+        return file(path, "bxl." + name.replace('/','.') + "." + filename);
     }
 }

@@ -47,6 +47,16 @@ public class IdPreMap {
     oids = new int[1];
   }
 
+  public IdPreMap(final DataInput in) throws IOException {
+      baseid = in.readNum();
+      rows = in.readNum();
+      pres = in.readNums();
+      fids = in.readNums();
+      nids = in.readNums();
+      incs = in.readNums();
+      oids = in.readNums();
+  }
+
   /**
    * Constructs a map by reading it from a file.
    * @param f file to read from
@@ -64,6 +74,15 @@ public class IdPreMap {
     }
   }
 
+  public void write(final DataOutput out) throws IOException {
+      out.writeNum(baseid);
+      out.writeNum(rows);
+      out.writeNums(pres);
+      out.writeNums(fids);
+      out.writeNums(nids);
+      out.writeNums(incs);
+      out.writeNums(oids);
+  }
   /**
    * Write the map to the specified file.
    * @param file file to write to
