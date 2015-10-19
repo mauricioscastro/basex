@@ -467,17 +467,17 @@ public class LmdbDataManager {
 //        }
 
 
-//        for (int i = 1; i < 1000; i++) {
-////            System.out.print(".");
-//            try (LmdbQueryContext ctx = new LmdbQueryContext("insert node <lake id='" + i + "' name='Lago " + i + "'>lago " + i + "</lake> into doc('c4/d0')/root")) {
-//                ctx.run(System.out);
-//            }
-//        }
+        for (int i = 1001; i < 2001; i++) {
+//            System.out.print(".");
+            try (LmdbQueryContext ctx = new LmdbQueryContext("insert node <lake id='" + i + "' name='Lago " + i + "'>lago " + i + "</lake> into doc('c4/d0')/root")) {
+                ctx.run(System.out);
+            }
+        }
 
         System.out.println("\n--\n\n");
         System.out.flush();
 
-        try(LmdbQueryContext ctx = new LmdbQueryContext("doc('c4/d0')//element()[@att1='oi']")) {
+        try(LmdbQueryContext ctx = new LmdbQueryContext("doc('c4/d0')//lake[@id='1901']")) {
             ctx.run(System.out);
         }
 

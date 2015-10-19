@@ -4,6 +4,7 @@ import lmdb.util.Byte;
 import org.basex.io.IO;
 import org.basex.io.random.Buffer;
 import org.basex.io.random.Buffers;
+import org.bouncycastle.util.Arrays;
 import org.fusesource.lmdbjni.Database;
 import org.fusesource.lmdbjni.Transaction;
 
@@ -130,10 +131,7 @@ public class LmdbDataAccess implements Closeable {
         final Buffer bf = bm.current();
         if(bf.dirty) writeBlock(bf);
         bf.pos = b;
-        if(bf.pos < readLength()) {
-            byte[] v = db.get(tx, lmdbkey(docid, (int)(bf.pos/IO.BLOCKSIZE)));
-            System.arraycopy(v, 0, bf.data, 0, (int)Math.min(length - bf.pos, IO.BLOCKSIZE));
-        }
+        if(bf.pos < readLength()) System.arraycopy(db.get(tx, lmdbkey(docid, (int)(bf.pos/IO.BLOCKSIZE))), 0, bf.data, 0, (int)Math.min(length - bf.pos, IO.BLOCKSIZE));
     }
 
     public synchronized int readNum() {
@@ -276,9 +274,7 @@ public class LmdbDataAccess implements Closeable {
     private void writeBlock(final Buffer buffer) {
         if(tx.isReadOnly()) return;
         final long pos = buffer.pos, len = Math.min(IO.BLOCKSIZE, length - pos);
-        byte[] v = new byte[(int)len];
-        System.arraycopy(buffer.data, 0, v, 0, (int)len);
-        db.put(tx, lmdbkey(docid, (int)(pos/IO.BLOCKSIZE)), v);
+        db.put(tx, lmdbkey(docid, (int)(pos/IO.BLOCKSIZE)), len < IO.BLOCKSIZE ? Arrays.copyOf(buffer.data,(int)len) : buffer.data);
         buffer.dirty = false;
     }
 
