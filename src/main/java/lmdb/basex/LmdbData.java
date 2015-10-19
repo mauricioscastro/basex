@@ -75,6 +75,9 @@ public class LmdbData extends Data implements AutoCloseable {
         } catch(final IOException ex) {
             Util.stack(ex);
         }
+        if(textIndex != null) textIndex.close();
+        if(attrIndex != null) attrIndex.close();
+        if(ftxtIndex != null) ftxtIndex.close();
         if(tx.isReadOnly()) return;
         writeStruct();
         writeLastRefs();

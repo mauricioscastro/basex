@@ -4,10 +4,7 @@ import lmdb.util.Byte;
 import org.basex.io.IO;
 import org.basex.io.random.Buffer;
 import org.basex.io.random.Buffers;
-import org.bouncycastle.util.Arrays;
 import org.fusesource.lmdbjni.Database;
-import org.fusesource.lmdbjni.Entry;
-import org.fusesource.lmdbjni.EntryIterator;
 import org.fusesource.lmdbjni.Transaction;
 
 import java.io.Closeable;
@@ -36,11 +33,7 @@ public class LmdbDataAccess implements Closeable {
         if(tx.isReadOnly()) return;
         for(final Buffer b : bm.all()) if(b.dirty) writeBlock(b);
         if(changed) {
-            byte[] newb = new byte[(int)(length - readLength())];
-            Arrays.fill(newb, (byte) 0xFF);
-            int nid = (int)(length % IO.BLOCKSIZE);
-            db.put(tx, lmdbkey(docid, nid), newb);
-            db.put(tx, getLenKey(docid), Byte.getBytes((int) length));
+            db.put(tx, getLenKey(docid), Byte.getBytes((int)length));
             changed = false;
         }
     }
@@ -138,8 +131,8 @@ public class LmdbDataAccess implements Closeable {
         if(bf.dirty) writeBlock(bf);
         bf.pos = b;
         if(bf.pos < readLength()) {
-            byte[] v = db.get(tx, lmdbkey(docid, (int) (bf.pos / IO.BLOCKSIZE)));
-            System.arraycopy(db.get(tx, lmdbkey(docid, (int) (bf.pos / IO.BLOCKSIZE))), 0, bf.data, 0, v.length);
+            byte[] v = db.get(tx, lmdbkey(docid, (int)(bf.pos/IO.BLOCKSIZE)));
+            System.arraycopy(v, 0, bf.data, 0, (int)Math.min(length - bf.pos, IO.BLOCKSIZE));
         }
     }
 
@@ -282,10 +275,10 @@ public class LmdbDataAccess implements Closeable {
 
     private void writeBlock(final Buffer buffer) {
         if(tx.isReadOnly()) return;
-//        final long pos = buffer.pos, len = Math.min(IO.BLOCKSIZE, length - pos);
-        db.put(tx, lmdbkey(docid, (int)buffer.pos), buffer.data);
-//        raf.seek(pos);
-//        raf.write(buffer.data, 0, (int) len);
+        final long pos = buffer.pos, len = Math.min(IO.BLOCKSIZE, length - pos);
+        byte[] v = new byte[(int)len];
+        System.arraycopy(buffer.data, 0, v, 0, (int)len);
+        db.put(tx, lmdbkey(docid, (int)(pos/IO.BLOCKSIZE)), v);
         buffer.dirty = false;
     }
 
