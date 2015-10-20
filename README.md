@@ -61,7 +61,7 @@ Any xquery will work after http://localhost:8080/
 
 ##extra documentation
 As stated by the title this is nothing less than [BaseX](http://basex.org/) itself, so any [BaseX documentation](http://docs.basex.org/) 
-regarding XQuery and modules (with some exceptions yet to be listed) can be used and as if it was BaseX itself. 
+regarding XQuery and modules (with some exceptions yet to be listed) can be used and as is. 
 
 ##todo
 - need to implement index dropping 
