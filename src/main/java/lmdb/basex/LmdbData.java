@@ -95,7 +95,7 @@ public class LmdbData extends Data implements AutoCloseable {
                 new LmdbValuesBuilder(docid, this, options, false).build();
                 break;
             case FULLTEXT:
-                new FTBuilder(this, options).build();
+                new LmdbFTBuilder(docid, this, options).build();
                 break;
             default:
                 throw new IOException("unknown index type while crating index");
@@ -104,7 +104,7 @@ public class LmdbData extends Data implements AutoCloseable {
 
     @Override
     public void dropIndex(IndexType type) throws IOException {
-        // TODO: basex-lmdb: launch background threads for this?
+        // TODO: basex-lmdb: launch background thread for this?
     }
 
     @Override

@@ -29,7 +29,7 @@ final class FTIndexTrees {
    * @param pos pos value of the token
    * @param cf current file id
    */
-  void index(final byte[] tok, final int pre, final int pos, final int cf) {
+  public void index(final byte[] tok, final int pre, final int pos, final int cf) {
     final int tl = tok.length;
     if(trees[tl] == null) trees[tl] = new FTIndexTree();
     trees[tl].add(tok, pre, pos, cf);

@@ -54,6 +54,11 @@ public class DiskValuesBuilder extends ValuesBuilder {
   @Override
   public DiskValues build() throws IOException {
     Util.debug(det());
+    _build();
+    return data.meta.updindex ? new UpdatableDiskValues(data, text) : new DiskValues(data, text);
+  }
+
+  protected void _build() throws IOException {
 
     for(pre = 0; pre < size; ++pre) {
       if((pre & 0x0FFF) == 0) check();
@@ -71,8 +76,6 @@ public class DiskValuesBuilder extends ValuesBuilder {
     }
 
     finishIndex();
-
-    return data.meta.updindex ? new UpdatableDiskValues(data, text) : new DiskValues(data, text);
   }
 
   @Override

@@ -61,7 +61,6 @@ Any xquery will work after http://localhost:8080/
 
 
 ###todo
-- need to port full text indexing to LMDB
 - need to port tests and improve LmdbDataManager tests
 - improve the return error codes in REST XQueryHandler 
 - needs more documentation on ~~how to run~~, ~~create collections~~, ~~documents~~, ~~updates~~, etc

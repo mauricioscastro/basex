@@ -32,13 +32,13 @@ import static org.basex.util.Token.diff;
  * @author BaseX Team 2005-15, BSD License
  * @author Christian Gruen
  */
-public final class FTBuilder extends IndexBuilder {
+public class FTBuilder extends IndexBuilder {
   /** Value trees. */
-  private final FTIndexTrees tree;
+  protected final FTIndexTrees tree;
   /** Word parser. */
-  private final FTLexer lexer;
+  protected final FTLexer lexer;
   /** Number of indexed tokens. */
-  private long ntok;
+  protected long ntok;
 
   /**
    * Constructor.
@@ -68,6 +68,11 @@ public final class FTBuilder extends IndexBuilder {
   @Override
   public FTIndex build() throws IOException {
     Util.debug(det());
+    _build();
+    return new FTIndex(data);
+  }
+
+  protected void _build() throws IOException {
 
     for(pre = 0; pre < size; ++pre) {
       if((pre & 0x0FFF) == 0) check();
@@ -93,11 +98,10 @@ public final class FTBuilder extends IndexBuilder {
       }
     }
 
-    // finalize partial or all index structures
-    write(splits > 0);
+      // finalize partial or all index structures
+      write(splits > 0);
 
-    finishIndex();
-    return new FTIndex(data);
+      finishIndex();
   }
 
   /**
@@ -105,7 +109,7 @@ public final class FTBuilder extends IndexBuilder {
    * @param partial write partial index
    * @throws IOException I/O exception
    */
-  private void write(final boolean partial) throws IOException {
+  protected void write(final boolean partial) throws IOException {
     writeIndex(partial);
     if(!partial) return;
 
@@ -181,7 +185,7 @@ public final class FTBuilder extends IndexBuilder {
    * @param partial partial flag
    * @throws IOException I/O exception
    */
-  private void writeIndex(final boolean partial) throws IOException {
+  protected void writeIndex(final boolean partial) throws IOException {
     final String name = DATAFTX + (partial ? splits : "");
     try(final DataOutput outX = new DataOutput(data.meta.dbfile(name + 'x'));
         final DataOutput outY = new DataOutput(data.meta.dbfile(name + 'y'));

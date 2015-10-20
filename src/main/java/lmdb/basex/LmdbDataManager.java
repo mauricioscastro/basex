@@ -175,7 +175,7 @@ public class LmdbDataManager {
         try(Transaction tx = env.createReadTransaction(); LmdbData data = (LmdbData)openDocument(name, opt, tx, false)) {
             data.createIndex(IndexType.TEXT, opt);
             data.createIndex(IndexType.ATTRIBUTE, opt);
-//        data.createIndex(IndexType.FULLTEXT, opt);
+            data.createIndex(IndexType.FULLTEXT, opt);
         }
     }
 
@@ -396,9 +396,9 @@ public class LmdbDataManager {
 //        LmdbDataManager.removeCollection("c1");
 //        LmdbDataManager.createCollection("c1");
 //        LmdbDataManager.removeCollection("c1");
-//        LmdbDataManager.createCollection("c4");
+        LmdbDataManager.createCollection("c4");
 //        LmdbDataManager.createDocument("c4/d0", new ByteArrayInputStream(CONTENT.getBytes()));
-//        LmdbDataManager.createDocument("c4/d1", new FileInputStream("/home/mscastro/dev/basex-lmdb/db/xml/etc/factbook.xml"));
+        LmdbDataManager.createDocument("c4/d1", new FileInputStream("/home/mscastro/dev/basex-lmdb/db/xml/etc/factbook.xml"));
 //        LmdbDataManager.createDocument("c4/d2", new FileInputStream("/home/mscastro/download/shakespeare.xml"));
 //        LmdbDataManager.createDocument("c4/d3", new FileInputStream("/home/mscastro/download/medline15n0766.xml"));
 //        LmdbDataManager.createDocument("c4/d4", new FileInputStream("/home/mscastro/download/standard.xml"));
@@ -433,7 +433,7 @@ public class LmdbDataManager {
 //        }
 //
 
-//
+
 //        try(Transaction tx = env.createReadTransaction()) {
 //            EntryIterator ei = txtindexldb.iterate(tx);
 //            while (ei.hasNext()) {
@@ -466,18 +466,22 @@ public class LmdbDataManager {
 //            }
 //        }
 
-
-        for (int i = 1001; i < 2001; i++) {
-//            System.out.print(".");
-            try (LmdbQueryContext ctx = new LmdbQueryContext("insert node <lake id='" + i + "' name='Lago " + i + "'>lago " + i + "</lake> into doc('c4/d0')/root")) {
-                ctx.run(System.out);
-            }
-        }
+//
+//        for (int i = 1001; i < 2001; i++) {
+////            System.out.print(".");
+//            try (LmdbQueryContext ctx = new LmdbQueryContext("insert node <lake id='" + i + "' name='Lago " + i + "'>lago " + i + "</lake> into doc('c4/d0')/root")) {
+//                ctx.run(System.out);
+//            }
+//        }
 
         System.out.println("\n--\n\n");
         System.out.flush();
 
-        try(LmdbQueryContext ctx = new LmdbQueryContext("doc('c4/d0')//lake[@id='1901']")) {
+        String query = "for $country in doc('c4/d1')//country " +
+                       "where $country//religions[text() contains text { 'Sunni', 'Shia' } any] " +
+                       "return $country/name";
+
+        try(LmdbQueryContext ctx = new LmdbQueryContext(query)) {
             ctx.run(System.out);
         }
 
@@ -485,30 +489,30 @@ public class LmdbDataManager {
         System.out.println("\n\n--\n");
         System.out.flush();
 
-//
-//        try(Transaction tx = env.createReadTransaction()) {
-//            EntryIterator ei = txtindexldb.iterate(tx);
-//            while (ei.hasNext()) {
-//                Entry e = ei.next();
-//                System.err.println("txtindexldb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
-//            }
-//        }
-//
-//        try(Transaction tx = env.createReadTransaction()) {
-//            EntryIterator ei = txtindexrdb.iterate(tx);
-//            while (ei.hasNext()) {
-//                Entry e = ei.next();
-//                System.err.println("txtindexrdb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
-//            }
-//        }
-//
-//        try(Transaction tx = env.createReadTransaction()) {
-//            EntryIterator ei = attindexldb.iterate(tx);
-//            while (ei.hasNext()) {
-//                Entry e = ei.next();
-//                System.err.println("attindexldb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
-//            }
-//        }
+
+        try(Transaction tx = env.createReadTransaction()) {
+            EntryIterator ei = ftindexxdb.iterate(tx);
+            while (ei.hasNext()) {
+                Entry e = ei.next();
+                System.err.println("ftindexxdb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
+            }
+        }
+
+        try(Transaction tx = env.createReadTransaction()) {
+            EntryIterator ei = ftindexydb.iterate(tx);
+            while (ei.hasNext()) {
+                Entry e = ei.next();
+                System.err.println("ftindexydb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
+            }
+        }
+
+        try(Transaction tx = env.createReadTransaction()) {
+            EntryIterator ei = ftindexzdb.iterate(tx);
+            while (ei.hasNext()) {
+                Entry e = ei.next();
+                System.err.println("ftindexzdb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
+            }
+        }
 //
 //        try(Transaction tx = env.createReadTransaction()) {
 //            EntryIterator ei = attindexrdb.iterate(tx);

@@ -3,11 +3,9 @@ package lmdb.basex;
 import org.apache.commons.io.IOUtils;
 import org.basex.core.MainOptions;
 import org.basex.data.Data;
-import org.basex.index.value.DiskValues;
-import org.basex.index.value.DiskValuesBuilder;
+import org.basex.index.ft.FTBuilder;
+import org.basex.index.ft.FTIndex;
 import org.basex.io.IO;
-import org.basex.util.Performance;
-import org.basex.util.Util;
 import org.fusesource.lmdbjni.Database;
 import org.fusesource.lmdbjni.Transaction;
 
@@ -17,34 +15,28 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 import static lmdb.basex.LmdbDataManager.env;
-import static lmdb.basex.LmdbDataManager.attindexldb;
-import static lmdb.basex.LmdbDataManager.attindexrdb;
-import static lmdb.basex.LmdbDataManager.txtindexldb;
-import static lmdb.basex.LmdbDataManager.txtindexrdb;
+import static lmdb.basex.LmdbDataManager.ftindexxdb;
+import static lmdb.basex.LmdbDataManager.ftindexydb;
+import static lmdb.basex.LmdbDataManager.ftindexzdb;
 import static lmdb.util.Byte.lmdbkey;
-import static org.basex.data.DataText.DATAATV;
-import static org.basex.data.DataText.DATATXT;
+import static org.basex.data.DataText.DATAFTX;
 
-
-public class LmdbValuesBuilder extends DiskValuesBuilder {
+public class LmdbFTBuilder extends FTBuilder {
 
     private byte[] docid;
 
-    public LmdbValuesBuilder(final byte[] docid, final Data data, final MainOptions options, final boolean text) {
-        super(data, options, text);
+    public LmdbFTBuilder(final byte[] docid, final Data data, final MainOptions options) throws IOException {
+        super(data, options);
         this.docid = docid;
     }
 
     @Override
-    public DiskValues build() throws IOException {
-
+    public FTIndex build() throws IOException {
         _build();
-
-        final String f = text ? DATATXT : DATAATV;
-        copyIndex(f + 'l', text ? txtindexldb : attindexldb);
-        copyIndex(f + 'r', text ? txtindexrdb : attindexrdb);
-
-        // just create it. do not use right away
+        copyIndex(DATAFTX + 'x', ftindexxdb);
+        copyIndex(DATAFTX + 'y', ftindexydb);
+        copyIndex(DATAFTX + 'z', ftindexzdb);
+        data.meta.dbfile("swl").file().delete();
         return null;
     }
 
@@ -60,10 +52,8 @@ public class LmdbValuesBuilder extends DiskValuesBuilder {
         int actual = -1;
         int ref = 0;
         int txcount = 0;
-        int tot = 0;
 
         while((actual = IOUtils.read(idx, b)) > 0) {
-            tot += actual;
             if(actual < b.length) {
                 byte[] nb = new byte[actual];
                 System.arraycopy(b,0,nb,0,actual);
@@ -76,9 +66,10 @@ public class LmdbValuesBuilder extends DiskValuesBuilder {
                 txcount = 0;
             }
         }
-        db.put(tx, LmdbDataAccess.getLenKey(docid), lmdb.util.Byte.getBytes(tot));
-        tx.commit();
+        if(txcount > 0) tx.commit();
+        else tx.close();
 
         f.delete();
     }
+
 }
