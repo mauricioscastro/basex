@@ -8,8 +8,6 @@ import org.basex.data.Data;
 import org.basex.data.Namespaces;
 import org.basex.index.IdPreMap;
 import org.basex.index.IndexType;
-import org.basex.index.ft.FTBuilder;
-import org.basex.index.ft.FTIndex;
 import org.basex.index.name.Names;
 import org.basex.index.path.PathSummary;
 import org.basex.io.IOContent;
@@ -17,6 +15,8 @@ import org.basex.io.in.DataInput;
 import org.basex.io.out.DataOutput;
 import org.basex.util.Token;
 import org.basex.util.Util;
+import org.fusesource.lmdbjni.Database;
+import org.fusesource.lmdbjni.EntryIterator;
 import org.fusesource.lmdbjni.Transaction;
 
 import java.io.ByteArrayInputStream;
@@ -25,9 +25,18 @@ import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
 
+import static lmdb.basex.LmdbDataManager.env;
 import static lmdb.basex.LmdbDataManager.attributevaldb;
 import static lmdb.basex.LmdbDataManager.structdb;
 import static lmdb.basex.LmdbDataManager.textdatadb;
+import static lmdb.basex.LmdbDataManager.txtindexldb;
+import static lmdb.basex.LmdbDataManager.txtindexrdb;
+import static lmdb.basex.LmdbDataManager.attindexldb;
+import static lmdb.basex.LmdbDataManager.attindexrdb;
+import static lmdb.basex.LmdbDataManager.ftindexxdb;
+import static lmdb.basex.LmdbDataManager.ftindexydb;
+import static lmdb.basex.LmdbDataManager.ftindexzdb;
+
 import static lmdb.util.Byte.lmdbkey;
 
 public class LmdbData extends Data implements AutoCloseable {
@@ -106,7 +115,47 @@ public class LmdbData extends Data implements AutoCloseable {
 
     @Override
     public void dropIndex(IndexType type) throws IOException {
-        // TODO: basex-lmdb: launch background thread for this?
+
+        switch(type) {
+            case TEXT:
+                dropIndex(new Database[]{txtindexldb, txtindexrdb});
+                break;
+            case ATTRIBUTE:
+                dropIndex(new Database[]{attindexldb, attindexrdb});
+                break;
+            case FULLTEXT:
+                dropIndex(new Database[]{ftindexxdb, ftindexydb, ftindexzdb});
+                break;
+            default:
+                throw new IOException("unknown index type while dropping index");
+        }
+
+    }
+
+    private void dropIndex(Database[] dblist) {
+        int deleteBatchSize = 10000;
+
+        for (Database db : dblist) {
+            try (EntryIterator dbei = db.seek(tx, docid)) {
+                int c = 0;
+                Transaction wtx = env.createWriteTransaction();
+                try {
+                    while (dbei.hasNext()) {
+                        byte[] key = dbei.next().getKey();
+                        if (Byte.getInt(docid) != Byte.getInt(key)) break;
+                        db.delete(wtx, key);
+                        if (++c > deleteBatchSize) {
+                            wtx.commit();
+                            wtx = env.createWriteTransaction();
+                            c = 0;
+                        }
+                    }
+                } finally {
+                    if(c > 0) wtx.commit();
+                    else wtx.close();
+                }
+            }
+        }
     }
 
     @Override

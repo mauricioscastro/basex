@@ -64,11 +64,11 @@ As stated by the title this is nothing less than [BaseX](http://basex.org/) itse
 regarding XQuery and modules (with some exceptions yet to be listed) can be used and as is. 
 
 ##todo
-- need to implement index dropping 
 - create OS based maven profile for dealing with [lmdbjni](https://github.com/deephacks/lmdbjni) dependencies  
 - need to port tests and improve LmdbDataManager tests
 - improve the return error codes in REST XQueryHandler 
-- needs more documentation on ~~how to run~~, ~~create collections~~, ~~documents~~, ~~updates~~, etc
+- migrate XQueryHandler to a servlet and create a maven WAR packaged project 
+- needs more documentation about configuration and running standalone or servlet
 - document the URI's used in fn:doc(): bxl://, file://, jdbc:// and related configurations where it fits
 - create new URI's accessed through fn:doc(): http:// with [HtmlUnit](http://htmlunit.sourceforge.net/) and extras with [commons VFS](https://commons.apache.org/proper/commons-vfs/filesystems.html) 
 - replicate either with [BookKeeper](http://bookkeeper.apache.org/) or [jgropus-raft](https://github.com/belaban/jgroups-raft/blob/master/doc/manual/overview.adoc). Ideas? 

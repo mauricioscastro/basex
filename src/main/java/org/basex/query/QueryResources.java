@@ -246,7 +246,7 @@ public class QueryResources {
   public Value collection(final QueryInput qi, final IO baseIO, final InputInfo info)
       throws QueryException {
 
-      return Empty.SEQ; // TODO: basex-lmdb: review
+      return Empty.SEQ;
 
 //      List col = null;
 //      try {

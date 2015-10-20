@@ -37,19 +37,17 @@ public class LmdbValuesBuilder extends DiskValuesBuilder {
     public DiskValues build() throws IOException {
         _build();
         final String f = text ? DATATXT : DATAATV;
-        copyIndex(f + 'l', text ? txtindexldb : attindexldb);
-        copyIndex(f + 'r', text ? txtindexrdb : attindexrdb);
+        copyIndex(data.meta.dbfile(f + 'l').file(), text ? txtindexldb : attindexldb, docid);
+        copyIndex(data.meta.dbfile(f + 'r').file(), text ? txtindexrdb : attindexrdb, docid);
         return null;
     }
 
-    private void copyIndex(final String name, Database db) throws IOException {
+    static void copyIndex(final File file, Database db, byte[] did) throws IOException {
 
         Transaction tx = env.createWriteTransaction();
 
-        File f = data.meta.dbfile(name).file();
-
         byte[] b = new byte[IO.BLOCKSIZE];
-        BufferedInputStream idx = new BufferedInputStream(new FileInputStream(f), 1024*16);
+        BufferedInputStream idx = new BufferedInputStream(new FileInputStream(file), 1024*16);
 
         int actual = -1;
         int ref = 0;
@@ -63,16 +61,16 @@ public class LmdbValuesBuilder extends DiskValuesBuilder {
                 System.arraycopy(b,0,nb,0,actual);
                 b = nb;
             }
-            db.put(tx, lmdbkey(docid,ref++), b);
+            db.put(tx, lmdbkey(did,ref++), b);
             if(++txcount > 10000) {
                 tx.commit();
                 tx = env.createWriteTransaction();
                 txcount = 0;
             }
         }
-        db.put(tx, LmdbDataAccess.getLenKey(docid), lmdb.util.Byte.getBytes(tot));
+        db.put(tx, LmdbDataAccess.getLenKey(did), lmdb.util.Byte.getBytes(tot));
         tx.commit();
 
-        f.delete();
+        file.delete();
     }
 }

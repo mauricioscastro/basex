@@ -44,16 +44,13 @@ public class LmdbQueryResources extends QueryResources {
     @Override
     public Value collection(final QueryInput qi, final IO baseIO, final InputInfo info) throws QueryException {
         List col = null;
-        String docURI = qi.original.trim();
-        if(docURI.startsWith("bxl://")) {
-            try {
-                col = LmdbDataManager.listDocuments(docURI.substring(6), true);
-                docs.addAll(col);
-            } catch (IOException e) {
-                throw new QueryException(e);
-            }
+        try {
+            col = LmdbDataManager.listDocuments(qi.original.trim(), true);
+            docs.addAll(col);
+        } catch (IOException e) {
+            throw new QueryException(e);
         }
-      return docs.isEmpty() ? Empty.SEQ : new LazyDBNodeSeq(col, qc.options, ((LmdbQueryContext)qc).tx());
+        return docs.isEmpty() ? Empty.SEQ : new LazyDBNodeSeq(col, qc.options, ((LmdbQueryContext)qc).tx());
     }
 
     @Override
