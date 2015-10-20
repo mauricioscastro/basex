@@ -63,7 +63,7 @@ Any xquery will work after http://localhost:8080/
 As stated by the title this is nothing less than [BaseX](http://basex.org/) itself, so any [BaseX documentation](http://docs.basex.org/) 
 regarding XQuery and modules (with some exceptions yet to be listed) can be used and as if it was BaseX itself. 
 
-###todo
+##todo
 - need to implement index dropping 
 - create OS based maven profile for dealing with [lmdbjni](https://github.com/deephacks/lmdbjni) dependencies  
 - need to port tests and improve LmdbDataManager tests
