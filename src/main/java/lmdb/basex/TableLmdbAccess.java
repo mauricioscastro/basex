@@ -73,7 +73,7 @@ public class TableLmdbAccess extends TableAccess {
         if(tx.isReadOnly()) return;
         for(final Buffer b : bm.all()) if(b.dirty) write(b);
         if(!dirty || !all) return;
-        try(ByteArrayOutputStream bos = new ByteArrayOutputStream(1024*32); final DataOutput out = new DataOutput(bos)) {
+        try(ByteArrayOutputStream bos = new ByteArrayOutputStream(1024*16); final DataOutput out = new DataOutput(bos)) {
             final int sz = size;
             out.writeNum(sz);
             out.writeNum(used);

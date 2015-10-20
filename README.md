@@ -61,6 +61,8 @@ Any xquery will work after http://localhost:8080/
 
 
 ###todo
+- need to implement index dropping 
+- create OS based maven profile for dealing with [lmdbjni](https://github.com/deephacks/lmdbjni) dependencies  
 - need to port tests and improve LmdbDataManager tests
 - improve the return error codes in REST XQueryHandler 
 - needs more documentation on ~~how to run~~, ~~create collections~~, ~~documents~~, ~~updates~~, etc

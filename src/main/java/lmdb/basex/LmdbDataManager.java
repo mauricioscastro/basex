@@ -172,11 +172,17 @@ public class LmdbDataManager {
         byte[] docid = getNextDocumentId(name);
         MainOptions opt = new MainOptions();
         LmdbBuilder.build(name, docid, new XMLParser(new IOStream(content), opt), opt, new StaticOptions(false));
+        indexDocument(name);
+    }
+
+    public static void indexDocument(final String name) throws IOException {
+        MainOptions opt = new MainOptions();
         try(Transaction tx = env.createReadTransaction(); LmdbData data = (LmdbData)openDocument(name, opt, tx, false)) {
             data.createIndex(IndexType.TEXT, opt);
             data.createIndex(IndexType.ATTRIBUTE, opt);
             data.createIndex(IndexType.FULLTEXT, opt);
         }
+
     }
 
     public static List<String> listDocuments(String collection) throws IOException {
