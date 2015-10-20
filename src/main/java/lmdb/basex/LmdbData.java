@@ -9,6 +9,7 @@ import org.basex.data.Namespaces;
 import org.basex.index.IdPreMap;
 import org.basex.index.IndexType;
 import org.basex.index.ft.FTBuilder;
+import org.basex.index.ft.FTIndex;
 import org.basex.index.name.Names;
 import org.basex.index.path.PathSummary;
 import org.basex.io.IOContent;
@@ -60,6 +61,7 @@ public class LmdbData extends Data implements AutoCloseable {
         if(openIndex) {
             textIndex = new UpdatableLmdbValues(this, true, docid, tx);
             attrIndex = new UpdatableLmdbValues(this, false, docid, tx);
+            ftxtIndex = new LmdbFTIndex(this, docid, tx);
         }
     }
 

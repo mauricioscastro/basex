@@ -2,6 +2,7 @@ package lmdb.basex;
 
 import lmdb.util.Byte;
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.basex.build.xml.XMLParser;
 import org.basex.core.MainOptions;
@@ -15,6 +16,7 @@ import org.fusesource.lmdbjni.Entry;
 import org.fusesource.lmdbjni.EntryIterator;
 import org.fusesource.lmdbjni.Env;
 import org.fusesource.lmdbjni.Transaction;
+import org.omg.CORBA.SystemException;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
@@ -389,6 +391,17 @@ public class LmdbDataManager {
 
     public static void main(String[] arg) throws Exception {
 
+//        int r;
+//        byte[] b = new byte[4096];
+//        FileInputStream f = new FileInputStream("/tmp/bxl.c4.d1.ftxz.basex");
+//
+//        while ((r = IOUtils.read(f,b)) == 4096) {
+//            System.err.println("ftindexzdb: " + Hex.encodeHexString(b));
+//        }
+//        if(r > 0) System.err.println("ftindexzdb: " + Hex.encodeHexString(Arrays.copyOf(b,r)));
+//
+//        System.exit(0);
+
         String home = "/home/mscastro/dev/basex-lmdb/db";
         MainOptions opt = new MainOptions();
         opt.set(MainOptions.XMLPATH, home + "/xml");
@@ -496,29 +509,29 @@ public class LmdbDataManager {
         System.out.flush();
 
 
-        try(Transaction tx = env.createReadTransaction()) {
-            EntryIterator ei = ftindexxdb.iterate(tx);
-            while (ei.hasNext()) {
-                Entry e = ei.next();
-                System.err.println("ftindexxdb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
-            }
-        }
-
-        try(Transaction tx = env.createReadTransaction()) {
-            EntryIterator ei = ftindexydb.iterate(tx);
-            while (ei.hasNext()) {
-                Entry e = ei.next();
-                System.err.println("ftindexydb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
-            }
-        }
-
-        try(Transaction tx = env.createReadTransaction()) {
-            EntryIterator ei = ftindexzdb.iterate(tx);
-            while (ei.hasNext()) {
-                Entry e = ei.next();
-                System.err.println("ftindexzdb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
-            }
-        }
+//        try(Transaction tx = env.createReadTransaction()) {
+//            EntryIterator ei = ftindexxdb.iterate(tx);
+//            while (ei.hasNext()) {
+//                Entry e = ei.next();
+//                System.err.println("ftindexxdb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
+//            }
+//        }
+//
+//        try(Transaction tx = env.createReadTransaction()) {
+//            EntryIterator ei = ftindexydb.iterate(tx);
+//            while (ei.hasNext()) {
+//                Entry e = ei.next();
+//                System.err.println("ftindexydb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
+//            }
+//        }
+//
+//        try(Transaction tx = env.createReadTransaction()) {
+//            EntryIterator ei = ftindexzdb.iterate(tx);
+//            while (ei.hasNext()) {
+//                Entry e = ei.next();
+//                System.err.println("ftindexzdb: " + Hex.encodeHexString(e.getKey()) + ":" + Hex.encodeHexString(e.getValue()));
+//            }
+//        }
 //
 //        try(Transaction tx = env.createReadTransaction()) {
 //            EntryIterator ei = attindexrdb.iterate(tx);

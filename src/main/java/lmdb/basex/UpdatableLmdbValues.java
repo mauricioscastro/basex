@@ -19,7 +19,6 @@ public class UpdatableLmdbValues extends LmdbValues {
         super(data, text, docid, tx);
     }
 
-
     @Override
     protected int pre(final int id) {
         return data.pre(id);

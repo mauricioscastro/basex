@@ -61,6 +61,7 @@ public class LmdbBuilder extends Builder {
         meta.updindex = true;
         meta.textindex = true;
         meta.attrindex = true;
+        meta.maxlen = opts.get(MainOptions.MAXLEN);
 
         this.docid = docid;
 

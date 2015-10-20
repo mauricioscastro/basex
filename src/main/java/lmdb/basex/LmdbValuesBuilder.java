@@ -6,8 +6,6 @@ import org.basex.data.Data;
 import org.basex.index.value.DiskValues;
 import org.basex.index.value.DiskValuesBuilder;
 import org.basex.io.IO;
-import org.basex.util.Performance;
-import org.basex.util.Util;
 import org.fusesource.lmdbjni.Database;
 import org.fusesource.lmdbjni.Transaction;
 
@@ -16,9 +14,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-import static lmdb.basex.LmdbDataManager.env;
 import static lmdb.basex.LmdbDataManager.attindexldb;
 import static lmdb.basex.LmdbDataManager.attindexrdb;
+import static lmdb.basex.LmdbDataManager.env;
 import static lmdb.basex.LmdbDataManager.txtindexldb;
 import static lmdb.basex.LmdbDataManager.txtindexrdb;
 import static lmdb.util.Byte.lmdbkey;
@@ -37,14 +35,10 @@ public class LmdbValuesBuilder extends DiskValuesBuilder {
 
     @Override
     public DiskValues build() throws IOException {
-
         _build();
-
         final String f = text ? DATATXT : DATAATV;
         copyIndex(f + 'l', text ? txtindexldb : attindexldb);
         copyIndex(f + 'r', text ? txtindexrdb : attindexrdb);
-
-        // just create it. do not use right away
         return null;
     }
 

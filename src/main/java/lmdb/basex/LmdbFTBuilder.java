@@ -52,8 +52,10 @@ public class LmdbFTBuilder extends FTBuilder {
         int actual = -1;
         int ref = 0;
         int txcount = 0;
+        int tot = 0;
 
         while((actual = IOUtils.read(idx, b)) > 0) {
+            tot += actual;
             if(actual < b.length) {
                 byte[] nb = new byte[actual];
                 System.arraycopy(b,0,nb,0,actual);
@@ -66,8 +68,8 @@ public class LmdbFTBuilder extends FTBuilder {
                 txcount = 0;
             }
         }
-        if(txcount > 0) tx.commit();
-        else tx.close();
+        db.put(tx, LmdbDataAccess.getLenKey(docid), lmdb.util.Byte.getBytes(tot));
+        tx.commit();
 
         f.delete();
     }
