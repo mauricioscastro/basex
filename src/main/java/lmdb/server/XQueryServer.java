@@ -10,6 +10,7 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 import org.basex.query.QueryException;
+import org.basex.query.expr.Except;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
@@ -23,6 +24,7 @@ import org.eclipse.jetty.util.component.AbstractLifeCycle;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.util.thread.ShutdownThread;
+import org.fusesource.lmdbjni.LMDBException;
 import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
 
@@ -30,6 +32,8 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.StringReader;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
@@ -62,8 +66,9 @@ public class XQueryServer {
             }
             xqserver = new XQueryServer(new File(home+"/etc/config.xml"));
             xqserver.start();
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch(Exception e) {
+            System.err.println(e.getMessage());
+            System.exit(1);
         }
     }
 
@@ -153,10 +158,9 @@ public class XQueryServer {
     }
 
     public void stop() throws Exception {
+        server.stop();
         JdbcDataManager.stop();
         LmdbDataManager.stop();
-        server.stop();
-//        threadPool.stop();
         logger.info("stop");
     }
 

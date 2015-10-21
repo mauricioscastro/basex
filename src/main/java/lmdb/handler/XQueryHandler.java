@@ -188,6 +188,10 @@ public class XQueryHandler extends AbstractHandler {
         basereq.setHandled(true);
     }
 
+    public void doStop() throws Exception {
+        super.doStop();
+    }
+
     private class HttpException extends Exception {
         private int status;
         public HttpException(int status, String msg) {

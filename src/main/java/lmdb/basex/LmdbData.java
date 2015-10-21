@@ -118,13 +118,19 @@ public class LmdbData extends Data implements AutoCloseable {
 
         switch(type) {
             case TEXT:
+                if(textIndex != null) textIndex.close();
                 dropIndex(new Database[]{txtindexldb, txtindexrdb});
+                textIndex = null;
                 break;
             case ATTRIBUTE:
+                if(attrIndex != null) attrIndex.close();
                 dropIndex(new Database[]{attindexldb, attindexrdb});
+                attrIndex = null;
                 break;
             case FULLTEXT:
+                if(ftxtIndex != null) ftxtIndex.close();
                 dropIndex(new Database[]{ftindexxdb, ftindexydb, ftindexzdb});
+                ftxtIndex = null;
                 break;
             default:
                 throw new IOException("unknown index type while dropping index");
