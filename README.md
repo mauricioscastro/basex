@@ -64,7 +64,9 @@ As stated by the title this is nothing less than [BaseX](http://basex.org/) itse
 regarding XQuery and modules (with some exceptions yet to be listed) can be used and as is. 
 
 ##todo
-- optimize xquery updates by writing to a LSM based solution before writing to LMDB thus freeing the sync client faster  
+- optimize xquery updates by writing to a LSM based solution before writing to LMDB thus freeing the sync client faster. 
+  considering the idea is to (maybe) replicate by using [jgropus-raft](https://github.com/belaban/jgroups-raft/blob/master/doc/manual/overview.adoc)
+  and once it uses LevelDB internally, would simply writing to the cluster do the trick?      
 - create OS based maven profile for dealing with [lmdbjni](https://github.com/deephacks/lmdbjni) dependencies  
 - need to port tests and improve LmdbDataManager tests
 - improve the return error codes in REST XQueryHandler 
@@ -72,7 +74,7 @@ regarding XQuery and modules (with some exceptions yet to be listed) can be used
 - needs more documentation about configuration and running standalone or servlet
 - document the URI's used in fn:doc(): bxl://, file://, jdbc:// and related configurations where it fits
 - create new URI's accessed through fn:doc(): http:// with [HtmlUnit](http://htmlunit.sourceforge.net/) and extras with [commons VFS](https://commons.apache.org/proper/commons-vfs/filesystems.html) 
-- replicate either with [BookKeeper](http://bookkeeper.apache.org/) or [jgropus-raft](https://github.com/belaban/jgroups-raft/blob/master/doc/manual/overview.adoc). Ideas? 
+- replicate either with [jgropus-raft](https://github.com/belaban/jgroups-raft/blob/master/doc/manual/overview.adoc). Ideas? 
 - assuming above replication is using raft and we have a good cluster, what about distributing XQuery queries amongst the cluster members for load balancing?
 - create a [Camel](http://camel.apache.org/) component for basex-lmdb and use it as a solid integration database (in the end canonical messages passing by are all xml anyway... right?).
 
