@@ -536,6 +536,9 @@ header a.button {
   right: 0;
   background: transparent url(../images/github-button.png) 0 0 no-repeat;
 }
+
+
+
 aside a.button {
   display: block;
   width: 138px;
@@ -545,13 +548,27 @@ aside a.button {
   background: transparent url(../images/download-button.png) 0 0 no-repeat;
 }
 
+
+a.ghbutton {
+  width: 134px;
+  height: 58px;
+  padding-top: 22px;
+  padding-left: 68px;
+  font-family: 'Architects Daughter', 'Helvetica Neue', Helvetica, Arial, serif;
+  font-size: 23px;
+  line-height: 1.2;
+  color: #fff;
+}
+a.ghbutton small {
+  display: block;
+  font-size: 11px;
+}
+
 aside a.ghbutton {
   display: block;
-  /*
   width: 138px;
   padding-left: 64px;
   margin-bottom: 20px;
-  */
   font-size: 21px;
   font-color: white;
   background: transparent url(../images/github-button.png) 0 0 no-repeat;
