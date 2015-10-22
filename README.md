@@ -64,6 +64,7 @@ As stated by the title this is nothing less than [BaseX](http://basex.org/) itse
 regarding XQuery and modules (with some exceptions yet to be listed) can be used and as is. 
 
 ##todo
+- optimize xquery updates by writing to a LSM based solution before writing to LMDB thus freeing the sync client faster  
 - create OS based maven profile for dealing with [lmdbjni](https://github.com/deephacks/lmdbjni) dependencies  
 - need to port tests and improve LmdbDataManager tests
 - improve the return error codes in REST XQueryHandler 
