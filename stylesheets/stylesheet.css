@@ -547,10 +547,13 @@ aside a.button {
 
 aside a.ghbutton {
   display: block;
+  /*
   width: 138px;
   padding-left: 64px;
   margin-bottom: 20px;
+  */
   font-size: 21px;
+  font-color: white;
   background: transparent url(../images/github-button.png) 0 0 no-repeat;
 }
 
