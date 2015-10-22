@@ -2,7 +2,6 @@ package lmdb.basex;
 
 import lmdb.util.Byte;
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.basex.build.xml.XMLParser;
 import org.basex.core.MainOptions;
@@ -16,10 +15,8 @@ import org.fusesource.lmdbjni.Entry;
 import org.fusesource.lmdbjni.EntryIterator;
 import org.fusesource.lmdbjni.Env;
 import org.fusesource.lmdbjni.Transaction;
-import org.omg.CORBA.SystemException;
 
 import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -31,7 +28,8 @@ import static lmdb.Constants.string;
 import static org.fusesource.lmdbjni.Constants.FIXEDMAP;
 import static org.fusesource.lmdbjni.Constants.bytes;
 
-// TODO: basex-lmdb: cleaner: add zombie entries check+removal in all tables for each get first and last and check all in the interval against coldb
+// TODO: basex-lmdb: cleaner: add zombie entries check+removal in all tables
+// TODO: basex-lmdb: cleaner: for each get first and last and check all in the interval against coldb
 
 public class LmdbDataManager {
 

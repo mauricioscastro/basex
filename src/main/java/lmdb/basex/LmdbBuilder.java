@@ -49,6 +49,8 @@ public class LmdbBuilder extends Builder {
     private long txtref = 1;
     private long attref = 1;
 
+    private final static int batchsz = 10000;
+
     private LmdbBuilder(final String name, final byte[] docid, final Parser parser,
                         final MainOptions opts, final StaticOptions sopts) throws IOException {
 
@@ -109,7 +111,7 @@ public class LmdbBuilder extends Builder {
             byte[] b = new byte[IO.BLOCKSIZE];
             if(IOUtils.read(tbl,b) == 0) break;
             tableaccessdb.put(tx,lmdbkey(docid,i),b);
-            if(++p > 10000) {
+            if(++p > batchsz) {
                 tx.commit();
                 tx = env.createWriteTransaction();
                 p = 0;
@@ -126,7 +128,7 @@ public class LmdbBuilder extends Builder {
                 for(; spos < ssize; ++spos) {
                     ta.write4(in.readNum(), 8, in.readNum());
                     ta.flush(false);
-                    if(++p > 10000) {
+                    if(++p > batchsz) {
                         tx.commit();
                         tx = env.createWriteTransaction();
                         ta.setTx(tx);
@@ -247,7 +249,7 @@ public class LmdbBuilder extends Builder {
                 text = di.readBoolean();
                 (text ? textdatadb : attributevaldb).put(tx, key, value);
                 c++;
-                if (c > 10000) {
+                if (c > batchsz) {
                     tx.commit();
                     c = 0;
                     tx = env.createWriteTransaction();
