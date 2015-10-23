@@ -1,4 +1,4 @@
-[BaseX](http://basex.org/) over [LMDB](http://symas.com/mdb/) [:earth_africa:](http://mauricioscastro.github.io/basex-lmdb/) 
+[BaseX](http://basex.org/) over [LMDB](http://symas.com/mdb/) 
 =============================================================
 
 A long time wish to make [BaseX](http://basex.org/) on disk base more robust.
