@@ -74,7 +74,7 @@ regarding XQuery and modules (with some exceptions yet to be listed) can be used
 - needs more documentation about configuration and running standalone or servlet
 - document the URI's used in fn:doc(): bxl://, file://, jdbc:// and related configurations where it fits
 - create new URI's accessed through fn:doc(): http:// with [HtmlUnit](http://htmlunit.sourceforge.net/) and extras with [commons VFS](https://commons.apache.org/proper/commons-vfs/filesystems.html) 
-- replicate either with [jgropus-raft](https://github.com/belaban/jgroups-raft/blob/master/doc/manual/overview.adoc). Ideas? 
+- replicate with [jgropus-raft](https://github.com/belaban/jgroups-raft/blob/master/doc/manual/overview.adoc). Ideas? 
 - assuming above replication is using raft and we have a good cluster, what about distributing XQuery queries amongst the cluster members for load balancing?
 - create a [Camel](http://camel.apache.org/) component for basex-lmdb and use it as a solid integration database (in the end canonical messages passing by are all xml anyway... right?).
 
