@@ -1,7 +1,7 @@
 [BaseX](http://basex.org/) over [LMDB](http://symas.com/mdb/)
 =============================================================
 
-A long time wish PoC to make [BaseX](http://basex.org/) on disk base more robust.
+A long time wish to make [BaseX](http://basex.org/) on disk base more robust.
 
 BaseX Core was stripped to its bare essentials.
  
@@ -61,7 +61,7 @@ Any xquery will work after http://localhost:8080/
 
 ##extra documentation
 As stated by the title this is nothing less than [BaseX](http://basex.org/) itself, so any [BaseX documentation](http://docs.basex.org/) 
-regarding XQuery and modules (with some exceptions yet to be listed) can be used and as is. 
+regarding XQuery and modules (with some exceptions yet to be listed) can be used as is. 
 
 ##todo
 - optimize xquery updates by writing to a LSM based solution before writing to LMDB thus freeing the sync client faster. 
