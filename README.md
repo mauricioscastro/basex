@@ -76,7 +76,7 @@ ls | while read F; do N=`echo $F | cut -d '.' -f 1`; curl --upload-file $F "http
 
 ###even bigger things
 I think this is not yet the hardest for basex-lmdb but it is a feasible real world example at hand. 
-download National Library of Medicine (ftp://ftp.nlm.nih.gov/nlmdata/sample/medline/) data and try it like the shakespeare example above.
+download [National Library of Medicine] (ftp://ftp.nlm.nih.gov/nlmdata/sample/medline/) data and try it like the shakespeare example above.
 the biggest file there is over 150MB and has over 4 million XML nodes.
 
 there's also [XMark's Benchmark Data Generator](http://www.xml-benchmark.org/generator.html) if you want to get serious.
