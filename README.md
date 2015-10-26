@@ -59,11 +59,35 @@ Any xquery will work after http://localhost:8080/
 
 >```curl -d "insert node <lake name='Lago da Paz'/> into doc('etc/factbook')/mondial" -X POST http://localhost:8080```
 
+###bigger things
+If you want to try bigger examples, try db/xml/shakespeare.zip and db/xml/religion.zip from the base directory:
+
+>```
+cd db/xml
+unzip shakespeare.zip
+curl -X PUT 'http://localhost:8080/shakespeare'
+cd shakespeare
+ls | while read F; do N=`echo $F | cut -d '.' -f 1`; curl --upload-file $F "http://localhost:8080/shakespeare/$N" & done
+unzip religion.zip
+curl -X PUT 'http://localhost:8080/religion'
+cd ../religion
+ls | while read F; do N=`echo $F | cut -d '.' -f 1`; curl --upload-file $F "http://localhost:8080/religion/$N" & done
+```
+
+###even bigger things
+I think this is not yet the hardest for basex-lmdb but it is a feasible real world example at hand. 
+download [National Library of Medicine](ftp://ftp.nlm.nih.gov/nlmdata/sample/medline/) data and try it like the shakespeare example above.
+the biggest file there is over 150MB and has over 4 million XML nodes.
+
+there's also [XMark's Benchmark Data Generator](http://www.xml-benchmark.org/generator.html) if you want to get serious.
+
+
 ##extra documentation
 As stated by the title this is nothing less than [BaseX](http://basex.org/) itself, so any [BaseX documentation](http://docs.basex.org/) 
 regarding XQuery and modules (with some exceptions yet to be listed) can be used as is. 
 
 ##todo
+- considering [kafka](http://kafka.apache.org/) for replication. can I embed it?
 - optimize xquery updates by writing to a LSM based solution before writing to LMDB thus freeing the sync client faster. 
   considering the idea is to (maybe) replicate by using [jgropus-raft](https://github.com/belaban/jgroups-raft/blob/master/doc/manual/overview.adoc)
   and once it uses LevelDB internally, would simply writing to the cluster do the trick?      
