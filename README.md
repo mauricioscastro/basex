@@ -60,7 +60,7 @@ Any xquery will work after http://localhost:8080/
 >```curl -d "insert node <lake name='Lago da Paz'/> into doc('etc/factbook')/mondial" -X POST http://localhost:8080```
 
 ###bigger things
-If you want to try bigger examples, try db/xml/shakespeare.zip and db/xml/religion.zip from the base directory:
+If you want bigger examples, try db/xml/shakespeare.zip and db/xml/religion.zip from the base directory:
 
 >```
 cd db/xml
