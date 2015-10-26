@@ -3,7 +3,7 @@
 
 A long time wish to make [BaseX](http://basex.org/) on disk base more robust.
 
-BaseX Core was stripped to its bare essentials.
+BaseX Core was stripped to its bare essentials (not really, more can be removed to make it even skinnier).
  
 A LmdbData, TableLmdbAccess and related builder an indexes were created to work on top of [LMDB](http://symas.com/mdb/) with [lmdbjni](https://github.com/deephacks/lmdbjni).
 
