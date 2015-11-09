@@ -23,6 +23,15 @@ In a browser or with curl, issue a HTTP GET request to http://localhost:8080/doc
 
 Any xquery will work after http://localhost:8080/
 
+###XQuery details
+The query string part of the URL will be interpreted as external variables to the XQuery context except 
+for the two following keys:
+ 
+**content-type:** what should be the resulting contents output type? default is "text/xml"
+
+**indent-content:** if resulting content should be indented. default is "no". use "yes/no", "true/false".   
+
+
 &nbsp;
 
 ###### All items below assumes you are in the project basedir:
