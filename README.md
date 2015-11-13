@@ -25,7 +25,7 @@ Any xquery will work after http://localhost:8080/
 
 ###XQuery details
 The query string part of the URL will be interpreted as external variables to the XQuery context except 
-for the two following keys:
+for the following two:
  
 **content-type:** what should be the resulting contents output type? default is "text/xml"
 

@@ -57,15 +57,13 @@ public class LmdbDataManager {
     private static final byte[] LAST_DOCUMENT_INDEX_KEY = new byte[]{0};
     private static final byte[] COLLECTION_LIST_KEY = new byte[]{1};
 
-    public static void config(String home) {
-        config(home, 102400000000000l);
-    }
+    public static void config(String home) { config(home, 100); }
 
     public static void config(String home, long size) {
         if(env != null) return;
         LmdbDataManager.home = home;
         env = new Env();
-        env.setMapSize(size);
+        env.setMapSize(size*1024000000000L);
         env.setMaxDbs(16);
         env.open(home, FIXEDMAP);
     }
@@ -277,7 +275,7 @@ public class LmdbDataManager {
     private static class Cleaner implements Runnable {
 
         private int writeBatchSize = 10000;
-        private int mincycle = 10; // minutes
+        private int mincycle = 60; // minutes
         private int secscounter = 0;
 
         private Database[] dblist =  new Database[]{
