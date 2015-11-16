@@ -9,7 +9,7 @@ A LmdbData, TableLmdbAccess and related builder an indexes were created to work 
 
 The idea is to strengthen the BaseX store structure and later replicate it (with [BookKeeper](http://bookkeeper.apache.org/)?, [jgropus-raft](https://github.com/belaban/jgroups-raft/blob/master/doc/manual/overview.adoc)?) for further high availability.
 
-A replication project idea is now in progress [here](https://github.com/mauricioscastro/lldb).
+A replication project idea is now in progress [here](https://github.com/mauricioscastro/rldb).
 
 
 ##build
