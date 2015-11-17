@@ -13,7 +13,7 @@ The idea is to strengthen the BaseX store structure and later replicate it (with
 
 
 ##build
-mvn clean install
+gradle clean install test
 
 ##run
 java -jar basex-lmdb.jar
