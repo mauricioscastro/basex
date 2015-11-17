@@ -1,3 +1,5 @@
-db/data.mdb
-db/lock.mdb
-.gradle
+/db/data.mdb
+/db/lock.mdb
+/basex-lmdb.iml
+/.idea
+/.gradle
