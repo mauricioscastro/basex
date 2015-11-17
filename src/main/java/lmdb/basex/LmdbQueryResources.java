@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("unchecked")
 public class LmdbQueryResources extends QueryResources {
 
     ArrayList<Data> data = new ArrayList<Data>();

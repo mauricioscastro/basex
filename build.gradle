@@ -1,0 +1,83 @@
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'maven'
+
+group = 'br.net.bsocial.db'
+version = 'Spring-2015'
+description = 'BaseX over LMDB'
+
+idea {
+    module {
+        downloadJavadoc = false
+        downloadSources = true
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        url "http://files.basex.org/maven"
+    }
+}
+
+compileJava {
+    sourceCompatibility = 1.7
+    targetCompatibility = 1.7
+}
+
+dependencies {
+
+    def jetty = '9.2.5.v20141112'
+    def sl4j = '1.7.12'
+
+    compile "log4j:log4j:1.2.17"
+    compile "org.slf4j:slf4j-api:${sl4j}"
+    compile "org.slf4j:slf4j-log4j12:${sl4j}"
+    compile "commons-codec:commons-codec:1.10"
+    compile "commons-fileupload:commons-fileupload:1.3.1"
+    compile "commons-io:commons-io:2.4"
+    compile "org.deephacks.lmdbjni:lmdbjni-linux64:0.4.4"
+    compile "com.alexkasko.springjdbc:springjdbc-iterable:1.0.3"
+    compile "com.zaxxer:HikariCP:2.4.1"
+    compile "org.bouncycastle:bcprov-jdk15on:1.52"
+//    compile "net.xqj:basex-xqj:1.4.0"
+//    compile "org.xmldb:xmldb-api:1.0"
+    compile "org.eclipse.jetty:jetty-continuation:${jetty}"
+    compile "org.eclipse.jetty:jetty-server:${jetty}"
+    compile "org.eclipse.jetty:jetty-http:${jetty}"
+//    compile "com.ettrema:milton-api:1.8.1.4"
+//    compile "com.vividsolutions:jts:1.13"
+    testCompile "junit:junit:4.11"
+}
+
+jar {
+
+    manifest.attributes ([
+        'Main-Class': 'lmdb.server.XQueryServer',
+        'Class-Path': configurations.runtime.files.collect { 'lib/'+it.name }.join(' ')
+    ])
+
+    doLast {
+
+        mkdir './lib'
+
+        copy {
+            from "build/libs/$archiveName"
+            rename archiveName, "$baseName.$extension"
+            into "./"
+        }
+
+        copy {
+            from configurations.runtime
+            into "./lib"
+        }
+    }
+}
+
+clean {
+    delete "./lib"
+    delete "./$jar.baseName.$jar.extension"
+    delete fileTree('./db') { include '*.mdb' }
+}
+
+
