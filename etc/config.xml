@@ -1,8 +1,8 @@
 <basexlmdb>
   <dbsize>100</dbsize> <!-- Gig -->
   <http>
-    <port>8080</port>
-    <sslport>8043</sslport>
+    <port>10080</port>
+    <sslport>10443</sslport>
     <uploadLimit>100</uploadLimit>
   </http>
   <!--

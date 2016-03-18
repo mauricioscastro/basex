@@ -60,9 +60,9 @@ public class LmdbBuilder extends Builder {
         sopts.set(DBPATH, System.getProperty("java.io.tmpdir", "/tmp"));
 
         meta = new LmdbMetaData(name, opts, sopts);
-        meta.updindex = true;
-        meta.textindex = true;
-        meta.attrindex = true;
+        meta.updindex = false; //true;
+        meta.textindex = false; //true;
+        meta.attrindex = false; //true;
         meta.maxlen = opts.get(MainOptions.MAXLEN);
 
         this.docid = docid;

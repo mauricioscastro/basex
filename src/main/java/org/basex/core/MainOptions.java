@@ -78,9 +78,9 @@ public final class MainOptions extends Options {
   // Indexing
 
   /** Flag for creating a text index. */
-  public static final BooleanOption TEXTINDEX = new BooleanOption("TEXTINDEX", true);
+  public static final BooleanOption TEXTINDEX = new BooleanOption("TEXTINDEX", false);
   /** Flag for creating an attribute value index. */
-  public static final BooleanOption ATTRINDEX = new BooleanOption("ATTRINDEX", true);
+  public static final BooleanOption ATTRINDEX = new BooleanOption("ATTRINDEX", false);
   /** Flag for creating a full-text index. */
   public static final BooleanOption FTINDEX = new BooleanOption("FTINDEX", false);
 

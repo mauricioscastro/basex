@@ -67,6 +67,10 @@ public class LmdbData extends Data implements AutoCloseable {
 
         this.table = new TableLmdbAccess(meta, tx, docid);
 
+        textIndex = null;
+        attrIndex = null;
+        ftxtIndex = null;
+
         if(openIndex) {
             textIndex = new UpdatableLmdbValues(this, true, docid, tx);
             attrIndex = new UpdatableLmdbValues(this, false, docid, tx);

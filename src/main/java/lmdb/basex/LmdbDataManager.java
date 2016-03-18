@@ -1,7 +1,6 @@
 package lmdb.basex;
 
 import lmdb.util.Byte;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.log4j.Logger;
 import org.basex.build.xml.XMLParser;
 import org.basex.core.MainOptions;
@@ -16,7 +15,6 @@ import org.fusesource.lmdbjni.EntryIterator;
 import org.fusesource.lmdbjni.Env;
 import org.fusesource.lmdbjni.Transaction;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -28,8 +26,7 @@ import static lmdb.Constants.string;
 import static org.fusesource.lmdbjni.Constants.FIXEDMAP;
 import static org.fusesource.lmdbjni.Constants.bytes;
 
-// TODO: basex-lmdb: cleaner: add zombie entries check+removal in all tables
-// TODO: basex-lmdb: cleaner: for each get first and last and check all in the interval against coldb
+// TODO: basex-lmdb: add docname as col/name/c before creating check side effects here in Manager first
 
 public class LmdbDataManager {
 
@@ -170,7 +167,7 @@ public class LmdbDataManager {
         byte[] docid = getNextDocumentId(name);
         MainOptions opt = new MainOptions();
         LmdbBuilder.build(name, docid, new XMLParser(new IOStream(content), opt), opt, new StaticOptions(false));
-        indexDocument(name);
+        //indexDocument(name);
     }
 
     public static void indexDocument(final String name) throws IOException {
@@ -225,7 +222,7 @@ public class LmdbDataManager {
     }
 
     static Data openDocument(String name, MainOptions options, Transaction tx) throws IOException {
-        return openDocument(name, options, tx, true);
+        return openDocument(name, options, tx, false); //true);
     }
 
 
