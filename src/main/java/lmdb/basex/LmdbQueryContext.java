@@ -1,5 +1,6 @@
 package lmdb.basex;
 
+import org.basex.build.json.JsonOptions;
 import org.basex.build.json.JsonSerialOptions;
 import org.basex.core.MainOptions;
 import org.basex.io.IOContent;
@@ -13,6 +14,7 @@ import org.basex.query.value.item.Item;
 import org.basex.query.value.node.DBNode;
 import org.basex.query.value.type.NodeType;
 import org.basex.query.value.type.SeqType;
+import org.basex.util.options.Options;
 import org.fusesource.lmdbjni.Transaction;
 
 import java.io.ByteArrayOutputStream;
@@ -100,12 +102,20 @@ public class LmdbQueryContext extends QueryContext implements Closeable {
         run(result, null, indent);
     }
 
+    public void run(OutputStream result, String method, String indent, String jsonFormat) throws QueryException {
+        run(result, method, Boolean.parseBoolean(indent), jsonFormat);
+    }
+
     public void run(OutputStream result, String method, String indent) throws QueryException {
         run(result, method, Boolean.parseBoolean(indent));
     }
 
     public void run(OutputStream result, String method, boolean indent) throws QueryException {
-        try(Serializer s = Serializer.get(result, getSerializerOptions(method, indent))) {
+        run(result, method, indent, "basic");
+    }
+
+    public void run(OutputStream result, String method, boolean indent, String jsonFormat) throws QueryException {
+        try(Serializer s = Serializer.get(result, getSerializerOptions(method, indent, jsonFormat))) {
             Iter iter = iter();
             Item i = null;
             while ((i = iter.next()) != null) {
@@ -181,9 +191,9 @@ public class LmdbQueryContext extends QueryContext implements Closeable {
         }
     }
 
-    private SerializerOptions getSerializerOptions(String method, boolean indent) {
+    private static SerializerOptions getSerializerOptions(String method, boolean indent, String jsonFormat) {
         method = method == null ? "text/xml" : method.toLowerCase();
-        SerializerOptions opt = SerializerOptions.get(indent);
+        SerializerOptions opt = new SerializerOptions();
         opt.set(SerializerOptions.METHOD, SerialMethod.XML);
         if(method != null && !method.contains("/xml")) {
             if (method.contains("plain")) opt.set(SerializerOptions.METHOD, SerialMethod.TEXT);
@@ -191,16 +201,21 @@ public class LmdbQueryContext extends QueryContext implements Closeable {
             else if (method.contains("html")) opt.set(SerializerOptions.METHOD, SerialMethod.HTML);
             else if (method.contains("json") || method.contains("javascript")) {
                 JsonSerialOptions jsopt = new JsonSerialOptions();
-                jsopt.set(JsonSerialOptions.FORMAT,"jsonml");
-                opt.set(SerializerOptions.JSON, jsopt);
+                jsopt.set(JsonOptions.FORMAT, jsonFormat);
                 opt.set(SerializerOptions.METHOD, SerialMethod.JSON);
+                opt.set(SerializerOptions.JSON, jsopt);
             }
             else if (method.contains("raw")) opt.set(SerializerOptions.METHOD, SerialMethod.RAW);
         }
+        opt.set(SerializerOptions.INDENT, indent ? Options.YesNo.YES : Options.YesNo.NO);
         return opt;
     }
 
-    private SerializerOptions getSerializerOptions(String method) {
+    private static SerializerOptions getSerializerOptions(String method, boolean indent) {
+        return getSerializerOptions(method, indent, "basic");
+    }
+
+    private static SerializerOptions getSerializerOptions(String method) {
         return getSerializerOptions(method, false);
     }
 }

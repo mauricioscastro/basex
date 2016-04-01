@@ -1,6 +1,7 @@
 package lmdb.util;
 
 import lmdb.basex.LmdbQueryContext;
+import org.basex.build.json.JsonOptions;
 import org.basex.build.json.JsonSerialOptions;
 import org.basex.io.IOContent;
 import org.basex.io.serial.SerialMethod;
@@ -13,6 +14,7 @@ import org.basex.query.value.item.Item;
 import org.basex.query.value.node.DBNode;
 import org.basex.query.value.type.NodeType;
 import org.basex.query.value.type.SeqType;
+import org.basex.util.options.Options;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -181,9 +183,9 @@ public class XQuery {   // TODO: retire
         return getStream(ctx, null);
     }
 
-    private static SerializerOptions getSerializerOptions(String method, boolean indent) {
+    private static SerializerOptions getSerializerOptions(String method, boolean indent, String jsonFormat) {
         method = method == null ? "text/xml" : method.toLowerCase();
-        SerializerOptions opt = SerializerOptions.get(indent);
+        SerializerOptions opt = new SerializerOptions();
         opt.set(SerializerOptions.METHOD, SerialMethod.XML);
         if(method != null && !method.contains("/xml")) {
             if (method.contains("plain")) opt.set(SerializerOptions.METHOD, SerialMethod.TEXT);
@@ -191,13 +193,18 @@ public class XQuery {   // TODO: retire
             else if (method.contains("html")) opt.set(SerializerOptions.METHOD, SerialMethod.HTML);
             else if (method.contains("json") || method.contains("javascript")) {
                 JsonSerialOptions jsopt = new JsonSerialOptions();
-                jsopt.set(JsonSerialOptions.FORMAT,"jsonml");
-                opt.set(SerializerOptions.JSON, jsopt);
+                jsopt.set(JsonOptions.FORMAT, jsonFormat);
                 opt.set(SerializerOptions.METHOD, SerialMethod.JSON);
+                opt.set(SerializerOptions.JSON, jsopt);
             }
             else if (method.contains("raw")) opt.set(SerializerOptions.METHOD, SerialMethod.RAW);
         }
+        opt.set(SerializerOptions.INDENT, indent ? Options.YesNo.YES : Options.YesNo.NO);
         return opt;
+    }
+
+    private static SerializerOptions getSerializerOptions(String method, boolean indent) {
+        return getSerializerOptions(method, indent, "basic");
     }
 
     private static SerializerOptions getSerializerOptions(String method) {

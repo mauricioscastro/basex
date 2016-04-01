@@ -29,6 +29,12 @@
 				<param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %c %5p: %m%n"/>
 			</layout>
 		</appender>
+    <!--<appender name="rolling-file" class="org.apache.log4j.RollingFileAppender">-->
+      <!--<param name="File" value="basex.log"/>-->
+      <!--<layout class="org.apache.log4j.PatternLayout">-->
+        <!--<param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %c %5p: %m%n"/>-->
+      <!--</layout>-->
+    <!--</appender>    -->
 		<root>
 			<priority value="debug" />
 			<appender-ref ref="console" />

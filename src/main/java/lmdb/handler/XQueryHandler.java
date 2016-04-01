@@ -114,18 +114,14 @@ public class XQueryHandler extends AbstractHandler {
         if (basereq.getMethod().equals("GET")) {
             basereq.extractParameters();
             MultiMap param = basereq.getQueryParameters();
-            String contentType = param.getString("content-type");
-            String indentContent = param.getString("indent-content");
-            if (contentType != null) {
-                param.remove("content-type");
-            } else {
-                contentType = "text/xml";
-            }
+            String contentType = getParam(param, "content-type", "text/xml");
+            String indentContent = getParam(param, "indent-content", "false");
+            String jsonFormat = getParam(param, "json-format", "basic");
             resp.setContentType(contentType);
             OutputStream os = resp.getOutputStream();
             try(LmdbQueryContext ctx = new LmdbQueryContext(req.getPathInfo().substring(1).trim(), param, options)) {
                 if (ctx.updating) throw new HttpException(405, "xquery is updating. use post instead.");
-                ctx.run(os, contentType, indentContent);
+                ctx.run(os, contentType, indentContent, jsonFormat);
                 resp.setStatus(HttpServletResponse.SC_OK);
             } catch (LMDBException lmdbe) {
                 logger.warn(lmdbe.getMessage());
@@ -186,6 +182,12 @@ public class XQueryHandler extends AbstractHandler {
             }
         }
         basereq.setHandled(true);
+    }
+
+    private String getParam(MultiMap map, String param, String defaultval) {
+        String p = map.getString(param);
+        if (p != null) map.remove(param);
+        return p == null ? defaultval : p;
     }
 
     public void doStop() throws Exception {
