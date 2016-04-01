@@ -116,7 +116,7 @@ public class XQueryHandler extends AbstractHandler {
             MultiMap param = basereq.getQueryParameters();
             String contentType = getParam(param, "content-type", "text/xml");
             String indentContent = getParam(param, "indent-content", "false");
-            String jsonFormat = getParam(param, "json-format", "basic");
+            String jsonFormat = getParam(param, "json-format", "jsonml");
             resp.setContentType(contentType);
             OutputStream os = resp.getOutputStream();
             try(LmdbQueryContext ctx = new LmdbQueryContext(req.getPathInfo().substring(1).trim(), param, options)) {
