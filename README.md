@@ -93,7 +93,7 @@ the biggest file there is over 150MB and has over 4.5 million XML nodes.
 there's also [XMark's Benchmark Data Generator](http://www.xml-benchmark.org/generator.html) if you want to get serious.
 
 
-##extra documentation
+## extra documentation
 As stated by the title this is nothing less than [BaseX](http://basex.org/) itself, so any [BaseX documentation](http://docs.basex.org/) 
 regarding XQuery and modules (with some exceptions yet to be listed) can be used as is. 
 
