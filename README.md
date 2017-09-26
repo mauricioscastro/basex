@@ -9,23 +9,20 @@ A LmdbData, TableLmdbAccess and related builder an indexes were created to work 
 
 The idea is to strengthen the BaseX store structure and later replicate it (with [BookKeeper](http://bookkeeper.apache.org/)?, [jgropus-raft](https://github.com/belaban/jgroups-raft/blob/master/doc/manual/overview.adoc)?) for further high availability.
 
-[A replication project idea is now in progress](https://github.com/mauricioscastro/rlmdb).
-
-
-##build
+## build
 gradle clean install test
 
-##run
+## run
 java -jar basex-lmdb.jar
 
 from project basedir
 
-##simple usage
+## simple usage
 In a browser or with curl, issue a HTTP GET request to http://localhost:8080/doc('file://etc/books.xml')
 
 Any xquery will work after http://localhost:8080/
 
-###XQuery details
+### XQuery details
 The query string part of the URL will be interpreted as external variables to the XQuery context except 
 for the following two:
  
@@ -64,28 +61,31 @@ for the following two:
 &nbsp;
 
 >##### some updates to factbook document:
->```curl -d 'rename node doc("etc/factbook")//lake[1] as "LAKE"' -X POST http://localhost:8080```
-
->```curl -d 'replace value of node doc("etc/factbook")//LAKE/@name with "Casper Sea"' -X POST http://localhost:8080```
-
->```curl -d "insert node <lake name='Lago da Paz'/> into doc('etc/factbook')/mondial" -X POST http://localhost:8080```
-
-###bigger things
-If you want bigger examples, try db/xml/shakespeare.zip and db/xml/religion.zip from the base directory:
+>```
+>curl -d 'rename node doc("etc/factbook")//lake[1] as "LAKE"' -X POST http://localhost:8080```
 
 >```
-cd db/xml
-unzip shakespeare.zip
-curl -X PUT 'http://localhost:8080/shakespeare'
-cd shakespeare
-ls | while read F; do N=`echo $F | cut -d '.' -f 1`; curl --upload-file $F "http://localhost:8080/shakespeare/$N" & done
-unzip religion.zip
-curl -X PUT 'http://localhost:8080/religion'
-cd ../religion
-ls | while read F; do N=`echo $F | cut -d '.' -f 1`; curl --upload-file $F "http://localhost:8080/religion/$N" & done
+>curl -d 'replace value of node doc("etc/factbook")//LAKE/@name with "Casper Sea"' -X POST http://localhost:8080``` 
+
+> ```
+> curl -d "insert node <lake name='Lago da Paz'/> into doc('etc/factbook')/mondial" -X POST http://localhost:8080```
+
+### bigger things
+If you want bigger examples, try db/xml/shakespeare.zip and db/xml/religion.zip from the base directory:
+
+```
+> cd db/xml 
+> unzip shakespeare.zip curl -X PUT 'http://localhost:8080/shakespeare'
+> cd shakespeare
+> ls | while read F; do N=`echo $F | cut -d '.' -f 1`; curl --upload-file $F > "http://localhost:8080/shakespeare/$N" & done
+> unzip religion.zip
+> curl -X PUT 'http://localhost:8080/religion'
+> cd ../religion
+> ls | while read F; do N=`echo $F | cut -d '.' -f 1`; curl --upload-file $F "http://localhost:8080/religion/$N" & done
 ```
 
-###even bigger things
+
+### even bigger things
 I think this is not yet the hardest for basex-lmdb but it is a feasible real world example at hand. 
 download National Library of Medicine (ftp://ftp.nlm.nih.gov/nlmdata/sample/medline/) data and try it like the shakespeare example above.
 the biggest file there is over 150MB and has over 4.5 million XML nodes.
@@ -97,7 +97,7 @@ there's also [XMark's Benchmark Data Generator](http://www.xml-benchmark.org/gen
 As stated by the title this is nothing less than [BaseX](http://basex.org/) itself, so any [BaseX documentation](http://docs.basex.org/) 
 regarding XQuery and modules (with some exceptions yet to be listed) can be used as is. 
 
-##todo
+## todo
 - considering [kafka](http://kafka.apache.org/) for replication. can I embed it?
 - optimize xquery updates by writing to a LSM based solution before writing to LMDB thus freeing the sync client faster. 
   considering the idea is to (maybe) replicate by using [jgropus-raft](https://github.com/belaban/jgroups-raft/blob/master/doc/manual/overview.adoc)
@@ -112,6 +112,7 @@ regarding XQuery and modules (with some exceptions yet to be listed) can be used
 - replicate with [jgropus-raft](https://github.com/belaban/jgroups-raft/blob/master/doc/manual/overview.adoc). Ideas? 
 - assuming above replication is using raft and we have a good cluster, what about distributing XQuery queries amongst the cluster members for load balancing?
 - create a [Camel](http://camel.apache.org/) component for basex-lmdb and use it as a solid integration database (in the end canonical messages passing by are all xml anyway... right?).
+
 
 
 
